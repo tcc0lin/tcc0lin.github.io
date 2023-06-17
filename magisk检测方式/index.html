@@ -1,0 +1,794 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>Magisk检测方式 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Magisk检测方式" />
+<meta property="og:description" content="一、市面现存的检测方式 1 Magisk Detector来源于Magisk Detector（现已停止维护），我们可以从官方的细节文档看出它之前的设计思路 ，" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" /><meta property="og:image" content="http://example.org/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-06-17T11:45:41+08:00" />
+<meta property="article:modified_time" content="2023-06-17T11:45:41+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://example.org/logo.png"/>
+
+<meta name="twitter:title" content="Magisk检测方式"/>
+<meta name="twitter:description" content="一、市面现存的检测方式 1 Magisk Detector来源于Magisk Detector（现已停止维护），我们可以从官方的细节文档看出它之前的设计思路 ，"/>
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" /><link rel="prev" href="http://example.org/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Magisk检测方式",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/example.org\/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F\/"
+        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  2826 ,
+        "url": "http:\/\/example.org\/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F\/","datePublished": "2023-06-17T11:45:41+08:00","dateModified": "2023-06-17T11:45:41+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一市面现存的检测方式">一、市面现存的检测方式</a>
+          <ul>
+            <li><a href="#1-magisk-detector">1 Magisk Detector</a>
+              <ul>
+                <li><a href="#11-su文件检测">1.1 su文件检测</a></li>
+                <li><a href="#12-magisk模块篡改系统文件检测">1.2 Magisk模块篡改系统文件检测</a></li>
+                <li><a href="#13-magisk-hide开启检测">1.3 Magisk Hide开启检测</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Magisk检测方式</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/magisk%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>Magisk生态</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2826 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 6 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一市面现存的检测方式">一、市面现存的检测方式</a>
+          <ul>
+            <li><a href="#1-magisk-detector">1 Magisk Detector</a>
+              <ul>
+                <li><a href="#11-su文件检测">1.1 su文件检测</a></li>
+                <li><a href="#12-magisk模块篡改系统文件检测">1.2 Magisk模块篡改系统文件检测</a></li>
+                <li><a href="#13-magisk-hide开启检测">1.3 Magisk Hide开启检测</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="一市面现存的检测方式" class="headerLink">
+    <a href="#%e4%b8%80%e5%b8%82%e9%9d%a2%e7%8e%b0%e5%ad%98%e7%9a%84%e6%a3%80%e6%b5%8b%e6%96%b9%e5%bc%8f" class="header-mark"></a>一、市面现存的检测方式</h3><h4 id="1-magisk-detector" class="headerLink">
+    <a href="#1-magisk-detector" class="header-mark"></a>1 Magisk Detector</h4><p>来源于<a href="https://github.com/vvb2060/MagiskDetector" target="_blank" rel="noopener noreferrer">Magisk Detector</a>（现已停止维护），我们可以从官方的<a href="https://github.com/vvb2060/MagiskDetector/blob/master/README_ZH.md" target="_blank" rel="noopener noreferrer">细节文档</a>看出它之前的设计思路
+，目前从最新的代码上看，仅仅存在三种检测方式</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">JNINativeMethod</span> <span class="n">methods</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s">&#34;haveSu&#34;</span><span class="p">,</span>         <span class="s">&#34;()I&#34;</span><span class="p">,</span> <span class="n">haveSu</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s">&#34;haveMagiskHide&#34;</span><span class="p">,</span> <span class="s">&#34;()I&#34;</span><span class="p">,</span> <span class="n">haveMagiskHide</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s">&#34;haveMagicMount&#34;</span><span class="p">,</span> <span class="s">&#34;()I&#34;</span><span class="p">,</span> <span class="n">haveMagicMount</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="11-su文件检测" class="headerLink">
+    <a href="#11-su%e6%96%87%e4%bb%b6%e6%a3%80%e6%b5%8b" class="header-mark"></a>1.1 su文件检测</h5><ul>
+<li>
+<p>检测方式</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">scan_path</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">path</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s">&#34;PATH&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">strtok</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#34;:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">supath</span><span class="p">[</span><span class="n">PATH_MAX</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sprintf</span><span class="p">(</span><span class="n">supath</span><span class="p">,</span> <span class="s">&#34;%s/su&#34;</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">access</span><span class="p">(</span><span class="n">supath</span><span class="p">,</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGW</span><span class="p">(</span><span class="s">&#34;Found su at %s&#34;</span><span class="p">,</span> <span class="n">supath</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">while</span> <span class="p">((</span><span class="n">p</span> <span class="o">=</span> <span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">&#34;:&#34;</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>代码比较少，很容易理解，通过获取系统环境变量path的值来确定当前有哪些可执行文件的目录，再依次遍历这些目录检测是否存在su文件，系统环境变量path内的路径通常是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">selene:/ $ <span class="nb">echo</span> <span class="nv">$PATH</span>
+</span></span><span class="line"><span class="cl">/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin
+</span></span><span class="line"><span class="cl">selene:/ $
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>思路</p>
+<p>之所以要检测这些可执行文件的目录是否存在su文件是因为正常情况下，root过的手机都会依照传统方式通过执行su命令来提权切换到root用户下，那这就依靠在这些可执行文件的目录下放置su文件。对于Magisk来说，同样也是在每次启动后去动态修改bin目录，先是将magisk、magiskinit放入自身文件下的bin目录，再将例如su、magiskhide等做magisk的软链，最后通过bind mount同步到真实的bin目录下达到修改bin的效果</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native/jni/core/module.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">inject_magisk_bins</span><span class="p">(</span><span class="n">root_node</span> <span class="o">*</span><span class="n">system</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">bin</span> <span class="o">=</span> <span class="n">system</span><span class="o">-&gt;</span><span class="n">child</span><span class="o">&lt;</span><span class="n">inter_node</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&#34;bin&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">bin</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">bin</span> <span class="o">=</span> <span class="k">new</span> <span class="n">inter_node</span><span class="p">(</span><span class="s">&#34;bin&#34;</span><span class="p">,</span> <span class="s">&#34;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">system</span><span class="o">-&gt;</span><span class="n">insert</span><span class="p">(</span><span class="n">bin</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Insert binaries
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">bin</span><span class="o">-&gt;</span><span class="n">insert</span><span class="p">(</span><span class="k">new</span> <span class="n">magisk_node</span><span class="p">(</span><span class="s">&#34;magisk&#34;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">bin</span><span class="o">-&gt;</span><span class="n">insert</span><span class="p">(</span><span class="k">new</span> <span class="n">magisk_node</span><span class="p">(</span><span class="s">&#34;magiskinit&#34;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Also delete all applets to make sure no modules can override it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">applet_names</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">delete</span> <span class="n">bin</span><span class="o">-&gt;</span><span class="n">extract</span><span class="p">(</span><span class="n">applet_names</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">init_applet</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">delete</span> <span class="n">bin</span><span class="o">-&gt;</span><span class="n">extract</span><span class="p">(</span><span class="n">init_applet</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">magisk_node</span> <span class="o">:</span> <span class="k">public</span> <span class="n">node_entry</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">explicit</span> <span class="n">magisk_node</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span> <span class="o">:</span> <span class="n">node_entry</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">DT_REG</span><span class="p">,</span> <span class="k">this</span><span class="p">)</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">mount</span><span class="p">()</span> <span class="k">override</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="n">dir_name</span> <span class="o">=</span> <span class="n">parent</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">node_path</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">name</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#34;magisk&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">applet_names</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">string</span> <span class="n">dest</span> <span class="o">=</span> <span class="n">dir_name</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="o">+</span> <span class="n">applet_names</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="n">VLOGD</span><span class="p">(</span><span class="s">&#34;create&#34;</span><span class="p">,</span> <span class="s">&#34;./magisk&#34;</span><span class="p">,</span> <span class="n">dest</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">                <span class="n">xsymlink</span><span class="p">(</span><span class="s">&#34;./magisk&#34;</span><span class="p">,</span> <span class="n">dest</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">init_applet</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">string</span> <span class="n">dest</span> <span class="o">=</span> <span class="n">dir_name</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="o">+</span> <span class="n">init_applet</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="n">VLOGD</span><span class="p">(</span><span class="s">&#34;create&#34;</span><span class="p">,</span> <span class="s">&#34;./magiskinit&#34;</span><span class="p">,</span> <span class="n">dest</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">                <span class="n">xsymlink</span><span class="p">(</span><span class="s">&#34;./magiskinit&#34;</span><span class="p">,</span> <span class="n">dest</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">create_and_mount</span><span class="p">(</span><span class="n">MAGISKTMP</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="o">+</span> <span class="n">name</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>所以，可以在/system/bin目录下看到magisk所做的变动，通过这个方面来检测magisk</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">selene:/ $ ls -al /system/bin <span class="p">|</span>grep magisk
+</span></span><span class="line"><span class="cl">-rwxr-xr-x  <span class="m">1</span> root root   <span class="m">170224</span> 2023-06-16 17:00 magisk
+</span></span><span class="line"><span class="cl">lrwxrwxrwx  <span class="m">1</span> root root        <span class="m">8</span> 2023-06-16 17:00 magiskhide -&gt; ./magisk
+</span></span><span class="line"><span class="cl">-rwxr-xr-x  <span class="m">1</span> root root  <span class="m">3987848</span> 2023-06-16 17:00 magiskinit
+</span></span><span class="line"><span class="cl">lrwxrwxrwx  <span class="m">1</span> root root       <span class="m">12</span> 2023-06-16 17:00 magiskpolicy -&gt; ./magiskinit
+</span></span><span class="line"><span class="cl">lrwxrwxrwx  <span class="m">1</span> root root        <span class="m">8</span> 2023-06-16 17:00 resetprop -&gt; ./magisk
+</span></span><span class="line"><span class="cl">lrwxrwxrwx  <span class="m">1</span> root root        <span class="m">8</span> 2023-06-16 17:00 su -&gt; ./magisk
+</span></span><span class="line"><span class="cl">lrwxrwxrwx  <span class="m">1</span> root root       <span class="m">12</span> 2023-06-16 17:00 supolicy -&gt; ./magiskinit
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h5 id="12-magisk模块篡改系统文件检测" class="headerLink">
+    <a href="#12-magisk%e6%a8%a1%e5%9d%97%e7%af%a1%e6%94%b9%e7%b3%bb%e7%bb%9f%e6%96%87%e4%bb%b6%e6%a3%80%e6%b5%8b" class="header-mark"></a>1.2 Magisk模块篡改系统文件检测</h5><ul>
+<li>
+<p>检测方式</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="n">jint</span> <span class="nf">haveMagicMount</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span> <span class="n">__unused</span><span class="p">,</span> <span class="n">jclass</span> <span class="n">clazz</span> <span class="n">__unused</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dev_t</span> <span class="n">data_dev</span> <span class="o">=</span> <span class="n">scan_mountinfo</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">data_dev</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">scan_maps</span><span class="p">(</span><span class="n">data_dev</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="n">dev_t</span> <span class="nf">scan_mountinfo</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">major</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">minor</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">line</span><span class="p">[</span><span class="n">PATH_MAX</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">mountinfo</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;/proc/self/mountinfo&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">sys_open</span><span class="p">(</span><span class="n">mountinfo</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;cannot open %s&#34;</span><span class="p">,</span> <span class="n">mountinfo</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fp</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;cannot open %s&#34;</span><span class="p">,</span> <span class="n">mountinfo</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 遍历mountinfo文件，判断存在/ /data的行时拿它的设备号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span> <span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">PATH_MAX</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">strstr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34;/ /data &#34;</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">sscanf</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34;%*d %*d %d:%d&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">major</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">minor</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 根据major和minor创建设备号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">makedev</span><span class="p">(</span><span class="n">major</span><span class="p">,</span> <span class="n">minor</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">scan_maps</span><span class="p">(</span><span class="n">dev_t</span> <span class="n">data_dev</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">module</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">line</span><span class="p">[</span><span class="n">PATH_MAX</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">maps</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;/proc/self/maps&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">sys_open</span><span class="p">(</span><span class="n">maps</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;cannot open %s&#34;</span><span class="p">,</span> <span class="n">maps</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fp</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;cannot open %s&#34;</span><span class="p">,</span> <span class="n">maps</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">PATH_MAX</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 在maps的内容里判断都否存在/data目录下的设备号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">strchr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">strstr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34; /system/&#34;</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">            <span class="n">strstr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34; /vendor/&#34;</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">            <span class="n">strstr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34; /product/&#34;</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">            <span class="n">strstr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34; /system_ext/&#34;</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">int</span> <span class="n">f</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">int</span> <span class="n">s</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">char</span> <span class="n">p</span><span class="p">[</span><span class="n">PATH_MAX</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">sscanf</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34;%*s %*s %*s %x:%x %*s %s&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">f</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">makedev</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="n">data_dev</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">LOGW</span><span class="p">(</span><span class="s">&#34;Magisk module file %x:%x %s&#34;</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">module</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">module</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>思路</p>
+<p>我理解是在Android系统中，类似system、vendor、product这些都属于系统相关的镜像，它们挂载到设备上时分区通常是只读的，而相对而言，data分区是可读写的，因此某些magisk模块会通过挂载的方式将例如system挂载到/data/system下面，从而完成对system分区的修改。</p>
+<blockquote>
+</blockquote>
+<p>这样做的检测原理是例如当访问/system/build.prop时，实际上却是访问/data/system/build.prop，在上面的检测逻辑中是先获取挂载信息中/data目录相关的挂载设备号，例如</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">selene:/ <span class="c1"># cat /proc/7428/mountinfo |grep &#34;/ /data&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="m">94628</span> <span class="m">94522</span> 253:6 / /data rw,nosuid,nodev,noatime master:42 - f2fs /dev/block/dm-6 rw,lazytime,seclabel,background_gc<span class="o">=</span>on,gc_merge,discard,no_heap,user_xattr,inline_xattr,acl,inline_data,inline_dentry,extent_cache,mode<span class="o">=</span>adaptive,active_logs<span class="o">=</span>6,reserve_root<span class="o">=</span>54072,resuid<span class="o">=</span>0,resgid<span class="o">=</span>1065,inlinecrypt,alloc_mode<span class="o">=</span>default,checkpoint_merge,fsync_mode<span class="o">=</span>nobarrier
+</span></span><span class="line"><span class="cl"><span class="m">136334</span> <span class="m">94522</span> 0:36 / /data_mirror rw,nosuid,nodev,noexec,relatime master:43 - tmpfs tmpfs rw,seclabel,size<span class="o">=</span>1906244k,nr_inodes<span class="o">=</span>476561,mode<span class="o">=</span>700,gid<span class="o">=</span><span class="m">1000</span>
+</span></span><span class="line"><span class="cl"><span class="m">141106</span> <span class="m">94628</span> 0:155 / /data/data rw,nosuid,nodev,noexec,relatime - tmpfs tmpfs rw,seclabel,mode<span class="o">=</span><span class="m">751</span>
+</span></span><span class="line"><span class="cl"><span class="m">141107</span> <span class="m">94628</span> 0:156 / /data/user rw,nosuid,nodev,noexec,relatime - tmpfs tmpfs rw,seclabel,mode<span class="o">=</span><span class="m">751</span>
+</span></span><span class="line"><span class="cl"><span class="m">141108</span> <span class="m">94628</span> 0:157 / /data/user_de rw,nosuid,nodev,noexec,relatime - tmpfs tmpfs rw,seclabel,mode<span class="o">=</span><span class="m">751</span>
+</span></span><span class="line"><span class="cl"><span class="m">141111</span> <span class="m">94628</span> 0:158 / /data/misc/profiles/cur rw,nosuid,nodev,noexec,relatime - tmpfs tmpfs rw,seclabel,mode<span class="o">=</span><span class="m">751</span> 
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>像253:6、0:36这样的主设备号:次设备号的结构，接着去maps中寻找是否system、vendor、product中是否包含相同设备号的，例如</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">7cd43b5000-7cd43b6000 r--s <span class="m">00000000</span> fd:06 <span class="m">924</span>                            /data/resource-cache/vendor@overlay@MiuiFrameworkResOverlay.apk@idmap
+</span></span><span class="line"><span class="cl">7cd4424000-7cd4425000 r--s <span class="m">00000000</span> fd:02 <span class="m">2543</span>                           /vendor/overlay/DevicesAndroidOverlay.apk
+</span></span><span class="line"><span class="cl">7cd4425000-7cd4426000 r--s <span class="m">00002000</span> fd:02 <span class="m">2543</span>                           /vendor/overlay/DevicesAndroidOverlay.apk
+</span></span><span class="line"><span class="cl">7cd4426000-7cd4427000 r--s <span class="m">00000000</span> fd:06 <span class="m">920</span>                            /data/resource-cache/vendor@overlay@DevicesAndroidOverlay.apk@idmap
+</span></span><span class="line"><span class="cl">7cd445a000-7cd445c000 r--s <span class="m">00000000</span> fd:02 <span class="m">2539</span>                           /vendor/overlay/AospFrameworkResOverlay.apk
+</span></span><span class="line"><span class="cl">7cd445c000-7cd445d000 r--s <span class="m">00000000</span> fd:06 <span class="m">919</span>                            /data/resource-cache/vendor@overlay@AospFrameworkResOverlay.apk@idmap
+</span></span><span class="line"><span class="cl">7cd4497000-7cd4499000 r--s <span class="m">00000000</span> fd:02 <span class="m">2541</span>                           /vendor/overlay/DeviceAndroidConfig.apk
+</span></span><span class="line"><span class="cl">7cd4499000-7cd449a000 r--s <span class="m">00000000</span> fd:06 <span class="m">918</span>                            /data/resource-cache/vendor@overlay@DeviceAndroidConfig.apk@idmap
+</span></span><span class="line"><span class="cl">7cd44fa000-7cd44fb000 r--s <span class="m">00000000</span> fd:02 <span class="m">2546</span>                           /vendor/overlay/FrameworkResOverlay/FrameworkResOverlay.apk
+</span></span><span class="line"><span class="cl">7cd44fb000-7cd44fc000 r--s <span class="m">00002000</span> fd:02 <span class="m">2546</span>                           /vendor/overlay/FrameworkResOverlay/FrameworkResOverlay.apk
+</span></span><span class="line"><span class="cl">7cd44fc000-7cd44fd000 r--s <span class="m">00000000</span> fd:06 <span class="m">917</span>                            /data/resource-cache/vendor@overlay@FrameworkResOverlay@FrameworkResOverlay.apk@idmap
+</span></span><span class="line"><span class="cl">7cd47d5000-7cd47e0000 r--p <span class="m">00000000</span> fd:01 <span class="m">3517</span>                           /system/lib64/vendor.mediatek.hardware.mms@1.2.so
+</span></span><span class="line"><span class="cl">7cd47e0000-7cd47e8000 r-xp 0000b000 fd:01 <span class="m">3517</span>                           /system/lib64/vendor.mediatek.hardware.mms@1.2.so
+</span></span><span class="line"><span class="cl">7cd47e8000-7cd47ea000 r--p <span class="m">00013000</span> fd:01 <span class="m">3517</span>                           /system/lib64/vendor.mediatek.hardware.mms@1.2.so
+</span></span><span class="line"><span class="cl">7cd47ea000-7cd47eb000 rw-p <span class="m">00014000</span> fd:01 <span class="m">3517</span>                           /system/lib64/vendor.mediatek.hardware.mms@1.2.so
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>取出像01:3517、02:2541设备号来检测一致性</p>
+<blockquote>
+</blockquote>
+<p>上述检测异常结果并没有在Android11上复现，待后续分析原因</p>
+</li>
+</ul>
+<h5 id="13-magisk-hide开启检测" class="headerLink">
+    <a href="#13-magisk-hide%e5%bc%80%e5%90%af%e6%a3%80%e6%b5%8b" class="header-mark"></a>1.3 Magisk Hide开启检测</h5><ul>
+<li>
+<p>检测方式</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">scan_status</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">getppid</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">pid</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">line</span><span class="p">[</span><span class="n">PATH_MAX</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">maps</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;/proc/self/status&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">sys_open</span><span class="p">(</span><span class="n">maps</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;cannot open %s&#34;</span><span class="p">,</span> <span class="n">maps</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fp</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;cannot open %s&#34;</span><span class="p">,</span> <span class="n">maps</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 遍历status文件查看TracerPid的值为否为0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span> <span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">PATH_MAX</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">strncmp</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s">&#34;TracerPid&#34;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">pid</span> <span class="o">=</span> <span class="n">atoi</span><span class="p">(</span><span class="o">&amp;</span><span class="n">line</span><span class="p">[</span><span class="mi">10</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">pid</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>思路</p>
+<p>检测逻辑比较简单，比较maps中的TracerPid是否为0，更有意思的是它的检测时机，首先看看AndroidManifest.xml</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># app/src/main/AndroidManifest.xml</span>
+</span></span><span class="line"><span class="cl">&lt;application
+</span></span><span class="line"><span class="cl">    android:allowBackup<span class="o">=</span><span class="s2">&#34;false&#34;</span>
+</span></span><span class="line"><span class="cl">    android:label<span class="o">=</span><span class="s2">&#34;@string/app_name&#34;</span>
+</span></span><span class="line"><span class="cl">    android:supportsRtl<span class="o">=</span><span class="s2">&#34;true&#34;</span>
+</span></span><span class="line"><span class="cl">    android:theme<span class="o">=</span><span class="s2">&#34;@android:style/Theme.DeviceDefault&#34;</span>
+</span></span><span class="line"><span class="cl">    android:zygotePreloadName<span class="o">=</span><span class="s2">&#34;io.github.vvb2060.magiskdetector.AppZygote&#34;</span>
+</span></span><span class="line"><span class="cl">    tools:ignore<span class="o">=</span><span class="s2">&#34;AllowBackup,MissingApplicationIcon&#34;</span>
+</span></span><span class="line"><span class="cl">    tools:targetApi<span class="o">=</span><span class="s2">&#34;q&#34;</span>&gt;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ......
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    &lt;service
+</span></span><span class="line"><span class="cl">        android:name<span class="o">=</span><span class="s2">&#34;.RemoteService&#34;</span>
+</span></span><span class="line"><span class="cl">        android:isolatedProcess<span class="o">=</span><span class="s2">&#34;true&#34;</span>
+</span></span><span class="line"><span class="cl">        android:useAppZygote<span class="o">=</span><span class="s2">&#34;true&#34;</span> /&gt;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">&lt;/application&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>首先是引用了zygotePreloadName这个属性，它是在Android 4.1后引入的，App可以通过该属性指定在Zygote启动时需要加载自定义的so并缓存到Zygote进程中。然后是isolatedProcess以及useAppZygote这两个属性，isolatedProcess是表示让service独立运行在进程中，而useAppZygote则从名字上能直接看出来，表明是否需要使用AppZygote模式</p>
+<blockquote>
+</blockquote>
+<p>有了上面这些属性的开启，就能确保检测进程以AppZygote模式启动，并且也在Zygote启动时加载检测so文件，之所以要以AppZygote的模式启动，也是因为为了要规避Magisk Hide的影响，可以从文档中以下两个方面的解释来看</p>
+<ul>
+<li>
+<blockquote>
+<p>Magisk Hide的实现核心是ptrace：magiskd跟踪zygote进程，监控fork和clone操作，即关注子进程创建及其线程创建。 被触发后读取/proc/pid/cmdline和uid判断是否为目标进程。 一般应用进程的cmdline在Java设置，此时已有主线程及JVM虚拟机工作线程。 在加载用户代码前，会至少有一次binder调用，使binder线程启动，此操作触发magiskhide卸载挂载</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p>唯一的例外是app zygote，它和zygote一样通过socket通信，没有binder线程。在设置cmdline和加载用户代码之间没有线程启动， 因此，可以检测是否被ptrace来判断magiskhide的存在，即使不在隐藏列表中，只要开启功能，就会被发现</p>
+</blockquote>
+</li>
+</ul>
+<p>可以从进程列表上看</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">selene:/ <span class="c1"># ps -ef|grep vvb</span>
+</span></span><span class="line"><span class="cl">u0_a244        <span class="m">6375</span>    <span class="m">607</span> <span class="m">0</span> 11:16:12 ?     00:00:01 io.github.vvb2060.magiskdetector
+</span></span><span class="line"><span class="cl">u0_a244        <span class="m">7285</span>    <span class="m">607</span> <span class="m">0</span> 11:38:22 ?     00:00:00 io.github.vvb2060.magiskdetector_zygote
+</span></span><span class="line"><span class="cl">u0_i0          <span class="m">7295</span>   <span class="m">7285</span> <span class="m">1</span> 11:38:22 ?     00:00:00 io.github.vvb2060.magiskdetector:io.github.vvb2060.magiskdetector.RemoteService
+</span></span><span class="line"><span class="cl">root           <span class="m">7322</span>   <span class="m">6346</span> <span class="m">3</span> 11:38:35 pts/27 00:00:00 grep vvb
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>启动了名为io.github.vvb2060.magiskdetector_zygote的AppZygote进程，而就是通过这个检测来判断TracerPid</p>
+</li>
+</ul>
+</div>
+
+        
+
+
+<h2>相关内容</h2>
+<div class="related-container">
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/">重读Magisk内部实现细节2</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/">重读Magisk内部实现细节</a>
+            </h2>
+        </div>
+    
+
+</div>
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2023-06-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式" data-hashtags="Magisk,源码分析"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-hashtag="Magisk"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" data-title="Magisk检测方式"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/magisk/">Magisk</a>,&nbsp;<a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/" class="prev" rel="prev" title="重读Magisk内部实现细节2"><i class="fas fa-angle-left fa-fw"></i>重读Magisk内部实现细节2</a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.113.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.3.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.css">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/typeit.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>
