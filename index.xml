@@ -3,9 +3,16 @@
         <title>tcc0lin&#39;s blog</title>
         <link>http://example.org/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 17 Jun 2023 11:45:41 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</lastBuildDate>
             <atom:link href="http://example.org/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>重读Magisk内部实现细节3</title>
+    <link>http://example.org/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</link>
+    <pubDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>http://example.org/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</guid>
+    <description><![CDATA[前言Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide]]></description>
+</item><item>
     <title>Magisk检测方式</title>
     <link>http://example.org/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/</link>
     <pubDate>Sat, 17 Jun 2023 11:45:41 &#43;0800</pubDate><author>
@@ -68,12 +75,5 @@
         <name>tcc0lin</name>
     </author><guid>http://example.org/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</guid>
     <description><![CDATA[一、前置知识点总体上来说，SHA1算法和MD5算法很类似（因为它们都属于是针对于信息摘要的哈希算法），大体的算法流程也是基本相同，可以回忆下]]></description>
-</item><item>
-    <title>从RFC4648中理解Base64算法</title>
-    <link>http://example.org/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>http://example.org/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[一、前置知识点Base64算法是一种编码算法，它是采用常见的64个字符来表示做数据映射的表，分别是A-Z、a-z、+、/。 64对应的二进制是]]></description>
 </item></channel>
 </rss>
