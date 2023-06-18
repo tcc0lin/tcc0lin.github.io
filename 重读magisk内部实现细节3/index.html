@@ -35,7 +35,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/example.org\/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823\/"
-        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  3841 ,
+        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  4215 ,
         "url": "http:\/\/example.org\/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823\/","datePublished": "2023-06-18T13:33:34+08:00","dateModified": "2023-06-18T13:33:34+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -158,8 +158,8 @@
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/magisk%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>Magisk生态</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-18">2023-06-18</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-18">2023-06-18</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 3841 字&nbsp;
-                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 8 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-18">2023-06-18</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-18">2023-06-18</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4215 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -913,8 +913,8 @@
 </span></span><span class="line"><span class="cl"><span class="nf">setup_inotify</span><span class="p">();</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">setup_inotify</span><span class="p">()</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="c1">// 创建 inotify 实例时指定了 IN_CLOEXEC 标志位，表示将 inotify 实例设置为 close-on-exec 模式。
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 在 close-on-exec 模式下，当进程调用 exec 函数时，inotify 实例会自动关闭
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建inotify实例时指定了IN_CLOEXEC标志位，表示将inotify实例设置为 close-on-exec 模式。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 在close-on-exec模式下，当进程调用exec函数时，inotify实例会自动关闭
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">inotify_fd</span> <span class="o">=</span> <span class="nf">xinotify_init1</span><span class="p">(</span><span class="n">IN_CLOEXEC</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">inotify_fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
@@ -944,7 +944,12 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h4 id="2-ptrace-zygote" class="headerLink">
+</div><p>这个部分主要做的事是</p>
+<ul>
+<li>设置信号处理函数，信号分别是SIGTERMTHRD、SIGIO、SIGALRM</li>
+<li>启动inotify，fd写入inotify_fd，监控/system/bin/app_process的access事件，重点在于packages.xml文件的写入</li>
+</ul>
+<h4 id="2-ptrace-zygote" class="headerLink">
     <a href="#2-ptrace-zygote" class="header-mark"></a>2 ptrace Zygote</h4><div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -1099,7 +1104,8 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h4 id="3-子进程信号处理" class="headerLink">
+</div><p>这一部分的作用是轮询判断zygote进程是否启动以及ptrace attach到zygote以便于监控到zygote的fork操作（引导启动App进程）</p>
+<h4 id="3-子进程信号处理" class="headerLink">
     <a href="#3-%e5%ad%90%e8%bf%9b%e7%a8%8b%e4%bf%a1%e5%8f%b7%e5%a4%84%e7%90%86" class="header-mark"></a>3 子进程信号处理</h4><div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">  1
@@ -1306,6 +1312,8 @@
 </span><span class="lnt">202
 </span><span class="lnt">203
 </span><span class="lnt">204
+</span><span class="lnt">205
+</span><span class="lnt">206
 </span></code></pre></td>
 <td class="lntd">
 <pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">;;)</span> <span class="p">{</span>
@@ -1336,15 +1344,16 @@
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">signal</span> <span class="o">==</span> <span class="n">SIGTRAP</span> <span class="o">&amp;&amp;</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">msg</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="c1">// 获取进程消息
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_GETEVENTMSG</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">zygote_map</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_GETEVENTMSG</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 处理zygote消息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">zygote_map</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">            <span class="c1">// Zygote event
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">switch</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_FORK</span><span class="p">:</span>
 </span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_VFORK</span><span class="p">:</span>
 </span></span><span class="line"><span class="cl">                    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;zygote forked: [%lu]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                    <span class="c1">// 表示收到的是zygote事件，监控到zygote fork子进程
+</span></span><span class="line"><span class="cl">                    <span class="c1">// 表示收到的是zygote消息，监控到zygote fork子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="c1">// 此时设置attaches map中app pid的值为true
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="n">attaches</span><span class="p">[</span><span class="n">msg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">                    <span class="k">break</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_EXIT</span><span class="p">:</span>
@@ -1355,8 +1364,9 @@
 </span></span><span class="line"><span class="cl">                    <span class="n">DETACH_AND_CONT</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">            <span class="p">}</span>
 </span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">switch</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="c1">// 表示收到的是子进程的信号
+</span></span><span class="line"><span class="cl">            <span class="c1">// 处理用户App消息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">switch</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// 表示收到的是子进程的信号，有新的App启动，开始执行隐藏操作
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">case</span> <span class="nl">PTRACE_EVENT_CLONE</span><span class="p">:</span>
 </span></span><span class="line"><span class="cl">                    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;create new threads: [%lu]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="n">attaches</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nf">check_pid</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
@@ -1514,7 +1524,8 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div></div>
+</div><p>核心步骤，上一步已经ptrace attach到zygote，当监听到App启动了，切换到目标进程的namespace并执行umount操作</p>
+</div>
 
         
 
