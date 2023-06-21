@@ -36,7 +36,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F\/"
-        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  4001 ,
+        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  4729 ,
         "url": "https:\/\/tcc0lin.github.io\/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F\/","datePublished": "2023-06-17T11:45:41+08:00","dateModified": "2023-06-17T11:45:41+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -154,8 +154,8 @@
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/magisk%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>Magisk生态</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4001 字&nbsp;
-                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 8 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4729 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 10 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -577,8 +577,6 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>取出像01:3517、02:2541设备号来检测一致性</p>
-<blockquote>
-</blockquote>
 <p>上述检测异常结果并没有在Android11上复现，待后续分析原因</p>
 </li>
 </ul>
@@ -691,8 +689,6 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>首先是引用了zygotePreloadName这个属性，它是在Android 4.1后引入的，App可以通过该属性指定在Zygote启动时需要加载自定义的so并缓存到Zygote进程中。然后是isolatedProcess以及useAppZygote这两个属性，isolatedProcess是表示让service独立运行在进程中，而useAppZygote则从名字上能直接看出来，表明是否需要使用AppZygote模式</p>
-<blockquote>
-</blockquote>
 <p>有了上面这些属性的开启，就能确保检测进程以AppZygote模式启动，并且也在Zygote启动时加载检测so文件，之所以要以AppZygote的模式启动，也是因为为了要规避Magisk Hide的影响，可以从文档中以下两个方面的解释来看</p>
 <ul>
 <li>
@@ -724,8 +720,6 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>启动了名为io.github.vvb2060.magiskdetector_zygote的AppZygote进程，而就是通过这个检测来判断TracerPid</p>
-<blockquote>
-</blockquote>
 <p>从源码角度来看看AppZygote进程和App进程启动方式的区别，直接从AMS看起</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -1121,8 +1115,297 @@
 </span></span><span class="line"><span class="cl"><span class="o">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>创建了ChildZygote进程，可以认为这个就是AppZygote进程，这个进程就没有创建binder线程，使用socket通信</p>
-</li>
+</div><p>可以看到是通过ZYGOTE_PROCESS的startChildZygote来启动的进程，而正常的App则是这么启动的</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// core/java/android/os/Process.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">public</span> <span class="kd">static</span> <span class="n">ProcessStartResult</span> <span class="nf">start</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">processClass</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">niceName</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">gid</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">gids</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">int</span> <span class="n">runtimeFlags</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">int</span> <span class="n">mountExternal</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">int</span> <span class="n">targetSdkVersion</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">seInfo</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@NonNull</span> <span class="n">String</span> <span class="n">abi</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">instructionSet</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">appDataDir</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">invokeWith</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">packageName</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">int</span> <span class="n">zygotePolicyFlags</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">boolean</span> <span class="n">isTopApp</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">disabledCompatChanges</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Long</span><span class="o">&gt;&gt;</span>
+</span></span><span class="line"><span class="cl">                                               <span class="n">pkgDataInfoMap</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Long</span><span class="o">&gt;&gt;</span>
+</span></span><span class="line"><span class="cl">                                               <span class="n">whitelistedDataInfoMap</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">boolean</span> <span class="n">bindMountAppsData</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="kt">boolean</span> <span class="n">bindMountAppStorageDirs</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                       <span class="nd">@Nullable</span> <span class="n">String</span><span class="o">[]</span> <span class="n">zygoteArgs</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ZYGOTE_PROCESS</span><span class="o">.</span><span class="na">start</span><span class="o">(</span><span class="n">processClass</span><span class="o">,</span> <span class="n">niceName</span><span class="o">,</span> <span class="n">uid</span><span class="o">,</span> <span class="n">gid</span><span class="o">,</span> <span class="n">gids</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">runtimeFlags</span><span class="o">,</span> <span class="n">mountExternal</span><span class="o">,</span> <span class="n">targetSdkVersion</span><span class="o">,</span> <span class="n">seInfo</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">abi</span><span class="o">,</span> <span class="n">instructionSet</span><span class="o">,</span> <span class="n">appDataDir</span><span class="o">,</span> <span class="n">invokeWith</span><span class="o">,</span> <span class="n">packageName</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">zygotePolicyFlags</span><span class="o">,</span> <span class="n">isTopApp</span><span class="o">,</span> <span class="n">disabledCompatChanges</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pkgDataInfoMap</span><span class="o">,</span> <span class="n">whitelistedDataInfoMap</span><span class="o">,</span> <span class="n">bindMountAppsData</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">bindMountAppStorageDirs</span><span class="o">,</span> <span class="n">zygoteArgs</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//core/java/android/os/ZygoteProcess.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">public</span> <span class="kd">final</span> <span class="n">Process</span><span class="o">.</span><span class="na">ProcessStartResult</span> <span class="nf">start</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">processClass</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kd">final</span> <span class="n">String</span> <span class="n">niceName</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">gid</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">gids</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">int</span> <span class="n">runtimeFlags</span><span class="o">,</span> <span class="kt">int</span> <span class="n">mountExternal</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">int</span> <span class="n">targetSdkVersion</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">seInfo</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@NonNull</span> <span class="n">String</span> <span class="n">abi</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">instructionSet</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">appDataDir</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">invokeWith</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">String</span> <span class="n">packageName</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">int</span> <span class="n">zygotePolicyFlags</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">boolean</span> <span class="n">isTopApp</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">disabledCompatChanges</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Long</span><span class="o">&gt;&gt;</span>
+</span></span><span class="line"><span class="cl">                                                      <span class="n">pkgDataInfoMap</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Long</span><span class="o">&gt;&gt;</span>
+</span></span><span class="line"><span class="cl">                                                      <span class="n">whitelistedDataInfoMap</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">boolean</span> <span class="n">bindMountAppsData</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="kt">boolean</span> <span class="n">bindMountAppStorageDirs</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="nd">@Nullable</span> <span class="n">String</span><span class="o">[]</span> <span class="n">zygoteArgs</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// TODO (chriswailes): Is there a better place to check this value?
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="o">(</span><span class="n">fetchUsapPoolEnabledPropWithMinInterval</span><span class="o">())</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">informZygotesOfUsapPoolStatus</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">startViaZygote</span><span class="o">(</span><span class="n">processClass</span><span class="o">,</span> <span class="n">niceName</span><span class="o">,</span> <span class="n">uid</span><span class="o">,</span> <span class="n">gid</span><span class="o">,</span> <span class="n">gids</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">runtimeFlags</span><span class="o">,</span> <span class="n">mountExternal</span><span class="o">,</span> <span class="n">targetSdkVersion</span><span class="o">,</span> <span class="n">seInfo</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">abi</span><span class="o">,</span> <span class="n">instructionSet</span><span class="o">,</span> <span class="n">appDataDir</span><span class="o">,</span> <span class="n">invokeWith</span><span class="o">,</span> <span class="cm">/*startChildZygote=*/</span> <span class="kc">false</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">packageName</span><span class="o">,</span> <span class="n">zygotePolicyFlags</span><span class="o">,</span> <span class="n">isTopApp</span><span class="o">,</span> <span class="n">disabledCompatChanges</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pkgDataInfoMap</span><span class="o">,</span> <span class="n">whitelistedDataInfoMap</span><span class="o">,</span> <span class="n">bindMountAppsData</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">bindMountAppStorageDirs</span><span class="o">,</span> <span class="n">zygoteArgs</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ZygoteStartFailedEx</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">LOG_TAG</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s">&#34;Starting VM process through Zygote failed&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span>
+</span></span><span class="line"><span class="cl">                <span class="s">&#34;Starting VM process through Zygote failed&#34;</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>差异在于startViaZygote与startChildZygote的不同，而startChildZygote的关键在于</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// core/java/android/os/ZygoteProcess.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="o">(</span><span class="n">startChildZygote</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">argsForZygote</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&#34;--start-child-zygote&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>启动参数的不同，在Zygote处理命令时的不同</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// core/java/com/android/internal/os/ZygoteInit.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * The main function called when started through the zygote process. This could be unified with
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * main(), if the native code in nativeFinishInit() were rationalized with Zygote startup.&lt;p&gt;
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * Current recognized args:
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * &lt;ul&gt;
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * &lt;li&gt; &lt;code&gt; [--] &amp;lt;start class name&amp;gt;  &amp;lt;args&amp;gt;
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * &lt;/ul&gt;
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * @param targetSdkVersion target SDK version
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * @param disabledCompatChanges set of disabled compat changes for the process (all others
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *                              are enabled)
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * @param argv             arg strings
+</span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
+</span></span><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Runnable</span> <span class="nf">zygoteInit</span><span class="o">(</span><span class="kt">int</span> <span class="n">targetSdkVersion</span><span class="o">,</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">disabledCompatChanges</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">String</span><span class="o">[]</span> <span class="n">argv</span><span class="o">,</span> <span class="n">ClassLoader</span> <span class="n">classLoader</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">RuntimeInit</span><span class="o">.</span><span class="na">DEBUG</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Slog</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">RuntimeInit</span><span class="o">.</span><span class="na">TAG</span><span class="o">,</span> <span class="s">&#34;RuntimeInit: Starting application from zygote&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">Trace</span><span class="o">.</span><span class="na">traceBegin</span><span class="o">(</span><span class="n">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_ACTIVITY_MANAGER</span><span class="o">,</span> <span class="s">&#34;ZygoteInit&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RuntimeInit</span><span class="o">.</span><span class="na">redirectLogStreams</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">RuntimeInit</span><span class="o">.</span><span class="na">commonInit</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 启动binder线程池
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ZygoteInit</span><span class="o">.</span><span class="na">nativeZygoteInit</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">RuntimeInit</span><span class="o">.</span><span class="na">applicationInit</span><span class="o">(</span><span class="n">targetSdkVersion</span><span class="o">,</span> <span class="n">disabledCompatChanges</span><span class="o">,</span> <span class="n">argv</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">classLoader</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * The main function called when starting a child zygote process. This is used as an alternative
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * to zygoteInit(), which skips calling into initialization routines that start the Binder
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * threadpool.
+</span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
+</span></span><span class="line"><span class="cl"><span class="kd">static</span> <span class="kd">final</span> <span class="n">Runnable</span> <span class="nf">childZygoteInit</span><span class="o">(</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">targetSdkVersion</span><span class="o">,</span> <span class="n">String</span><span class="o">[]</span> <span class="n">argv</span><span class="o">,</span> <span class="n">ClassLoader</span> <span class="n">classLoader</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RuntimeInit</span><span class="o">.</span><span class="na">Arguments</span> <span class="n">args</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RuntimeInit</span><span class="o">.</span><span class="na">Arguments</span><span class="o">(</span><span class="n">argv</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">RuntimeInit</span><span class="o">.</span><span class="na">findStaticMain</span><span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">startClass</span><span class="o">,</span> <span class="n">args</span><span class="o">.</span><span class="na">startArgs</span><span class="o">,</span> <span class="n">classLoader</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>相比于zygoteInit，childZygoteInit跳过了zygoteInit的步骤（也就是初始化binder线程池的步骤）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// core/jni/AndroidRuntime.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">com_android_internal_os_ZygoteInit_nativeZygoteInit</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">clazz</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">gCurRuntime</span><span class="o">-&gt;</span><span class="nf">onZygoteInit</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// cmds/app_process/app_main.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">virtual</span> <span class="kt">void</span> <span class="nf">onZygoteInit</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sp</span><span class="o">&lt;</span><span class="n">ProcessState</span><span class="o">&gt;</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">ProcessState</span><span class="o">::</span><span class="nf">self</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">ALOGV</span><span class="p">(</span><span class="s">&#34;App process: starting thread pool.</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// binder线程池启动
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">proc</span><span class="o">-&gt;</span><span class="nf">startThreadPool</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
 </ul>
 </div>
 
