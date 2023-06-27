@@ -3,9 +3,16 @@
         <title>tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>重读Magisk内部实现细节4</title>
+    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</link>
+    <pubDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</guid>
+    <description><![CDATA[前言Magisk内部实现细节的第四篇，在前两篇着重讲了Magisk的三个重要功能的两个&mdash;su以及hide，这篇就来分析下最后一个]]></description>
+</item><item>
     <title>重读Magisk内部实现细节3</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</link>
     <pubDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</pubDate><author>
@@ -68,12 +75,5 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</guid>
     <description><![CDATA[一、RC5算法概述作为同样是由Rivest推出的算法，RC5算法与RC4算法是完全不同的，一个明显的特征是RC5采用的是基于Feistel对]]></description>
-</item><item>
-    <title>从RFC3174中理解SHA1算法</title>
-    <link>https://tcc0lin.github.io/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[一、前置知识点总体上来说，SHA1算法和MD5算法很类似（因为它们都属于是针对于信息摘要的哈希算法），大体的算法流程也是基本相同，可以回忆下]]></description>
 </item></channel>
 </rss>
