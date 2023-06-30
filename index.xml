@@ -3,9 +3,16 @@
         <title>tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 30 Jun 2023 23:50:17 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 01 Jul 2023 00:10:12 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>内核改机</title>
+    <link>https://tcc0lin.github.io/%E5%86%85%E6%A0%B8%E6%94%B9%E6%9C%BA/</link>
+    <pubDate>Sat, 01 Jul 2023 00:10:12 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E5%86%85%E6%A0%B8%E6%94%B9%E6%9C%BA/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
     <title>红米Note11内核编译流程</title>
     <link>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
     <pubDate>Fri, 30 Jun 2023 23:50:17 &#43;0800</pubDate><author>
@@ -68,12 +75,5 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</guid>
     <description><![CDATA[DES是一种对称密钥的块加密算法。”对称密钥”，是因为加密、解密用的密钥是一样的（这不同于RSA等非对称密钥体系）。“块加密”，是因为这种算]]></description>
-</item><item>
-    <title>从RFC1321中理解MD5算法</title>
-    <link>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[一、前置知识点MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit） 二、]]></description>
 </item></channel>
 </rss>
