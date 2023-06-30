@@ -3,9 +3,16 @@
         <title>tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 30 Jun 2023 23:50:17 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>红米Note11内核编译流程</title>
+    <link>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
+    <pubDate>Fri, 30 Jun 2023 23:50:17 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
     <title>重读Magisk内部实现细节4</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</link>
     <pubDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</pubDate><author>
@@ -68,12 +75,5 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</guid>
     <description><![CDATA[一、前置知识点MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit） 二、]]></description>
-</item><item>
-    <title>从RFC2040中理解RC5算法</title>
-    <link>https://tcc0lin.github.io/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[一、RC5算法概述作为同样是由Rivest推出的算法，RC5算法与RC4算法是完全不同的，一个明显的特征是RC5采用的是基于Feistel对]]></description>
 </item></channel>
 </rss>
