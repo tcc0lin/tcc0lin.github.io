@@ -36,7 +36,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F\/"
-        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  4729 ,
+        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  7878 ,
         "url": "https:\/\/tcc0lin.github.io\/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F\/","datePublished": "2023-06-17T11:45:41+08:00","dateModified": "2023-06-17T11:45:41+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -144,6 +144,19 @@
                 <li><a href="#13-magisk-hide开启检测">1.3 Magisk Hide开启检测</a></li>
               </ul>
             </li>
+            <li><a href="#2-detectmagiskhide">2 DetectMagiskHide</a>
+              <ul>
+                <li><a href="#21-su文件检测">2.1 su文件检测</a></li>
+                <li><a href="#22-mount文件检测">2.2 mount文件检测</a></li>
+              </ul>
+            </li>
+            <li><a href="#3-magiskkiller">3 MagiskKiller</a>
+              <ul>
+                <li><a href="#31-detectproperties">3.1 detectProperties</a></li>
+                <li><a href="#32-detectmagiskpts">3.2 detectMagiskPts</a></li>
+                <li><a href="#33-detecttracertask">3.3 detectTracerTask</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
       </ul>
@@ -154,8 +167,8 @@
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/magisk%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>Magisk生态</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4729 字&nbsp;
-                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 10 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-17">2023-06-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 7878 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 16 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -172,6 +185,19 @@
                 <li><a href="#11-su文件检测">1.1 su文件检测</a></li>
                 <li><a href="#12-magisk模块篡改系统文件检测">1.2 Magisk模块篡改系统文件检测</a></li>
                 <li><a href="#13-magisk-hide开启检测">1.3 Magisk Hide开启检测</a></li>
+              </ul>
+            </li>
+            <li><a href="#2-detectmagiskhide">2 DetectMagiskHide</a>
+              <ul>
+                <li><a href="#21-su文件检测">2.1 su文件检测</a></li>
+                <li><a href="#22-mount文件检测">2.2 mount文件检测</a></li>
+              </ul>
+            </li>
+            <li><a href="#3-magiskkiller">3 MagiskKiller</a>
+              <ul>
+                <li><a href="#31-detectproperties">3.1 detectProperties</a></li>
+                <li><a href="#32-detectmagiskpts">3.2 detectMagiskPts</a></li>
+                <li><a href="#33-detecttracertask">3.3 detectTracerTask</a></li>
               </ul>
             </li>
           </ul>
@@ -1406,6 +1432,898 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div></li>
+</ul>
+<h4 id="2-detectmagiskhide" class="headerLink">
+    <a href="#2-detectmagiskhide" class="header-mark"></a>2 DetectMagiskHide</h4><p>来源于开源项目<a href="https://github.com/darvincisec/DetectMagiskHide" target="_blank" rel="noopener noreferrer">DetectMagiskHide</a>（现已停止维护），作者也通过一篇<a href="https://darvincitech.wordpress.com/2019/11/04/detecting-magisk-hide/" target="_blank" rel="noopener noreferrer">文章</a>来阐述他的想法，想法和上一个项目类似，也是寻找到MagiskHide的漏洞，当service存在于一个独立的isolated process中时，MagiskHide无法改变其namespace，因此service就可以用常规的su/magisk检测手段来做检测了，具体看看代码</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;manifest</span> <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">xmlns:tools=</span><span class="s">&#34;http://schemas.android.com/tools&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">package=</span><span class="s">&#34;com.darvin.security&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;application</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:allowBackup=</span><span class="s">&#34;false&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:icon=</span><span class="s">&#34;@mipmap/ic_launcher&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:label=</span><span class="s">&#34;@string/app_name&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:roundIcon=</span><span class="s">&#34;@mipmap/ic_launcher_round&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:supportsRtl=</span><span class="s">&#34;true&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:zygotePreloadName=</span><span class="s">&#34;.AppZygotePreload&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:theme=</span><span class="s">&#34;@style/AppTheme&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">tools:targetApi=</span><span class="s">&#34;q&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">&#34;.DetectMagisk&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:exported=</span><span class="s">&#34;true&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;intent-filter&gt;</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">&#34;android.intent.action.MAIN&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">                <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">&#34;android.intent.category.LAUNCHER&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;/intent-filter&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;/activity&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;service</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:name=</span><span class="s">&#34;.IsolatedService&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:exported=</span><span class="s">&#34;false&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:isolatedProcess=</span><span class="s">&#34;true&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:useAppZygote=</span><span class="s">&#34;true&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/application&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/manifest&gt;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>从AndroidManifest.xml上也能看出，zygotePreloadName指定了预加载so的类，isolatedProcess和useAppZygote也指定了IsolatedService作为独立进程，检测的方式也是常用的检测手段</p>
+<h5 id="21-su文件检测" class="headerLink">
+    <a href="#21-su%e6%96%87%e4%bb%b6%e6%a3%80%e6%b5%8b" class="header-mark"></a>2.1 su文件检测</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">suPaths</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/data/local/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/data/local/bin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/data/local/xbin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/sbin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/su/bin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/system/bin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/system/bin/.ext/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/system/bin/failsafe/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/system/sd/xbin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/system/usr/we-need-root/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/system/xbin/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/cache/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/data/su&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;/dev/su&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">bool</span> <span class="nf">is_supath_detected</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">suPaths</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">suPaths</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">bRet</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">__android_log_print</span><span class="p">(</span><span class="n">ANDROID_LOG_INFO</span><span class="p">,</span> <span class="n">TAG</span><span class="p">,</span> <span class="s">&#34;Checking SU Path  :%s&#34;</span><span class="p">,</span> <span class="n">suPaths</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">open</span><span class="p">(</span><span class="n">suPaths</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">O_RDONLY</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">__android_log_print</span><span class="p">(</span><span class="n">ANDROID_LOG_INFO</span><span class="p">,</span> <span class="n">TAG</span><span class="p">,</span> <span class="s">&#34;Found SU Path :%s&#34;</span><span class="p">,</span> <span class="n">suPaths</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">bRet</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="nf">access</span><span class="p">(</span><span class="n">suPaths</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">R_OK</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">__android_log_print</span><span class="p">(</span><span class="n">ANDROID_LOG_INFO</span><span class="p">,</span> <span class="n">TAG</span><span class="p">,</span> <span class="s">&#34;Found SU Path :%s&#34;</span><span class="p">,</span> <span class="n">suPaths</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">bRet</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">bRet</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="22-mount文件检测" class="headerLink">
+    <a href="#22-mount%e6%96%87%e4%bb%b6%e6%a3%80%e6%b5%8b" class="header-mark"></a>2.2 mount文件检测</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">char</span> <span class="o">*</span><span class="n">blacklistedMountPaths</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;magisk&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;core/mirror&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;core/img&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">bool</span> <span class="nf">is_mountpaths_detected</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">blacklistedMountPaths</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">blacklistedMountPaths</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">bRet</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;/proc/self/mounts&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fp</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">exit</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">fseek</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="mi">0L</span><span class="p">,</span> <span class="n">SEEK_END</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">long</span> <span class="n">size</span> <span class="o">=</span> <span class="nf">ftell</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">__android_log_print</span><span class="p">(</span><span class="n">ANDROID_LOG_INFO</span><span class="p">,</span> <span class="n">TAG</span><span class="p">,</span> <span class="s">&#34;Opening Mount file size: %ld&#34;</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="cm">/* For some reason size comes as zero */</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">size</span> <span class="o">=</span> <span class="mi">20000</span><span class="p">;</span>  <span class="cm">/*This will differ for different devices */</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">buffer</span> <span class="o">=</span> <span class="nf">calloc</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">buffer</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">exit</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">size_t</span> <span class="n">read</span> <span class="o">=</span> <span class="nf">fread</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">__android_log_print</span><span class="p">(</span><span class="n">ANDROID_LOG_INFO</span><span class="p">,</span> <span class="n">TAG</span><span class="p">,</span> <span class="s">&#34;Checking Mount Path  :%s&#34;</span><span class="p">,</span> <span class="n">blacklistedMountPaths</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">char</span> <span class="o">*</span><span class="n">rem</span> <span class="o">=</span> <span class="nf">strstr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">blacklistedMountPaths</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">rem</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">__android_log_print</span><span class="p">(</span><span class="n">ANDROID_LOG_INFO</span><span class="p">,</span> <span class="n">TAG</span><span class="p">,</span> <span class="s">&#34;Found Mount Path :%s&#34;</span><span class="p">,</span> <span class="n">blacklistedMountPaths</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">bRet</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nl">exit</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">buffer</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">free</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fp</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">bRet</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="3-magiskkiller" class="headerLink">
+    <a href="#3-magiskkiller" class="header-mark"></a>3 MagiskKiller</h4><p>来源于开源项目<a href="https://github.com/canyie/MagiskKiller" target="_blank" rel="noopener noreferrer">MagiskKiller</a>（现已停止维护），作者在项目中也说明了适用于Magisk v23.0版本及以下，因此对于高版本的Magisk来说已经无法适用了</p>
+<p>检测方式都来源于MagiskKiller类的detect方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">detect</span><span class="o">(</span><span class="n">String</span> <span class="n">apk</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">var</span> <span class="n">detectTracerTask</span> <span class="o">=</span> <span class="n">detectTracer</span><span class="o">(</span><span class="n">apk</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// int类型的result用来存储结果数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">result</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 检测Properties
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">result</span> <span class="o">=</span> <span class="n">detectProperties</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 检测/dev/pts
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">result</span> <span class="o">|=</span> <span class="n">detectMagiskPts</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">tracer</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 检测trace
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">tracer</span> <span class="o">=</span> <span class="n">detectTracerTask</span><span class="o">.</span><span class="na">call</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span><span class="s">&#34;wait trace checker&#34;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">tracer</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="s">&#34;Found magiskd &#34;</span> <span class="o">+</span> <span class="n">tracer</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_TRACER</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="31-detectproperties" class="headerLink">
+    <a href="#31-detectproperties" class="header-mark"></a>3.1 detectProperties</h5><ul>
+<li>检测方式
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/top/canyie/magiskkiller/MagiskKiller.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">detectProperties</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">detectBootloaderProperties</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">|=</span> <span class="n">detectDalvikConfigProperties</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="s">&#34;Failed to check props&#34;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">detectDalvikConfigProperties</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PropArea</span> <span class="n">dalvikConfig</span> <span class="o">=</span> <span class="n">PropArea</span><span class="o">.</span><span class="na">any</span><span class="o">(</span><span class="s">&#34;dalvik_config_prop&#34;</span><span class="o">,</span> <span class="s">&#34;exported_dalvik_prop&#34;</span><span class="o">,</span> <span class="s">&#34;dalvik_prop&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">dalvikConfig</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">var</span> <span class="n">values</span> <span class="o">=</span> <span class="n">dalvikConfig</span><span class="o">.</span><span class="na">findPossibleValues</span><span class="o">(</span><span class="s">&#34;ro.dalvik.vm.native.bridge&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">values</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_RESETPROP</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">value</span> <span class="o">:</span> <span class="n">values</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="s">&#34;libriruloader.so&#34;</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">value</span><span class="o">))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_RIRU</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">detectBootloaderProperties</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// The better way to get the filename would be `getprop -Z`
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// But &#34;-Z&#34; option requires Android 7.0+, and I&#39;m lazy to implement it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">PropArea</span> <span class="n">bootloader</span> <span class="o">=</span> <span class="n">PropArea</span><span class="o">.</span><span class="na">any</span><span class="o">(</span><span class="s">&#34;bootloader_prop&#34;</span><span class="o">,</span> <span class="s">&#34;exported2_default_prop&#34;</span><span class="o">,</span> <span class="s">&#34;default_prop&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">bootloader</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">var</span> <span class="n">values</span> <span class="o">=</span> <span class="n">bootloader</span><span class="o">.</span><span class="na">findPossibleValues</span><span class="o">(</span><span class="s">&#34;ro.boot.verifiedbootstate&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ro properties are read-only, multiple values found = the property has been modified by resetprop
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="o">(</span><span class="n">values</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_RESETPROP</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">value</span> <span class="o">:</span> <span class="n">values</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="s">&#34;orange&#34;</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">value</span><span class="o">))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_BOOTLOADER_UNLOCKED</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">FOUND_BOOTLOADER_SELF_SIGNED</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="s">&#34;yellow&#34;</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">value</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">result</span> <span class="o">&amp;</span> <span class="n">FOUND_BOOTLOADER_UNLOCKED</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_BOOTLOADER_SELF_SIGNED</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">values</span> <span class="o">=</span> <span class="n">bootloader</span><span class="o">.</span><span class="na">findPossibleValues</span><span class="o">(</span><span class="s">&#34;ro.boot.vbmeta.device_state&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">values</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_RESETPROP</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">value</span> <span class="o">:</span> <span class="n">values</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="s">&#34;unlocked&#34;</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">value</span><span class="o">))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">|=</span> <span class="n">FOUND_BOOTLOADER_UNLOCKED</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">FOUND_BOOTLOADER_SELF_SIGNED</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>思路
+关于prop的检测思路很简单，直接操作运行时的属性文件，读取其中的属性值
+<ul>
+<li>ro.boot.verifiedbootstate: 用来表示bl锁是否已经解锁，解锁后属性值为yellow</li>
+<li>ro.boot.vbmeta.device_state: 同样用来表示设备完成性，当解锁bl或是刷入非官方boot时，属性值都会变成unlocked</li>
+<li>ro.dalvik.vm.native.bridge: 正常情况下会是0，但是riru修改了该属性，替换成了libriruloader，这样就能通过判断这个属性来检测是否加载了riru</li>
+</ul>
+</li>
+</ul>
+<h5 id="32-detectmagiskpts" class="headerLink">
+    <a href="#32-detectmagiskpts" class="header-mark"></a>3.2 detectMagiskPts</h5><ul>
+<li>检测方式
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// Scan /dev/pts and check if there is an alive magisk pts
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Use `magisk su` to open a root session to test it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nd">@SuppressLint</span><span class="o">({</span><span class="s">&#34;PrivateApi&#34;</span><span class="o">,</span> <span class="s">&#34;DiscouragedPrivateApi&#34;</span><span class="o">})</span>
+</span></span><span class="line"><span class="cl"><span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">detectMagiskPts</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Method</span> <span class="n">getFileContext</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Os.getxattr is available since Oreo, fallback to getFileContext on pre O
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="o">(</span><span class="n">Build</span><span class="o">.</span><span class="na">VERSION</span><span class="o">.</span><span class="na">SDK_INT</span> <span class="o">&lt;</span> <span class="n">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">O</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">getFileContext</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="s">&#34;android.os.SELinux&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="o">.</span><span class="na">getDeclaredMethod</span><span class="o">(</span><span class="s">&#34;getFileContext&#34;</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">getFileContext</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="s">&#34;Failed to reflect getFileContext&#34;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">getFileContext</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Listing files under /dev/pts is not possible because of SELinux
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// So we manually recreate the folder structure
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 轮询查找是否有可用的rts
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">var</span> <span class="n">basePts</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="s">&#34;/dev/pts&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">1024</span><span class="o">;</span><span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">var</span> <span class="n">pts</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="n">basePts</span><span class="o">,</span> <span class="n">Integer</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// No more pts, break.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="o">(!</span><span class="n">pts</span><span class="o">.</span><span class="na">exists</span><span class="o">())</span> <span class="k">break</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// We found an active pts, check if it has magisk context.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">String</span> <span class="n">ptsContext</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="n">getFileContext</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">ptsContext</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">getFileContext</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="n">pts</span><span class="o">.</span><span class="na">getAbsolutePath</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nd">@SuppressLint</span><span class="o">({</span><span class="s">&#34;NewApi&#34;</span><span class="o">,</span> <span class="s">&#34;LocalSuppress&#34;</span><span class="o">})</span>
+</span></span><span class="line"><span class="cl">                <span class="kt">byte</span><span class="o">[]</span> <span class="n">raw</span> <span class="o">=</span> <span class="n">Os</span><span class="o">.</span><span class="na">getxattr</span><span class="o">(</span><span class="n">pts</span><span class="o">.</span><span class="na">getAbsolutePath</span><span class="o">(),</span> <span class="s">&#34;security.selinux&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// Os.getxattr returns the raw data which includes the C-style terminator (&#39;\0&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="c1">// We need to manually exclude it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="kt">int</span> <span class="n">terminatorIndex</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="o">(;</span><span class="n">terminatorIndex</span> <span class="o">&lt;</span> <span class="n">raw</span><span class="o">.</span><span class="na">length</span> <span class="o">&amp;&amp;</span> <span class="n">raw</span><span class="o">[</span><span class="n">terminatorIndex</span><span class="o">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">;</span><span class="n">terminatorIndex</span><span class="o">++);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">ptsContext</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">raw</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">terminatorIndex</span><span class="o">,</span> <span class="n">StandardCharsets</span><span class="o">.</span><span class="na">UTF_8</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="s">&#34;u:object_r:magisk_file:s0&#34;</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">ptsContext</span><span class="o">))</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">FOUND_MAGISK_PTS</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="s">&#34;Failed to check file context of &#34;</span> <span class="o">+</span> <span class="n">pts</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>思路
+首先了解下/dev/pts，/dev/pts是一个特殊的文件系统，用于提供伪终端（pseudo terminal）设备。伪终端是一种虚拟的终端设备，它可以模拟物理终端设备的功能，让用户和程序可以像使用物理终端一样使用它来进行输入和输出。也就是说当我们使用adb去调试设备时，每当我们开启一个adb连接，/dev/pts目录下就会新增一个对应的文件，而也正可以通过这个方法来检测是否开启了magisk的pts，如下
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">1|sailfish:/ # ls -alZ /dev/pts
+</span></span><span class="line"><span class="cl">total 0
+</span></span><span class="line"><span class="cl">drwxr-xr-x  2 root  root  u:object_r:devpts:s0             0 1970-01-01 08:00 .
+</span></span><span class="line"><span class="cl">drwxr-xr-x 18 root  root  u:object_r:device:s0          3980 2022-02-11 00:16 ..
+</span></span><span class="line"><span class="cl">crw-------  1 shell shell u:object_r:devpts:s0      136,   0 2022-02-12 02:11 0
+</span></span><span class="line"><span class="cl">crw-------  1 shell shell u:object_r:magisk_file:s0 136,   1 2022-02-12 02:11 1
+</span></span><span class="line"><span class="cl">crw-------  1 shell shell u:object_r:magisk_file:s0 136,   2 2022-02-12 02:12 2
+</span></span><span class="line"><span class="cl">crw-------  1 shell shell u:object_r:devpts:s0      136,   3 2022-02-12 02:12 3
+</span></span><span class="line"><span class="cl">crw-------  1 root  root  u:object_r:magisk_file:s0 136,   4 2022-02-12 02:11 4
+</span></span><span class="line"><span class="cl">crw-------  1 shell shell u:object_r:devpts:s0      136,   5 2022-02-12 02:06 5
+</span></span></code></pre></td></tr></table>
+</div>
+</div>查看/dev/pts目录下的文件属性可以看出，magisk_file特征的文件就是magisk pts</li>
+</ul>
+<h5 id="33-detecttracertask" class="headerLink">
+    <a href="#33-detecttracertask" class="header-mark"></a>3.3 detectTracerTask</h5><p>最关键的一个检测手段，也是为了应对MagiskHide</p>
+<ul>
+<li>检测方式
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">//app/src/main/java/top/canyie/magiskkiller/MagiskKiller.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">public</span> <span class="kd">static</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">detectTracer</span><span class="o">(</span><span class="n">String</span> <span class="n">apk</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Magisk Hide will attach processes with name=zygote/zygote64 and ppid=1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Orphan processes will have PPID=1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// The return value is the pipe to communicate with the child process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">rawReadFd</span> <span class="o">=</span> <span class="n">forkOrphan</span><span class="o">(</span><span class="n">apk</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">(</span><span class="n">rawReadFd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span><span class="s">&#34;fork failed&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">var</span> <span class="n">readFd</span> <span class="o">=</span> <span class="n">ParcelFileDescriptor</span><span class="o">.</span><span class="na">adoptFd</span><span class="o">(</span><span class="n">rawReadFd</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span> <span class="o">(</span><span class="n">DataInputStream</span> <span class="n">fis</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DataInputStream</span><span class="o">(</span><span class="k">new</span> <span class="n">ParcelFileDescriptor</span><span class="o">.</span><span class="na">AutoCloseInputStream</span><span class="o">(</span><span class="n">readFd</span><span class="o">)))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">fis</span><span class="o">.</span><span class="na">readUTF</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">};</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>创建fd的过程
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//app/src/main/cpp/main.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">jint</span> <span class="nf">SafetyChecker_forkOrphan</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">apk</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// After forking we are no longer able to call many functions including JNI
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">auto</span> <span class="n">orig_apk_path</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="nf">GetStringUTFChars</span><span class="p">(</span><span class="n">apk</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">apk_path</span> <span class="o">=</span> <span class="nf">strdup</span><span class="p">(</span><span class="n">orig_apk_path</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">env</span><span class="o">-&gt;</span><span class="nf">ReleaseStringUTFChars</span><span class="p">(</span><span class="n">apk</span><span class="p">,</span> <span class="n">orig_apk_path</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取apk_path
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Create pipe to communicate with the child process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Do not use O_CLOEXEC as we want to write to pipe after exec
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nf">pipe</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建匿名管道
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">read_fd</span> <span class="o">=</span> <span class="n">fd</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">write_fd</span> <span class="o">=</span> <span class="n">fd</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">snprintf</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">tmp</span><span class="p">),</span> <span class="s">&#34;%d&#34;</span><span class="p">,</span> <span class="n">write_fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">fd_arg</span> <span class="o">=</span> <span class="nf">strdup</span><span class="p">(</span><span class="n">tmp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// fd_arg是write_fd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="kt">pid_t</span> <span class="n">pid</span> <span class="o">=</span> <span class="nf">fork</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="n">pid</span><span class="p">;</span> <span class="c1">// fork failed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 调用fork产生子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// child process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">close</span><span class="p">(</span><span class="n">read_fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 在子进程中再次调用fork
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">pid</span> <span class="o">=</span> <span class="nf">fork</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// fork failed, exit to trigger EOFException when reader reads from pipe
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nf">LOGE</span><span class="p">(</span><span class="s">&#34;fork() failed with %d: %s&#34;</span><span class="p">,</span> <span class="n">errno</span><span class="p">,</span> <span class="nf">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">close</span><span class="p">(</span><span class="n">write_fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">abort</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 杀死父进程，保证子进程是孤儿进程以便于让zygote接管，ppid=1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// pid == 0, make sure we&#39;re orphan process (parent died)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">kill</span><span class="p">(</span><span class="nf">getppid</span><span class="p">(),</span> <span class="n">SIGKILL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// After fork we cannot call many functions including JNI (otherwise we may deadlock)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// Call execl() to recreate runtime and run our checking code
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// 创建新进程，名称为zygote，执行的类为SubprocessMain，传入pipe的fd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">setenv</span><span class="p">(</span><span class="s">&#34;CLASSPATH&#34;</span><span class="p">,</span> <span class="n">apk_path</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">execl</span><span class="p">(</span><span class="s">&#34;/system/bin/app_process&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;/system/bin/app_process&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;/system/bin&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// We already have PPID=1, set process name to zygote
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">// MagiskHide will think we&#39;re zygote and attach us
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="s">&#34;--nice-name=zygote&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;top.canyie.magiskkiller.SubprocessMain&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;--write-fd&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">fd_arg</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// execl() only returns if failed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">LOGE</span><span class="p">(</span><span class="s">&#34;execl() failed with %d: %s&#34;</span><span class="p">,</span> <span class="n">errno</span><span class="p">,</span> <span class="nf">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">abort</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// parent process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">free</span><span class="p">(</span><span class="n">fd_arg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">free</span><span class="p">(</span><span class="n">apk_path</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">write_fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">read_fd</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>到这步已经创建好了基于SubprocessMain类的新进程，这个进程ppid=1并且名为zygote，可以被MagiskHide attach
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">//app/src/main/java/top/canyie/magiskkiller/SubprocessMain.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SubprocessMain</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 解析出writeFd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// Parse fd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">!=</span> <span class="mi">2</span> <span class="o">||</span> <span class="o">!</span><span class="s">&#34;--write-fd&#34;</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">String</span> <span class="n">error</span> <span class="o">=</span> <span class="s">&#34;Bad args passed: &#34;</span> <span class="o">+</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">args</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">error</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">MagiskKiller</span><span class="o">.</span><span class="na">TAG</span><span class="o">,</span> <span class="n">error</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">System</span><span class="o">.</span><span class="na">exit</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ParcelFileDescriptor</span> <span class="n">writeFd</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">writeFd</span> <span class="o">=</span> <span class="n">ParcelFileDescriptor</span><span class="o">.</span><span class="na">adoptFd</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">]));</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;Unable to parse &#34;</span> <span class="o">+</span> <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">MagiskKiller</span><span class="o">.</span><span class="na">TAG</span><span class="o">,</span> <span class="s">&#34;Unable to parse &#34;</span> <span class="o">+</span> <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">],</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">System</span><span class="o">.</span><span class="na">exit</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// 获取tracer，将tracer的pid写回pipe
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">// Do our work and send the tracer&#39;s pid back to app
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="kt">int</span> <span class="n">tracer</span> <span class="o">=</span> <span class="n">MagiskKiller</span><span class="o">.</span><span class="na">requestTrace</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">try</span> <span class="o">(</span><span class="n">DataOutputStream</span> <span class="n">fos</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DataOutputStream</span><span class="o">(</span><span class="k">new</span> <span class="n">ParcelFileDescriptor</span><span class="o">.</span><span class="na">AutoCloseOutputStream</span><span class="o">(</span><span class="n">writeFd</span><span class="o">)))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">fos</span><span class="o">.</span><span class="na">writeUTF</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">tracer</span><span class="o">));</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">MagiskKiller</span><span class="o">.</span><span class="na">TAG</span><span class="o">,</span> <span class="s">&#34;&#34;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">System</span><span class="o">.</span><span class="na">exit</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//app/src/main/java/top/canyie/magiskkiller/MagiskKiller.java
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">getTracer</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="o">(</span><span class="n">BufferedReader</span> <span class="n">br</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="n">FileReader</span><span class="o">(</span><span class="s">&#34;/proc/self/status&#34;</span><span class="o">)))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">String</span> <span class="n">line</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">while</span> <span class="o">((</span><span class="n">line</span> <span class="o">=</span> <span class="n">br</span><span class="o">.</span><span class="na">readLine</span><span class="o">())</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="n">line</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s">&#34;TracerPid:&#34;</span><span class="o">))</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">line</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="s">&#34;TracerPid:&#34;</span><span class="o">.</span><span class="na">length</span><span class="o">()).</span><span class="na">trim</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span><span class="s">&#34;read tracer&#34;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>具体例子如下
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sailfish:/ $ ps -ef<span class="p">|</span>grep magiskkiller
+</span></span><span class="line"><span class="cl">u0_a148      <span class="m">30043</span>   <span class="m">763</span> <span class="m">72</span> 17:09:19 ?    00:00:01 top.canyie.magiskkiller
+</span></span><span class="line"><span class="cl">u0_a148      <span class="m">30110</span>     <span class="m">1</span> <span class="m">17</span> 17:09:20 ?    00:00:00 app_process /system/bin --nice-name<span class="o">=</span>zygote top.canyie.magiskkiller.SubprocessMain --write-fd <span class="m">40</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>思路
+很巧妙的思路，因为MagiskHide会attach到zygote进程，监控zygote的动作，因此就可以主动构成一个伪zygote进程，主动让MagiskHide attach，这样就可以根据TracerPid来判断是否开启了MagiskHide</li>
 </ul>
 </div>
 

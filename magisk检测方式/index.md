@@ -1,5 +1,8 @@
 # Magisk检测方式
 
+
+
+
 ### 一、市面现存的检测方式
 #### 1 Magisk Detector
 来源于[Magisk Detector](https://github.com/vvb2060/MagiskDetector)（现已停止维护），我们可以从官方的[细节文档](https://github.com/vvb2060/MagiskDetector/blob/master/README_ZH.md)看出它之前的设计思路
@@ -611,3 +614,451 @@ JNINativeMethod methods[] = {
     }
     ```
 
+
+#### 2 DetectMagiskHide
+来源于开源项目[DetectMagiskHide](https://github.com/darvincisec/DetectMagiskHide)（现已停止维护），作者也通过一篇[文章](https://darvincitech.wordpress.com/2019/11/04/detecting-magisk-hide/)来阐述他的想法，想法和上一个项目类似，也是寻找到MagiskHide的漏洞，当service存在于一个独立的isolated process中时，MagiskHide无法改变其namespace，因此service就可以用常规的su/magisk检测手段来做检测了，具体看看代码
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.darvin.security">
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:zygotePreloadName=".AppZygotePreload"
+        android:theme="@style/AppTheme"
+        tools:targetApi="q">
+        <activity android:name=".DetectMagisk"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service
+            android:name=".IsolatedService"
+            android:exported="false"
+            android:isolatedProcess="true"
+            android:useAppZygote="true" />
+    </application>
+
+</manifest>
+```
+从AndroidManifest.xml上也能看出，zygotePreloadName指定了预加载so的类，isolatedProcess和useAppZygote也指定了IsolatedService作为独立进程，检测的方式也是常用的检测手段
+
+##### 2.1 su文件检测
+```c
+static const char *suPaths[] = {
+        "/data/local/su",
+        "/data/local/bin/su",
+        "/data/local/xbin/su",
+        "/sbin/su",
+        "/su/bin/su",
+        "/system/bin/su",
+        "/system/bin/.ext/su",
+        "/system/bin/failsafe/su",
+        "/system/sd/xbin/su",
+        "/system/usr/we-need-root/su",
+        "/system/xbin/su",
+        "/cache/su",
+        "/data/su",
+        "/dev/su"
+};
+static inline bool is_supath_detected() {
+    int len = sizeof(suPaths) / sizeof(suPaths[0]);
+
+    bool bRet = false;
+    for (int i = 0; i < len; i++) {
+        __android_log_print(ANDROID_LOG_INFO, TAG, "Checking SU Path  :%s", suPaths[i]);
+        if (open(suPaths[i], O_RDONLY) >= 0) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Found SU Path :%s", suPaths[i]);
+            bRet = true;
+            break;
+        }
+        if (0 == access(suPaths[i], R_OK)) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Found SU Path :%s", suPaths[i]);
+            bRet = true;
+            break;
+        }
+    }
+
+    return bRet;
+}
+```
+##### 2.2 mount文件检测
+```c
+static char *blacklistedMountPaths[] = {
+        "magisk",
+        "core/mirror",
+        "core/img"
+};
+
+static inline bool is_mountpaths_detected() {
+    int len = sizeof(blacklistedMountPaths) / sizeof(blacklistedMountPaths[0]);
+
+    bool bRet = false;
+
+    FILE *fp = fopen("/proc/self/mounts", "r");
+    if (fp == NULL)
+        goto exit;
+
+    fseek(fp, 0L, SEEK_END);
+    long size = ftell(fp);
+    __android_log_print(ANDROID_LOG_INFO, TAG, "Opening Mount file size: %ld", size);
+    /* For some reason size comes as zero */
+    if (size == 0)
+        size = 20000;  /*This will differ for different devices */
+    char *buffer = calloc(size, sizeof(char));
+    if (buffer == NULL)
+        goto exit;
+
+    size_t read = fread(buffer, 1, size, fp);
+    int count = 0;
+    for (int i = 0; i < len; i++) {
+        __android_log_print(ANDROID_LOG_INFO, TAG, "Checking Mount Path  :%s", blacklistedMountPaths[i]);
+        char *rem = strstr(buffer, blacklistedMountPaths[i]);
+        if (rem != NULL) {
+            count++;
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Found Mount Path :%s", blacklistedMountPaths[i]);
+            break;
+        }
+    }
+    if (count > 0)
+        bRet = true;
+
+    exit:
+
+    if (buffer != NULL)
+        free(buffer);
+    if (fp != NULL)
+        fclose(fp);
+
+    return bRet;
+}
+```
+
+#### 3 MagiskKiller
+来源于开源项目[MagiskKiller](https://github.com/canyie/MagiskKiller)（现已停止维护），作者在项目中也说明了适用于Magisk v23.0版本及以下，因此对于高版本的Magisk来说已经无法适用了
+
+检测方式都来源于MagiskKiller类的detect方法
+```java
+public static int detect(String apk) {
+    var detectTracerTask = detectTracer(apk);
+    // int类型的result用来存储结果数据
+    int result;
+    // 检测Properties
+    result = detectProperties();
+    // 检测/dev/pts
+    result |= detectMagiskPts();
+
+    int tracer;
+    try {
+        // 检测trace
+        tracer = detectTracerTask.call();
+    } catch (Exception e) {
+        throw new RuntimeException("wait trace checker", e);
+    }
+    if (tracer != 0) {
+        Log.e(TAG, "Found magiskd " + tracer);
+        result |= FOUND_TRACER;
+    }
+    return result;
+}
+```
+##### 3.1 detectProperties
+- 检测方式
+    ```java
+    // app/src/main/java/top/canyie/magiskkiller/MagiskKiller.java
+    public static int detectProperties() {
+        int result = 0;
+        try {
+            result = detectBootloaderProperties();
+            result |= detectDalvikConfigProperties();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to check props", e);
+        }
+        return result;
+    }
+
+    private static int detectDalvikConfigProperties() {
+        int result = 0;
+        PropArea dalvikConfig = PropArea.any("dalvik_config_prop", "exported_dalvik_prop", "dalvik_prop");
+        if (dalvikConfig == null) return 0;
+        var values = dalvikConfig.findPossibleValues("ro.dalvik.vm.native.bridge");
+        if (values.size() > 1) {
+            result |= FOUND_RESETPROP;
+        }
+
+        for (String value : values) {
+            if ("libriruloader.so".equals(value)) {
+                result |= FOUND_RIRU;
+                break;
+            }
+        }
+        return result;
+    }
+
+    private static int detectBootloaderProperties() {
+        int result = 0;
+        // The better way to get the filename would be `getprop -Z`
+        // But "-Z" option requires Android 7.0+, and I'm lazy to implement it
+        PropArea bootloader = PropArea.any("bootloader_prop", "exported2_default_prop", "default_prop");
+        if (bootloader == null) return 0;
+        var values = bootloader.findPossibleValues("ro.boot.verifiedbootstate");
+        // ro properties are read-only, multiple values found = the property has been modified by resetprop
+        if (values.size() > 1) {
+            result |= FOUND_RESETPROP;
+        }
+        for (String value : values) {
+            if ("orange".equals(value)) {
+                result |= FOUND_BOOTLOADER_UNLOCKED;
+                result &= ~FOUND_BOOTLOADER_SELF_SIGNED;
+            } else if ("yellow".equals(value) && (result & FOUND_BOOTLOADER_UNLOCKED) == 0) {
+                result |= FOUND_BOOTLOADER_SELF_SIGNED;
+            }
+        }
+
+        values = bootloader.findPossibleValues("ro.boot.vbmeta.device_state");
+        if (values.size() > 1) {
+            result |= FOUND_RESETPROP;
+        }
+        for (String value : values) {
+            if ("unlocked".equals(value)) {
+                result |= FOUND_BOOTLOADER_UNLOCKED;
+                result &= ~FOUND_BOOTLOADER_SELF_SIGNED;
+                break;
+            }
+        }
+        return result;
+    }
+    ```
+- 思路
+    关于prop的检测思路很简单，直接操作运行时的属性文件，读取其中的属性值
+    - ro.boot.verifiedbootstate: 用来表示bl锁是否已经解锁，解锁后属性值为yellow
+    - ro.boot.vbmeta.device_state: 同样用来表示设备完成性，当解锁bl或是刷入非官方boot时，属性值都会变成unlocked
+    - ro.dalvik.vm.native.bridge: 正常情况下会是0，但是riru修改了该属性，替换成了libriruloader，这样就能通过判断这个属性来检测是否加载了riru
+    
+##### 3.2 detectMagiskPts
+- 检测方式
+    ```java
+    // Scan /dev/pts and check if there is an alive magisk pts
+    // Use `magisk su` to open a root session to test it
+    @SuppressLint({"PrivateApi", "DiscouragedPrivateApi"})
+    private static int detectMagiskPts() {
+        Method getFileContext;
+
+        // Os.getxattr is available since Oreo, fallback to getFileContext on pre O
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            try {
+                getFileContext = Class.forName("android.os.SELinux")
+                        .getDeclaredMethod("getFileContext", String.class);
+                getFileContext.setAccessible(true);
+            } catch (Throwable e) {
+                Log.e(TAG, "Failed to reflect getFileContext", e);
+                return 0;
+            }
+        } else {
+            getFileContext = null;
+        }
+
+        // Listing files under /dev/pts is not possible because of SELinux
+        // So we manually recreate the folder structure
+        // 轮询查找是否有可用的rts
+        var basePts = new File("/dev/pts");
+        for (int i = 0;i < 1024;i++) {
+            var pts = new File(basePts, Integer.toString(i));
+
+            // No more pts, break.
+            if (!pts.exists()) break;
+
+            // We found an active pts, check if it has magisk context.
+            try {
+                String ptsContext;
+                if (getFileContext != null) {
+                    ptsContext = (String) getFileContext.invoke(null, pts.getAbsolutePath());
+                } else {
+                    @SuppressLint({"NewApi", "LocalSuppress"})
+                    byte[] raw = Os.getxattr(pts.getAbsolutePath(), "security.selinux");
+                    // Os.getxattr returns the raw data which includes the C-style terminator ('\0')
+                    // We need to manually exclude it
+                    int terminatorIndex = 0;
+                    for (;terminatorIndex < raw.length && raw[terminatorIndex] != 0;terminatorIndex++);
+                    ptsContext = new String(raw, 0, terminatorIndex, StandardCharsets.UTF_8);
+                }
+                if ("u:object_r:magisk_file:s0".equals(ptsContext))
+                    return FOUND_MAGISK_PTS;
+            } catch (Throwable e) {
+                Log.e(TAG, "Failed to check file context of " + pts, e);
+            }
+        }
+        return 0;
+    }
+    ```
+- 思路
+    首先了解下/dev/pts，/dev/pts是一个特殊的文件系统，用于提供伪终端（pseudo terminal）设备。伪终端是一种虚拟的终端设备，它可以模拟物理终端设备的功能，让用户和程序可以像使用物理终端一样使用它来进行输入和输出。也就是说当我们使用adb去调试设备时，每当我们开启一个adb连接，/dev/pts目录下就会新增一个对应的文件，而也正可以通过这个方法来检测是否开启了magisk的pts，如下
+    ```
+    1|sailfish:/ # ls -alZ /dev/pts
+    total 0
+    drwxr-xr-x  2 root  root  u:object_r:devpts:s0             0 1970-01-01 08:00 .
+    drwxr-xr-x 18 root  root  u:object_r:device:s0          3980 2022-02-11 00:16 ..
+    crw-------  1 shell shell u:object_r:devpts:s0      136,   0 2022-02-12 02:11 0
+    crw-------  1 shell shell u:object_r:magisk_file:s0 136,   1 2022-02-12 02:11 1
+    crw-------  1 shell shell u:object_r:magisk_file:s0 136,   2 2022-02-12 02:12 2
+    crw-------  1 shell shell u:object_r:devpts:s0      136,   3 2022-02-12 02:12 3
+    crw-------  1 root  root  u:object_r:magisk_file:s0 136,   4 2022-02-12 02:11 4
+    crw-------  1 shell shell u:object_r:devpts:s0      136,   5 2022-02-12 02:06 5
+    ```
+    查看/dev/pts目录下的文件属性可以看出，magisk_file特征的文件就是magisk pts
+##### 3.3 detectTracerTask
+最关键的一个检测手段，也是为了应对MagiskHide
+- 检测方式
+    ```java
+    //app/src/main/java/top/canyie/magiskkiller/MagiskKiller.java
+    public static Callable<Integer> detectTracer(String apk) {
+        // Magisk Hide will attach processes with name=zygote/zygote64 and ppid=1
+        // Orphan processes will have PPID=1
+        // The return value is the pipe to communicate with the child process
+        int rawReadFd = forkOrphan(apk);
+
+        if (rawReadFd < 0) throw new RuntimeException("fork failed");
+        var readFd = ParcelFileDescriptor.adoptFd(rawReadFd);
+        return () -> {
+            try (DataInputStream fis = new DataInputStream(new ParcelFileDescriptor.AutoCloseInputStream(readFd))) {
+                return Integer.parseInt(fis.readUTF());
+            }
+        };
+    }
+    ```
+    创建fd的过程
+    ```c
+    //app/src/main/cpp/main.cpp
+    jint SafetyChecker_forkOrphan(JNIEnv* env, jclass, jstring apk) {
+        // After forking we are no longer able to call many functions including JNI
+        auto orig_apk_path = env->GetStringUTFChars(apk, nullptr);
+        auto apk_path = strdup(orig_apk_path);
+        env->ReleaseStringUTFChars(apk, orig_apk_path);
+        // 获取apk_path
+
+        // Create pipe to communicate with the child process
+        // Do not use O_CLOEXEC as we want to write to pipe after exec
+        int fd[2];
+        if (pipe(fd) == -1) return -1;
+        // 创建匿名管道
+        int read_fd = fd[0];
+        int write_fd = fd[1];
+
+        char tmp[32];
+        snprintf(tmp, sizeof(tmp), "%d", write_fd);
+        auto fd_arg = strdup(tmp);
+        // fd_arg是write_fd
+
+        pid_t pid = fork();
+        if (pid < 0) return pid; // fork failed
+        // 调用fork产生子进程
+        if (pid == 0) { // child process
+            close(read_fd);
+            // 在子进程中再次调用fork
+            pid = fork();
+            if (pid > 0) {
+                exit(0);
+            } else if (pid < 0) {
+                // fork failed, exit to trigger EOFException when reader reads from pipe
+                LOGE("fork() failed with %d: %s", errno, strerror(errno));
+                close(write_fd);
+                abort();
+            }
+            // 杀死父进程，保证子进程是孤儿进程以便于让zygote接管，ppid=1
+            // pid == 0, make sure we're orphan process (parent died)
+            kill(getppid(), SIGKILL);
+
+            // After fork we cannot call many functions including JNI (otherwise we may deadlock)
+            // Call execl() to recreate runtime and run our checking code
+            // 创建新进程，名称为zygote，执行的类为SubprocessMain，传入pipe的fd
+            setenv("CLASSPATH", apk_path, 1);
+            execl("/system/bin/app_process",
+                "/system/bin/app_process",
+                "/system/bin",
+                // We already have PPID=1, set process name to zygote
+                // MagiskHide will think we're zygote and attach us
+                "--nice-name=zygote",
+                "top.canyie.magiskkiller.SubprocessMain",
+                "--write-fd",
+                fd_arg,
+                (char*) nullptr);
+
+            // execl() only returns if failed
+            LOGE("execl() failed with %d: %s", errno, strerror(errno));
+            abort();
+        }
+        // parent process
+        free(fd_arg);
+        free(apk_path);
+        close(write_fd);
+        return read_fd;
+    }
+    ```
+    到这步已经创建好了基于SubprocessMain类的新进程，这个进程ppid=1并且名为zygote，可以被MagiskHide attach
+    ```java
+    //app/src/main/java/top/canyie/magiskkiller/SubprocessMain.java
+    public class SubprocessMain {
+        public static void main(String[] args) {
+            // 解析出writeFd
+            // Parse fd
+            if (args.length != 2 || !"--write-fd".equals(args[0])) {
+                String error = "Bad args passed: " + Arrays.toString(args);
+                System.err.println(error);
+                Log.e(MagiskKiller.TAG, error);
+                System.exit(1);
+            }
+            ParcelFileDescriptor writeFd = null;
+            try {
+                writeFd = ParcelFileDescriptor.adoptFd(Integer.parseInt(args[1]));
+            } catch (Exception e) {
+                System.err.println("Unable to parse " + args[1]);
+                e.printStackTrace();
+                Log.e(MagiskKiller.TAG, "Unable to parse " + args[1], e);
+                System.exit(1);
+            }
+            try {
+                // 获取tracer，将tracer的pid写回pipe
+                // Do our work and send the tracer's pid back to app
+                int tracer = MagiskKiller.requestTrace();
+                try (DataOutputStream fos = new DataOutputStream(new ParcelFileDescriptor.AutoCloseOutputStream(writeFd))) {
+                    fos.writeUTF(Integer.toString(tracer));
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                Log.e(MagiskKiller.TAG, "", e);
+                System.exit(1);
+            }
+        }
+    }
+
+    //app/src/main/java/top/canyie/magiskkiller/MagiskKiller.java
+    public static int getTracer() {
+        try (BufferedReader br = new BufferedReader(new FileReader("/proc/self/status"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith("TracerPid:")) {
+                    return Integer.parseInt(line.substring("TracerPid:".length()).trim());
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("read tracer", e);
+        }
+        return 0;
+    }
+    ```
+    具体例子如下
+    ```shell
+    sailfish:/ $ ps -ef|grep magiskkiller
+    u0_a148      30043   763 72 17:09:19 ?    00:00:01 top.canyie.magiskkiller
+    u0_a148      30110     1 17 17:09:20 ?    00:00:00 app_process /system/bin --nice-name=zygote top.canyie.magiskkiller.SubprocessMain --write-fd 40
+    ```
+- 思路
+    很巧妙的思路，因为MagiskHide会attach到zygote进程，监控zygote的动作，因此就可以主动构成一个伪zygote进程，主动让MagiskHide attach，这样就可以根据TracerPid来判断是否开启了MagiskHide
