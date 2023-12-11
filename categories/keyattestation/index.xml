@@ -1,0 +1,14 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>KeyAttestation - 分类 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/categories/keyattestation/</link>
+        <description>KeyAttestation - 分类 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/keyattestation/" rel="self" type="application/rss+xml" /><item>
+    <title>KeyAttestation原理理解</title>
+    <link>https://tcc0lin.github.io/keyattestationke%E5%8F%AF%E7%94%A8%E6%80%A7%E6%B5%8B%E8%AF%95/</link>
+    <pubDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/keyattestationke%E5%8F%AF%E7%94%A8%E6%80%A7%E6%B5%8B%E8%AF%95/</guid>
+    <description><![CDATA[一、Key Attestation密钥认证根据官方文档的阐述 Keymaster在Android7.0 (Keymaster 2) 中引入了密钥认证 在 Android8.0 (Keymaster 3) 中引入了ID认]]></description>
+</item></channel>
+</rss>

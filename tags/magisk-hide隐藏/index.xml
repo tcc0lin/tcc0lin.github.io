@@ -1,0 +1,21 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Magisk Hide隐藏 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/magisk-hide%E9%9A%90%E8%97%8F/</link>
+        <description>Magisk Hide隐藏 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 16 Jul 2023 00:28:08 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/magisk-hide%E9%9A%90%E8%97%8F/" rel="self" type="application/rss+xml" /><item>
+    <title>Riru MomoHider源码分析</title>
+    <link>https://tcc0lin.github.io/riru-momohider%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
+    <pubDate>Sun, 16 Jul 2023 00:28:08 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/riru-momohider%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</guid>
+    <description><![CDATA[一、前言同样的，作为一个riru模块，从该项目的简介中，就可以发现它的主要作用了 Riru - MomoHider (aka IsolatedMagiskHider) 主要针对isolated进程所做的隐藏，MomoH]]></description>
+</item><item>
+    <title>Riru Unshare源码分析</title>
+    <link>https://tcc0lin.github.io/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
+    <pubDate>Tue, 04 Jul 2023 23:54:48 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</guid>
+    <description><![CDATA[一、前言在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zy]]></description>
+</item></channel>
+</rss>

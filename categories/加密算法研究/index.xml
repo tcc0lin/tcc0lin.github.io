@@ -1,0 +1,77 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>加密算法研究 - 分类 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/</link>
+        <description>加密算法研究 - 分类 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 06 Nov 2023 15:00:04 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/" rel="self" type="application/rss+xml" /><item>
+    <title>整数压缩算法理解</title>
+    <link>https://tcc0lin.github.io/%E6%95%B4%E6%95%B0%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</link>
+    <pubDate>Mon, 06 Nov 2023 15:00:04 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E6%95%B4%E6%95%B0%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Zlib压缩算法理解</title>
+    <link>https://tcc0lin.github.io/zlib%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</link>
+    <pubDate>Mon, 06 Nov 2023 14:59:55 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/zlib%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>多种AES算法原理理解</title>
+    <link>https://tcc0lin.github.io/%E5%A4%9A%E7%A7%8Daes%E7%AE%97%E6%B3%95%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
+    <pubDate>Mon, 30 Oct 2023 19:03:37 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E5%A4%9A%E7%A7%8Daes%E7%AE%97%E6%B3%95%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>还原白盒AES密钥的思路</title>
+    <link>https://tcc0lin.github.io/%E8%BF%98%E5%8E%9F%E7%99%BD%E7%9B%92aes%E5%AF%86%E9%92%A5%E7%9A%84%E6%80%9D%E8%B7%AF/</link>
+    <pubDate>Mon, 30 Oct 2023 19:02:09 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E8%BF%98%E5%8E%9F%E7%99%BD%E7%9B%92aes%E5%AF%86%E9%92%A5%E7%9A%84%E6%80%9D%E8%B7%AF/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>基于Chow方案的白盒AES理解</title>
+    <link>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Echow%E6%96%B9%E6%A1%88%E7%9A%84%E7%99%BD%E7%9B%92aes%E7%90%86%E8%A7%A3/</link>
+    <pubDate>Mon, 30 Oct 2023 18:59:38 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Echow%E6%96%B9%E6%A1%88%E7%9A%84%E7%99%BD%E7%9B%92aes%E7%90%86%E8%A7%A3/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Feistel密码结构学习</title>
+    <link>https://tcc0lin.github.io/feistel%E5%AF%86%E7%A0%81%E7%BB%93%E6%9E%84%E5%AD%A6%E4%B9%A0/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/feistel%E5%AF%86%E7%A0%81%E7%BB%93%E6%9E%84%E5%AD%A6%E4%B9%A0/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>从FIPS 197中理解AES算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Efips-197%E4%B8%AD%E7%90%86%E8%A7%A3aes%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Efips-197%E4%B8%AD%E7%90%86%E8%A7%A3aes%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>从FIPS 46-3中理解DES算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[DES是一种对称密钥的块加密算法。”对称密钥”，是因为加密、解密用的密钥是一样的（这不同于RSA等非对称密钥体系）。“块加密”，是因为这种算]]></description>
+</item><item>
+    <title>从RFC1321中理解MD5算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[一、前置知识点MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit） 二、]]></description>
+</item><item>
+    <title>从RFC2040中理解RC5算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[一、RC5算法概述作为同样是由Rivest推出的算法，RC5算法与RC4算法是完全不同的，一个明显的特征是RC5采用的是基于Feistel对]]></description>
+</item></channel>
+</rss>

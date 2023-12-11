@@ -1,0 +1,21 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>SHA1算法 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/sha1%E7%AE%97%E6%B3%95/</link>
+        <description>SHA1算法 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/sha1%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
+    <title>从RFC3174中理解SHA1算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[一、前置知识点总体上来说，SHA1算法和MD5算法很类似（因为它们都属于是针对于信息摘要的哈希算法），大体的算法流程也是基本相同，可以回忆下]]></description>
+</item><item>
+    <title>探讨关于SHA1算法的魔改方式</title>
+    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha1%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha1%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[写法 函数名 常量初始化方式 算法常量 IV K常量表 算法流程 分组数据变化的步函数 非线性函数 每次计算时初始化变量赋值方式]]></description>
+</item></channel>
+</rss>

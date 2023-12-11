@@ -1,0 +1,21 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>CRC32算法 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/crc32%E7%AE%97%E6%B3%95/</link>
+        <description>CRC32算法 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/crc32%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
+    <title>理解CRC32算法</title>
+    <link>https://tcc0lin.github.io/%E7%90%86%E8%A7%A3crc32%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E7%90%86%E8%A7%A3crc32%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[一、CRC算法概述 循环冗余校验（Cyclic Redundancy Check， CRC）是一种根据网络数据包或计算机文件等数据产生简短固定位数校验码的一种信道编码]]></description>
+</item><item>
+    <title>探讨关于CRC32算法的魔改方式</title>
+    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[写法 函数名 算法常量 CRC码表 多项式的二进制 算法流程 CRC码表生成方式]]></description>
+</item></channel>
+</rss>

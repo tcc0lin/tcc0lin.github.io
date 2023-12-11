@@ -1,0 +1,672 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>红米Note11内核编译流程 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="红米Note11内核编译流程" />
+<meta property="og:description" content="前言涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的源码，可以根据自身设备的型号来选择，下面简单描述下编译流程 一" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-06-30T23:50:17+08:00" />
+<meta property="article:modified_time" content="2023-06-30T23:50:17+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="红米Note11内核编译流程"/>
+<meta name="twitter:description" content="前言涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的源码，可以根据自身设备的型号来选择，下面简单描述下编译流程 一"/>
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" /><link rel="prev" href="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/" /><link rel="next" href="https://tcc0lin.github.io/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "红米Note11内核编译流程",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B\/"
+        },"genre": "posts","keywords": "内核编译","wordcount":  2862 ,
+        "url": "https:\/\/tcc0lin.github.io\/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B\/","datePublished": "2023-06-30T23:50:17+08:00","dateModified": "2023-06-30T23:50:17+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#一编译环境搭建">一、编译环境搭建</a>
+          <ul>
+            <li><a href="#1-物料准备">1 物料准备</a></li>
+            <li><a href="#2-工具准备">2 工具准备</a></li>
+          </ul>
+        </li>
+        <li><a href="#二编译错误修复">二、编译错误修复</a>
+          <ul>
+            <li><a href="#1-文件缺失">1 文件缺失</a></li>
+            <li><a href="#2-方法重复定义">2 方法重复定义</a></li>
+            <li><a href="#3-驱动文件缺失">3 驱动文件缺失</a></li>
+          </ul>
+        </li>
+        <li><a href="#三正式编译与boot重打包">三、正式编译与boot重打包</a>
+          <ul>
+            <li><a href="#1-bootimg解包">1 boot.img解包</a></li>
+            <li><a href="#2-内核编译">2 内核编译</a></li>
+            <li><a href="#3-内核替换">3 内核替换</a></li>
+            <li><a href="#4-bootimg重打包">4 boot.img重打包</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">红米Note11内核编译流程</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/"><i class="far fa-folder fa-fw"></i>系统定制</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-30">2023-06-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-30">2023-06-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2862 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 6 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#一编译环境搭建">一、编译环境搭建</a>
+          <ul>
+            <li><a href="#1-物料准备">1 物料准备</a></li>
+            <li><a href="#2-工具准备">2 工具准备</a></li>
+          </ul>
+        </li>
+        <li><a href="#二编译错误修复">二、编译错误修复</a>
+          <ul>
+            <li><a href="#1-文件缺失">1 文件缺失</a></li>
+            <li><a href="#2-方法重复定义">2 方法重复定义</a></li>
+            <li><a href="#3-驱动文件缺失">3 驱动文件缺失</a></li>
+          </ul>
+        </li>
+        <li><a href="#三正式编译与boot重打包">三、正式编译与boot重打包</a>
+          <ul>
+            <li><a href="#1-bootimg解包">1 boot.img解包</a></li>
+            <li><a href="#2-内核编译">2 内核编译</a></li>
+            <li><a href="#3-内核替换">3 内核替换</a></li>
+            <li><a href="#4-bootimg重打包">4 boot.img重打包</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><div class="details admonition note open">
+                <div class="details-summary admonition-title">
+                    <i class="icon fas fa-pencil-alt fa-fwnote"></i>注意<i class="details-icon fas fa-angle-right fa-fw"></i>
+                </div>
+                <div class="details-content">
+                    <div class="admonition-content">
+                        本文最后更新于 <span class="timeago" datetime="2023-06-30T23:50:17" title="June 30, 2023">2023-06-30</span>，文中内容可能已过时。</div>
+                </div>
+            </div><h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource" target="_blank" rel="noopener noreferrer">源码</a>，可以根据自身设备的型号来选择，下面简单描述下编译流程</p>
+<h3 id="一编译环境搭建" class="headerLink">
+    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
+    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
+<li>设备：红米note11（MIUI12 Android11）</li>
+<li>源码：<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource/tree/selene-r-oss" target="_blank" rel="noopener noreferrer">selene版本内核源码</a>
+<blockquote>
+<p>需要注意的是note11(selenes)是国内的叫法，而国际版对应的是红米10(selene)</p>
+</blockquote>
+</li>
+<li>原生boot.img镜像文件，参考<a href="https://xiaomifirmwareupdater.com/miui/selenes/" target="_blank" rel="noopener noreferrer">下载网站</a></li>
+</ul>
+<h4 id="2-工具准备" class="headerLink">
+    <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="header-mark"></a>2 工具准备</h4><ul>
+<li>编译支撑系统：ubuntu18
+<blockquote>
+<p>参照官方文档的版本来的，不过经过测试，使用ubuntu14的话会导致某些三方库安装失败</p>
+</blockquote>
+</li>
+<li>三方库预装
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt-get install git ccache automake flex lzop bison <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>gperf build-essential zip curl zlib1g-dev zlib1g-dev:i386 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>g++-multilib python-networkx libxml2-utils bzip2 libbz2-dev <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>x11proto-core-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>编译工具链准备
+<ul>
+<li>clang：c/c++编译工具</li>
+<li>lineage：交叉编译工具</li>
+</ul>
+</li>
+<li>一键编译脚本
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">CLANG_BIN</span><span class="o">=</span><span class="s2">&#34;clang-r383902/bin&#34;</span>    <span class="o">//</span><span class="err">需要需要路径</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">GCC_BIN</span><span class="o">=</span><span class="s2">&#34;android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-lineage-19.1/bin&#34;</span>    <span class="o">//</span><span class="err">需要需要路径</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&#34;$CLANG_BIN:$GCC_BIN:$PATH&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">export</span> <span class="n">PLATFORM_VERSION</span><span class="o">=</span><span class="mf">11.0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ARCH</span><span class="o">=</span><span class="n">arm64</span> <span class="n">make</span> <span class="n">CC</span><span class="o">=</span><span class="n">clang</span> <span class="n">HOSTCC</span><span class="o">=</span><span class="n">gcc</span> <span class="n">AR</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">ar</span> <span class="n">NM</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">nm</span> <span class="n">OBJCOPY</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">objcopy</span> <span class="n">OBJDUMP</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">objdump</span> <span class="n">STRIP</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">strip</span> <span class="n">O</span><span class="o">=</span><span class="n">out</span> <span class="n">CLANG_TRIPLE</span><span class="o">=</span><span class="n">aarch64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">-</span> <span class="n">CROSS_COMPILE</span><span class="o">=</span><span class="n">aarch64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">androidkernel</span><span class="o">-</span> <span class="n">LD</span><span class="o">=</span><span class="n">ld</span><span class="o">.</span><span class="n">lld</span> <span class="n">selene_defconfig</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ARCH</span><span class="o">=</span><span class="n">arm64</span> <span class="n">make</span> <span class="n">CC</span><span class="o">=</span><span class="n">clang</span> <span class="n">HOSTCC</span><span class="o">=</span><span class="n">gcc</span> <span class="n">AR</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">ar</span> <span class="n">NM</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">nm</span> <span class="n">OBJCOPY</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">objcopy</span> <span class="n">OBJDUMP</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">objdump</span> <span class="n">STRIP</span><span class="o">=</span><span class="n">llvm</span><span class="o">-</span><span class="n">strip</span> <span class="n">O</span><span class="o">=</span><span class="n">out</span> <span class="n">CLANG_TRIPLE</span><span class="o">=</span><span class="n">aarch64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">-</span> <span class="n">CROSS_COMPILE</span><span class="o">=</span><span class="n">aarch64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">androidkernel</span><span class="o">-</span> <span class="n">LD</span><span class="o">=</span><span class="n">ld</span><span class="o">.</span><span class="n">lld</span> <span class="o">-</span><span class="n">j</span> <span class="mi">6</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>boot.img解包打开工具
+<a href="https://github.com/cfig/Android_boot_image_editor" target="_blank" rel="noopener noreferrer">Android_boot_image_editor</a></li>
+</ul>
+<h3 id="二编译错误修复" class="headerLink">
+    <a href="#%e4%ba%8c%e7%bc%96%e8%af%91%e9%94%99%e8%af%af%e4%bf%ae%e5%a4%8d" class="header-mark"></a>二、编译错误修复</h3><h4 id="1-文件缺失" class="headerLink">
+    <a href="#1-%e6%96%87%e4%bb%b6%e7%bc%ba%e5%a4%b1" class="header-mark"></a>1 文件缺失</h4><p>错误提示如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">../drivers/input/touchscreen/mediatek/FT8719P/focaltech_flash.c:60:10: fatal error: &#39;include/firmware/fw_sample.i&#39; file not found
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在drivers/input/touchscreen/mediatek/focaltech_touch/include/firmware目录下添加fw_sample.i文件</p>
+<p>fw_sample.i文件内容从<a href="https://github.com/AOSPA/android_kernel_xiaomi_laurel_sprout/blob/373fd3abc3203d8201b696a3e8dceab30897ba84/drivers/input/touchscreen/focaltech_touch/include/firmware/fw_sample.i" target="_blank" rel="noopener noreferrer">fw_sample.i</a>中复制</p>
+<h4 id="2-方法重复定义" class="headerLink">
+    <a href="#2-%e6%96%b9%e6%b3%95%e9%87%8d%e5%a4%8d%e5%ae%9a%e4%b9%89" class="header-mark"></a>2 方法重复定义</h4><p>错误提示如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">ld.lld: error: duplicate symbol: mtk_vcu_mem_init
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:29 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:29)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(mtk_vcu_mem_init) in archive built-in.o
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:29 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:29)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(.text+0x0) in archive built-in.o
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ld.lld: error: duplicate symbol: mtk_vcu_mem_release
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:53 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:53)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(mtk_vcu_mem_release) in archive built-in.o
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:53 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:53)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(.text+0xBC) in archive built-in.o
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ld.lld: error: duplicate symbol: mtk_vcu_set_buffer
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:100 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:100)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(mtk_vcu_set_buffer) in archive built-in.o
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:100 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:100)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(.text+0x24C) in archive built-in.o
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ld.lld: error: duplicate symbol: mtk_vcu_get_buffer
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:184 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:184)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(mtk_vcu_get_buffer) in archive built-in.o
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:184 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:184)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(.text+0x5D0) in archive built-in.o
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ld.lld: error: duplicate symbol: mtk_vcu_get_page
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at slab.h:522 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../include/linux/slab.h:522)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(mtk_vcu_get_page) in archive built-in.o
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at slab.h:522 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../include/linux/slab.h:522)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(.text+0x748) in archive built-in.o
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ld.lld: error: duplicate symbol: mtk_vcu_free_buffer
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:251 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:251)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(mtk_vcu_free_buffer) in archive built-in.o
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt; defined at mtk_vcodec_mem.c:251 (/home/linhanqiu/proj/Xiaomi_Kernel_OpenSource/out/../drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c:251)
+</span></span><span class="line"><span class="cl">&gt;&gt;&gt;            drivers/media/platform/mtk-vcu/mtk_vcodec_mem.o:(.text+0x850) in archive built-in.o
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>修改参考：<a href="https://github.com/PixelExperience-Devices/kernel_redmi_rosemary/commit/646c084eb3a9a8a155fb39543358a8b399407fa6" target="_blank" rel="noopener noreferrer">重复定义异常</a></p>
+<h4 id="3-驱动文件缺失" class="headerLink">
+    <a href="#3-%e9%a9%b1%e5%8a%a8%e6%96%87%e4%bb%b6%e7%bc%ba%e5%a4%b1" class="header-mark"></a>3 驱动文件缺失</h4><p>原因是未加载wlan相关的驱动，官方代码只是内核相关的，需要将wlan驱动内嵌到内核源码中</p>
+<p>修改参考：<a href="https://github.com/Luquidtester/android_kernel_xiaomi_selene/commits/twelve?before=2757679fc5c2c98db45ef41c3f4d952c8f6ee155&#43;35&amp;branch=twelve&amp;path%5B%5D=drivers&amp;path%5B%5D=misc&amp;path%5B%5D=mediatek&amp;qualified_name=refs%2Fheads%2Ftwelve" target="_blank" rel="noopener noreferrer">驱动异常</a></p>
+<p>复制到Xiaomi_Kernel_OpenSource/drivers/misc/mediatek/connectivity这个目录下面，并且修改connectivity里面的Kconfig文件，增加启用模块编译</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">config</span> <span class="n">WLAN_DRV_BUILD_IN</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">bool</span> <span class="s">&#34;Build Wlan module in kernel&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">default</span> <span class="n">y</span> <span class="c1">//默认启用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">help</span>
+</span></span><span class="line"><span class="cl">	  <span class="n">This</span> <span class="n">will</span> <span class="n">build</span> <span class="n">the</span> <span class="n">wlan</span> <span class="n">driver</span> <span class="n">and</span> <span class="n">the</span> <span class="n">corresponding</span> <span class="n">componenets</span>
+</span></span><span class="line"><span class="cl">	  <span class="n">into</span> <span class="n">the</span> <span class="n">kernel</span><span class="p">.</span>
+</span></span><span class="line"><span class="cl">	  <span class="n">If</span> <span class="n">unsure</span> <span class="n">say</span> <span class="n">n</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="三正式编译与boot重打包" class="headerLink">
+    <a href="#%e4%b8%89%e6%ad%a3%e5%bc%8f%e7%bc%96%e8%af%91%e4%b8%8eboot%e9%87%8d%e6%89%93%e5%8c%85" class="header-mark"></a>三、正式编译与boot重打包</h3><p>将上面的环境、工具以及修复后的源码准备好就可以正式开始编译了，编译的产物是内核，而最终刷入系统的boot.img，因此整个流程大致可以看成如下：</p>
+<p>boot.img解包-&gt;内核编译-&gt;内核替换-&gt;boot.img重打包</p>
+<h4 id="1-bootimg解包" class="headerLink">
+    <a href="#1-bootimg%e8%a7%a3%e5%8c%85" class="header-mark"></a>1 boot.img解包</h4><p>使用Android_boot_image_editor来处理解包打包，先把boot.img放在在Android_boot_image_editor目录下后执行./gradlew unpack命令，下面是输出结果</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Starting a Gradle Daemon <span class="o">(</span>subsequent builds will be faster<span class="o">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">&gt; Task :unpack
+</span></span><span class="line"><span class="cl">20:00:53.716 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.packable.PackableLauncher - <span class="o">[</span>boot.img<span class="o">]</span> will be handled by <span class="o">[</span>BootImgParser<span class="o">]</span>
+</span></span><span class="line"><span class="cl">20:00:53.817 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.packable.PackableLauncher - <span class="s1">&#39;unpack&#39;</span> sequence initialized
+</span></span><span class="line"><span class="cl">20:00:53.820 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.packable.IPackable - deleting build/unzip_boot/ ...
+</span></span><span class="line"><span class="cl">20:00:54.190 <span class="o">[</span>main<span class="o">]</span> INFO  Helper - deleting uiderrors
+</span></span><span class="line"><span class="cl">20:00:54.198 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.packable.BootImgParser - header version <span class="m">2</span>
+</span></span><span class="line"><span class="cl">20:00:54.397 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.bootimg.v2.BootHeaderV2 - BootImgHeader constructor
+</span></span><span class="line"><span class="cl">20:00:54.417 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.Avb - python aosp/avb/avbtool.v1.2.py verify_image --image boot.img
+</span></span><span class="line"><span class="cl">Verifying image boot.img using embedded public key
+</span></span><span class="line"><span class="cl">vbmeta: Successfully verified footer and SHA256_RSA2048 vbmeta struct in boot.img
+</span></span><span class="line"><span class="cl">boot: Successfully verified sha256 <span class="nb">hash</span> of boot.img <span class="k">for</span> image of <span class="m">30773248</span> bytes
+</span></span><span class="line"><span class="cl">20:00:55.460 <span class="o">[</span>main<span class="o">]</span> INFO  KernelExtractor - <span class="o">[</span>aosp/make/tools/extract_kernel.py, --input, build/unzip_boot/kernel, --output-configs, build/unzip_boot/kernel_configs.txt, --output-version, build/unzip_boot/kernel_version.txt<span class="o">]</span>
+</span></span><span class="line"><span class="cl">20:00:55.464 <span class="o">[</span>main<span class="o">]</span> INFO  KernelExtractor - kernel version: <span class="o">[</span>4.14.186<span class="o">]</span>
+</span></span><span class="line"><span class="cl">20:00:55.464 <span class="o">[</span>main<span class="o">]</span> INFO  KernelExtractor - kernel config dumped to : build/unzip_boot/kernel_configs.txt
+</span></span><span class="line"><span class="cl">20:00:56.329 <span class="o">[</span>main<span class="o">]</span> INFO  ZipHelper - decompress<span class="o">(</span>gz<span class="o">)</span> <span class="k">done</span>: build/unzip_boot/ramdisk.img.gz -&gt; build/unzip_boot/ramdisk.img
+</span></span><span class="line"><span class="cl">20:00:56.332 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.bootimg.cpio.AndroidCpio - Cleaning /Users/linhanqiu/Projects/Android_boot_image_editor/build/unzip_boot/root ...
+</span></span><span class="line"><span class="cl">20:00:56.358 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.bootimg.cpio.AndroidCpio -   root/config has improper file mode 555, fix it
+</span></span><span class="line"><span class="cl">20:00:57.293 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.bootimg.cpio.AndroidCpio -   root/system/bin/logd has improper file mode 550, fix it
+</span></span><span class="line"><span class="cl">20:00:57.629 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.bootimg.cpio.AndroidCpio - cpio trailer found, <span class="nv">mode</span><span class="o">=</span>000001ed
+</span></span><span class="line"><span class="cl">20:00:57.631 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.bootimg.Common -  ramdisk extracted : build/unzip_boot/ramdisk.img -&gt; build/unzip_boot/root
+</span></span><span class="line"><span class="cl">20:00:57.647 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.utils.DTC - parsing DTB: build/unzip_boot/dtb
+</span></span><span class="line"><span class="cl">FATAL ERROR: Blob has incorrect magic number
+</span></span><span class="line"><span class="cl">20:00:57.683 <span class="o">[</span>main<span class="o">]</span> ERROR cfig.utils.DTC - can not parse DTB: build/unzip_boot/dtb
+</span></span><span class="line"><span class="cl">20:00:57.687 <span class="o">[</span>main<span class="o">]</span> INFO  avb.AVBInfo - parseFrom<span class="o">(</span>FILE:boot.img<span class="o">)</span> ...
+</span></span><span class="line"><span class="cl">20:00:57.723 <span class="o">[</span>main<span class="o">]</span> INFO  avb.AVBInfo - FILE:boot.img: Glance<span class="o">(</span><span class="nv">footer</span><span class="o">=</span>Footer<span class="o">(</span><span class="nv">versionMajor</span><span class="o">=</span>1, <span class="nv">versionMinor</span><span class="o">=</span>0, <span class="nv">originalImageSize</span><span class="o">=</span>30773248, <span class="nv">vbMetaOffset</span><span class="o">=</span>30773248, <span class="nv">vbMetaSize</span><span class="o">=</span>1600<span class="o">)</span>, <span class="nv">vbMetaOffset</span><span class="o">=</span>30773248<span class="o">)</span>.footer
+</span></span><span class="line"><span class="cl">20:00:57.837 <span class="o">[</span>main<span class="o">]</span> INFO  avb.AVBInfo - VBMeta: boot.img -&gt; build/unzip_boot/boot.avb.json
+</span></span><span class="line"><span class="cl">20:00:58.013 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.Avb - signed with release key: <span class="s1">&#39;Xiaomi Phone&#39;</span> by Mi
+</span></span><span class="line"><span class="cl">20:00:58.028 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.Avb - Found key: PublicKey<span class="o">(</span><span class="nv">device</span><span class="o">=</span><span class="s1">&#39;Xiaomi Phone&#39;</span> by <span class="s1">&#39;Mi&#39;</span>, <span class="nv">algorithm</span><span class="o">=</span><span class="s1">&#39;SHA256_RSA2048&#39;</span>, <span class="nv">sha1</span><span class="o">=</span><span class="s1">&#39;b2a02f1e56e366d727a1a8e089762fe0b91bbc84&#39;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">20:00:58.079 <span class="o">[</span>main<span class="o">]</span> INFO  cfig.bootimg.v2.BootV2 -
+</span></span><span class="line"><span class="cl">                        Unpack Summary of boot.img
+</span></span><span class="line"><span class="cl">┌───────────────────────────────────────┬──────────────────────────────────────┐
+</span></span><span class="line"><span class="cl">│What                                   │Where                                 │
+</span></span><span class="line"><span class="cl">└───────────────────────────────────────┴──────────────────────────────────────┘
+</span></span><span class="line"><span class="cl">┌───────────────────────────────────────┬──────────────────────────────────────┐
+</span></span><span class="line"><span class="cl">│image info                             │build/unzip_boot/boot.json            │
+</span></span><span class="line"><span class="cl">├───────────────────────────────────────┼──────────────────────────────────────┤
+</span></span><span class="line"><span class="cl">│AVB info <span class="o">[</span>verified<span class="o">]</span>                    │build/unzip_boot/boot.avb.json        │
+</span></span><span class="line"><span class="cl">│<span class="se">\-</span>- signing key                        │Xiaomi Phone by Mi                    │
+</span></span><span class="line"><span class="cl">├───────────────────────────────────────┼──────────────────────────────────────┤
+</span></span><span class="line"><span class="cl">│kernel                                 │build/unzip_boot/kernel               │
+</span></span><span class="line"><span class="cl">│<span class="se">\-</span>- version <span class="o">[</span>4.14.186<span class="o">]</span>                 │build/unzip_boot/kernel_version.txt   │
+</span></span><span class="line"><span class="cl">│<span class="se">\-</span>- config                             │build/unzip_boot/kernel_configs.txt   │
+</span></span><span class="line"><span class="cl">├───────────────────────────────────────┼──────────────────────────────────────┤
+</span></span><span class="line"><span class="cl">│ramdisk                                │build/unzip_boot/ramdisk.img.gz       │
+</span></span><span class="line"><span class="cl">│<span class="se">\-</span>- extracted ramdisk rootfs           │build/unzip_boot/root                 │
+</span></span><span class="line"><span class="cl">├───────────────────────────────────────┼──────────────────────────────────────┤
+</span></span><span class="line"><span class="cl">│dtb                                    │build/unzip_boot/dtb                  │
+</span></span><span class="line"><span class="cl">└───────────────────────────────────────┴──────────────────────────────────────┘
+</span></span><span class="line"><span class="cl">20:00:58.159 <span class="o">[</span>main<span class="o">]</span> WARN  cfig.packable.PackableLauncher - <span class="s1">&#39;unpack&#39;</span> sequence completed
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">BUILD SUCCESSFUL in 27s
+</span></span><span class="line"><span class="cl"><span class="m">10</span> actionable tasks: <span class="m">1</span> executed, <span class="m">9</span> up-to-date
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以从日志中看到解包后的文件都放在build/unzip_boot下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">boot.avb.json            dtb                      kernel_configs.txt       ramdisk.img              ramdisk.img_filelist.txt
+</span></span><span class="line"><span class="cl">boot.json                kernel                   kernel_version.txt       ramdisk.img.gz           root
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="2-内核编译" class="headerLink">
+    <a href="#2-%e5%86%85%e6%a0%b8%e7%bc%96%e8%af%91" class="header-mark"></a>2 内核编译</h4><p>编译结果如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">  AR      drivers/misc/mediatek/connectivity/wlan_drv_gen4m/built-in.o
+</span></span><span class="line"><span class="cl">  AR      drivers/misc/mediatek/connectivity/built-in.o
+</span></span><span class="line"><span class="cl">  AR      drivers/misc/mediatek/built-in.o
+</span></span><span class="line"><span class="cl">  AR      drivers/misc/built-in.o
+</span></span><span class="line"><span class="cl">  AR      drivers/built-in.o
+</span></span><span class="line"><span class="cl">  GEN     .version
+</span></span><span class="line"><span class="cl">  CHK     include/generated/compile.h
+</span></span><span class="line"><span class="cl">  UPD     include/generated/compile.h
+</span></span><span class="line"><span class="cl">  CC      init/version.o
+</span></span><span class="line"><span class="cl">  AR      init/built-in.o
+</span></span><span class="line"><span class="cl">  AR      built-in.o
+</span></span><span class="line"><span class="cl">  LD      vmlinux.o
+</span></span><span class="line"><span class="cl">  MODPOST vmlinux.o
+</span></span><span class="line"><span class="cl">  KSYM    .tmp_kallsyms1.o
+</span></span><span class="line"><span class="cl">  KSYM    .tmp_kallsyms2.o
+</span></span><span class="line"><span class="cl">  LD      vmlinux
+</span></span><span class="line"><span class="cl">  SORTEX  vmlinux
+</span></span><span class="line"><span class="cl">  SYSMAP  System.map
+</span></span><span class="line"><span class="cl">  OBJCOPY arch/arm64/boot/Image
+</span></span><span class="line"><span class="cl">  Building modules, stage 2.
+</span></span><span class="line"><span class="cl">  MODPOST <span class="m">4</span> modules
+</span></span><span class="line"><span class="cl">  GZIP    arch/arm64/boot/Image.gz
+</span></span><span class="line"><span class="cl">  DTC     arch/arm64/boot/dts/mediatek/mt6768.dtb
+</span></span><span class="line"><span class="cl">  CAT     arch/arm64/boot/Image.gz-dtb
+</span></span><span class="line"><span class="cl">make<span class="o">[</span>1<span class="o">]</span>: Leaving directory <span class="s1">&#39;/xiaomi_kernel_opensource-selene-r-oss/out&#39;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在out目录下可以看到内核编译产物，具体路径在out/arch/arm64/boot下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">dts  Image  Image.gz  Image.gz-dtb
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>内核文件是Image.gz-dtb，这个是将kenrl和dtb打包在一起
+另外还需要的文件是dts目录下的mt6768.dtb，因为kernel启动时需要配套的dtb文件</p>
+<h4 id="3-内核替换" class="headerLink">
+    <a href="#3-%e5%86%85%e6%a0%b8%e6%9b%bf%e6%8d%a2" class="header-mark"></a>3 内核替换</h4><p>替换kernel和dtb文件</p>
+<h4 id="4-bootimg重打包" class="headerLink">
+    <a href="#4-bootimg%e9%87%8d%e6%89%93%e5%8c%85" class="header-mark"></a>4 boot.img重打包</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./gradlew pack
+</span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+
+        
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2023-06-30</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程" data-hashtags="内核编译"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-hashtag="内核编译"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="红米Note11内核编译流程"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/">内核编译</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/" class="prev" rel="prev" title="重读Magisk内部实现细节4"><i class="fas fa-angle-left fa-fw"></i>重读Magisk内部实现细节4</a>
+            <a href="/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="next" rel="next" title="Riru Unshare源码分析">Riru Unshare源码分析<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.121.1">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>内核改机 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/%E5%86%85%E6%A0%B8%E6%94%B9%E6%9C%BA/</link>
+        <description>内核改机 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 10 Jul 2023 00:10:12 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/%E5%86%85%E6%A0%B8%E6%94%B9%E6%9C%BA/" rel="self" type="application/rss+xml" /><item>
+    <title>基于内核的改机策略</title>
+    <link>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</link>
+    <pubDate>Mon, 10 Jul 2023 00:10:12 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</guid>
+    <description><![CDATA[以红米Note11内核改机为例说明 sys.c：内核版本 statfs.c：文件信息 stat.c：文件信息 readdir.c：目录下的文件列表 o]]></description>
+</item></channel>
+</rss>

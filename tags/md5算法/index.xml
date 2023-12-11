@@ -1,0 +1,21 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>MD5算法 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/md5%E7%AE%97%E6%B3%95/</link>
+        <description>MD5算法 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/md5%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
+    <title>从RFC1321中理解MD5算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[一、前置知识点MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit） 二、]]></description>
+</item><item>
+    <title>探讨关于MD5算法的魔改方式</title>
+    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[写法 函数名 常量初始化方式 算法常量 IV 转换变量 T常量表 算法流程 非线性函数]]></description>
+</item></channel>
+</rss>

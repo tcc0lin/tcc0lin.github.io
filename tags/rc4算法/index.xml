@@ -1,0 +1,21 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>RC4算法 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/rc4%E7%AE%97%E6%B3%95/</link>
+        <description>RC4算法 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/rc4%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
+    <title>从RFC6229中理解RC4算法</title>
+    <link>https://tcc0lin.github.io/%E4%BB%8Erfc6229%E4%B8%AD%E7%90%86%E8%A7%A3rc4%E7%AE%97%E6%B3%95/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc6229%E4%B8%AD%E7%90%86%E8%A7%A3rc4%E7%AE%97%E6%B3%95/</guid>
+    <description><![CDATA[一、RC4概述RC4是在1987年提出，和DES算法一样。是一种对称加密算法，也就是说使用的密钥为单钥（或称为私钥）。但不同于DES算法的是]]></description>
+</item><item>
+    <title>探讨关于RC4算法的魔改方式</title>
+    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[写法 算法常量 S盒长度、值 算法流程 数据交换 流数据异或]]></description>
+</item></channel>
+</rss>

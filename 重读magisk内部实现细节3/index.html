@@ -1,0 +1,1614 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>重读Magisk内部实现细节3 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="重读Magisk内部实现细节3" />
+<meta property="og:description" content="前言Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-06-18T13:33:34+08:00" />
+<meta property="article:modified_time" content="2023-06-18T13:33:34+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="重读Magisk内部实现细节3"/>
+<meta name="twitter:description" content="前言Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide"/>
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" /><link rel="prev" href="https://tcc0lin.github.io/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" /><link rel="next" href="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "重读Magisk内部实现细节3",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823\/"
+        },"genre": "posts","keywords": "Magisk, 源码分析","wordcount":  4215 ,
+        "url": "https:\/\/tcc0lin.github.io\/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823\/","datePublished": "2023-06-18T13:33:34+08:00","dateModified": "2023-06-18T13:33:34+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#一magisk-hide入口">一、Magisk Hide入口</a></li>
+        <li><a href="#二magisk-hide指令分析">二、Magisk Hide指令分析</a>
+          <ul>
+            <li><a href="#1-launch_magiskhide">1 LAUNCH_MAGISKHIDE</a></li>
+            <li><a href="#2-stop_magiskhide">2 STOP_MAGISKHIDE</a></li>
+            <li><a href="#3-add_hidelist">3 ADD_HIDELIST</a></li>
+          </ul>
+        </li>
+        <li><a href="#三magisk-hide原理">三、Magisk Hide原理</a>
+          <ul>
+            <li><a href="#1-信号处理">1 信号处理</a></li>
+            <li><a href="#2-ptrace-zygote">2 ptrace Zygote</a></li>
+            <li><a href="#3-子进程信号处理">3 子进程信号处理</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">重读Magisk内部实现细节3</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/magisk%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>Magisk生态</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-06-18">2023-06-18</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-06-18">2023-06-18</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4215 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#一magisk-hide入口">一、Magisk Hide入口</a></li>
+        <li><a href="#二magisk-hide指令分析">二、Magisk Hide指令分析</a>
+          <ul>
+            <li><a href="#1-launch_magiskhide">1 LAUNCH_MAGISKHIDE</a></li>
+            <li><a href="#2-stop_magiskhide">2 STOP_MAGISKHIDE</a></li>
+            <li><a href="#3-add_hidelist">3 ADD_HIDELIST</a></li>
+          </ul>
+        </li>
+        <li><a href="#三magisk-hide原理">三、Magisk Hide原理</a>
+          <ul>
+            <li><a href="#1-信号处理">1 信号处理</a></li>
+            <li><a href="#2-ptrace-zygote">2 ptrace Zygote</a></li>
+            <li><a href="#3-子进程信号处理">3 子进程信号处理</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><div class="details admonition note open">
+                <div class="details-summary admonition-title">
+                    <i class="icon fas fa-pencil-alt fa-fwnote"></i>注意<i class="details-icon fas fa-angle-right fa-fw"></i>
+                </div>
+                <div class="details-content">
+                    <div class="admonition-content">
+                        本文最后更新于 <span class="timeago" datetime="2023-06-18T13:33:34" title="June 18, 2023">2023-06-18</span>，文中内容可能已过时。</div>
+                </div>
+            </div><h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide当中</p>
+<h3 id="一magisk-hide入口" class="headerLink">
+    <a href="#%e4%b8%80magisk-hide%e5%85%a5%e5%8f%a3" class="header-mark"></a>一、Magisk Hide入口</h3><p>不管是在Magisk Manager中管理Magisk Hide</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-kotlin" data-lang="kotlin"><span class="line"><span class="cl"><span class="k">object</span> <span class="nc">MagiskHide</span> <span class="p">:</span> <span class="nc">BaseSettingsItem</span><span class="p">.</span><span class="n">Toggle</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">override</span> <span class="k">val</span> <span class="py">title</span> <span class="p">=</span> <span class="nc">R</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">magiskhide</span><span class="p">.</span><span class="n">asText</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">override</span> <span class="k">val</span> <span class="py">description</span> <span class="p">=</span> <span class="nc">R</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">settings_magiskhide_summary</span><span class="p">.</span><span class="n">asText</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">override</span> <span class="k">var</span> <span class="py">value</span> <span class="p">=</span> <span class="nc">Config</span><span class="p">.</span><span class="n">magiskHide</span>
+</span></span><span class="line"><span class="cl">        <span class="k">set</span><span class="p">(</span><span class="k">value</span><span class="p">)</span> <span class="p">=</span> <span class="n">setV</span><span class="p">(</span><span class="k">value</span><span class="p">,</span> <span class="k">field</span><span class="p">,</span> <span class="p">{</span> <span class="k">field</span> <span class="p">=</span> <span class="k">it</span> <span class="p">})</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">val</span> <span class="py">cmd</span> <span class="p">=</span> <span class="k">if</span> <span class="p">(</span><span class="k">it</span><span class="p">)</span> <span class="s2">&#34;enable&#34;</span> <span class="k">else</span> <span class="s2">&#34;disable&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="nc">Shell</span><span class="p">.</span><span class="n">su</span><span class="p">(</span><span class="s2">&#34;magiskhide </span><span class="si">$cmd</span><span class="s2">&#34;</span><span class="p">).</span><span class="n">submit</span> <span class="p">{</span> <span class="n">cb</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="n">cb</span><span class="p">.</span><span class="n">isSuccess</span><span class="p">)</span> <span class="nc">Config</span><span class="p">.</span><span class="n">magiskHide</span> <span class="p">=</span> <span class="k">it</span>
+</span></span><span class="line"><span class="cl">                <span class="k">else</span> <span class="k">field</span> <span class="p">=</span> <span class="p">!</span><span class="k">it</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>还是通过adb shell来管理Magisk Hide</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">(</span>base<span class="o">)</span>  大慈大悲观世音菩萨  ~  adb shell
+</span></span><span class="line"><span class="cl">selene:/ $ su
+</span></span><span class="line"><span class="cl">selene:/ <span class="c1"># magiskhide status</span>
+</span></span><span class="line"><span class="cl">MagiskHide is not enabled
+</span></span><span class="line"><span class="cl">1<span class="p">|</span>selene:/ <span class="c1"># magiskhide enable</span>
+</span></span><span class="line"><span class="cl">selene:/ <span class="c1"># magiskhide status</span>
+</span></span><span class="line"><span class="cl">MagiskHide is enabled
+</span></span><span class="line"><span class="cl">selene:/ <span class="c1">#</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>其底层都是通过magiskhide这个二进制文件来触发的，而magiskhide的入口是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// native/jni/magiskhide/magiskhide.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 入口函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">magiskhide_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">usage</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// CLI backwards compatibility
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;-&#39;</span> <span class="o">&amp;&amp;</span> <span class="n">opt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;-&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">opt</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">req</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 选择触发的指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;enable&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">req</span> <span class="o">=</span> <span class="n">LAUNCH_MAGISKHIDE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;disable&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">req</span> <span class="o">=</span> <span class="n">STOP_MAGISKHIDE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;add&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">req</span> <span class="o">=</span> <span class="n">ADD_HIDELIST</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;rm&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">req</span> <span class="o">=</span> <span class="n">RM_HIDELIST</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;ls&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">req</span> <span class="o">=</span> <span class="n">LS_HIDELIST</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;status&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">req</span> <span class="o">=</span> <span class="n">HIDE_STATUS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">opt</span> <span class="o">==</span> <span class="s">&#34;exec&#34;</span><span class="n">sv</span> <span class="o">&amp;&amp;</span> <span class="n">argc</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">xunshare</span><span class="p">(</span><span class="n">CLONE_NEWNS</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">xmount</span><span class="p">(</span><span class="n">nullptr</span><span class="p">,</span> <span class="s">&#34;/&#34;</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n">MS_PRIVATE</span> <span class="o">|</span> <span class="n">MS_REC</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">hide_unmount</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">execvp</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">argv</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if 0</span><span class="c"> &amp;&amp; !ENABLE_INJECT
+</span></span></span><span class="line"><span class="cl"><span class="c">    else if (opt == &#34;test&#34;sv)
+</span></span></span><span class="line"><span class="cl"><span class="c">        test_proc_monitor();
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="k">else</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">usage</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 同样需要和daemon进行交互
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Send request
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">connect_daemon</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write_int</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">MAGISKHIDE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write_int</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">req</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">req</span> <span class="o">==</span> <span class="n">ADD_HIDELIST</span> <span class="o">||</span> <span class="n">req</span> <span class="o">==</span> <span class="n">RM_HIDELIST</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">write_string</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">write_string</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">?</span> <span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">:</span> <span class="s">&#34;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Get response
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">code</span> <span class="o">=</span> <span class="nf">read_int</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">DAEMON_SUCCESS</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_NOT_ENABLED</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;MagiskHide is not enabled</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_IS_ENABLED</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;MagiskHide is enabled</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_ITEM_EXIST</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;Target already exists in hide list</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_ITEM_NOT_EXIST</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;Target does not exist in hide list</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_NO_NS</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;Your kernel doesn&#39;t support mount namespace</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_INVALID_PKG</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;Invalid package / process name</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">ROOT_REQUIRED</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;Root is required for this operation</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">return_code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">DAEMON_ERROR</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;Daemon error</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">DAEMON_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">req</span> <span class="o">==</span> <span class="n">LS_HIDELIST</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">string</span> <span class="n">res</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">read_string</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="nf">empty</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">res</span><span class="p">.</span><span class="nf">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">return_code</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">req</span> <span class="o">==</span> <span class="n">HIDE_STATUS</span> <span class="o">?</span> <span class="p">(</span><span class="n">code</span> <span class="o">==</span> <span class="n">HIDE_IS_ENABLED</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="mi">1</span><span class="p">)</span> <span class="o">:</span> <span class="n">code</span> <span class="o">!=</span> <span class="n">DAEMON_SUCCESS</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>而对于daemon进程来说，处理magiskhide传来的指令，具体的处理逻辑还是在magiskhide.cpp中</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// native/jni/core/daemon.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">request_handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">client</span><span class="p">,</span> <span class="kt">int</span> <span class="n">req_code</span><span class="p">,</span> <span class="n">ucred</span> <span class="n">cred</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="p">(</span><span class="n">req_code</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="nl">MAGISKHIDE</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">magiskhide_handler</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">cred</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// native/jni/magiskhide/magiskhide.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">magiskhide_handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">client</span><span class="p">,</span> <span class="n">ucred</span> <span class="o">*</span><span class="n">cred</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">req</span> <span class="o">=</span> <span class="nf">read_int</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">DAEMON_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// magiskhide启动
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">case</span> <span class="nl">LAUNCH_MAGISKHIDE</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="nf">launch_magiskhide</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// magiskhide关闭
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">case</span> <span class="nl">STOP_MAGISKHIDE</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="nf">stop_magiskhide</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 新增需要隐藏的app
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">case</span> <span class="nl">ADD_HIDELIST</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="nf">add_list</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 移除
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">case</span> <span class="nl">RM_HIDELIST</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="nf">rm_list</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">LS_HIDELIST</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">ls_list</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">HIDE_STATUS</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="nf">hide_enabled</span><span class="p">()</span> <span class="o">?</span> <span class="nl">HIDE_IS_ENABLED</span> <span class="p">:</span> <span class="n">HIDE_NOT_ENABLED</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if ENABLE_INJECT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="k">case</span> <span class="nl">REMOTE_CHECK_HIDE</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="nf">check_uid_map</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">REMOTE_DO_HIDE</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">kill</span><span class="p">(</span><span class="n">cred</span><span class="o">-&gt;</span><span class="n">pid</span><span class="p">,</span> <span class="n">SIGSTOP</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">write_int</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">hide_daemon</span><span class="p">(</span><span class="n">cred</span><span class="o">-&gt;</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">close</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">write_int</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="二magisk-hide指令分析" class="headerLink">
+    <a href="#%e4%ba%8cmagisk-hide%e6%8c%87%e4%bb%a4%e5%88%86%e6%9e%90" class="header-mark"></a>二、Magisk Hide指令分析</h3><h4 id="1-launch_magiskhide" class="headerLink">
+    <a href="#1-launch_magiskhide" class="header-mark"></a>1 LAUNCH_MAGISKHIDE</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// native/jni/magiskhide/hide_utils.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 开启magiskhide
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">launch_magiskhide</span><span class="p">(</span><span class="kt">bool</span> <span class="n">late_props</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 锁申请
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">mutex_guard</span> <span class="nf">lock</span><span class="p">(</span><span class="n">hide_state_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 判断全局变量hide_state的值，如果已经启动直接返回
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">hide_state</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">HIDE_IS_ENABLED</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 检测是否有访问namespace的权限
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="nf">access</span><span class="p">(</span><span class="s">&#34;/proc/self/ns/mnt&#34;</span><span class="p">,</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">HIDE_NO_NS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 复制procfp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">procfp</span> <span class="o">==</span> <span class="n">nullptr</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">procfp</span> <span class="o">=</span> <span class="nf">opendir</span><span class="p">(</span><span class="s">&#34;/proc&#34;</span><span class="p">))</span> <span class="o">==</span> <span class="n">nullptr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">DAEMON_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">LOGI</span><span class="p">(</span><span class="s">&#34;* Enable MagiskHide</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 初始化hide_set并杀死相关进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Initialize the hide list
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">init_list</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">DAEMON_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 替换prop属性
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">hide_sensitive_props</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">late_props</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 针对vendor.boot.verifiedbootstate进行替换
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">hide_late_sensitive_props</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#if !ENABLE_INJECT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="c1">// Start monitoring
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 创建监控线程monitor_thread
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="nf">new_daemon_thread</span><span class="p">(</span><span class="o">&amp;</span><span class="n">proc_monitor</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">DAEMON_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="c1">// 更新当前magiskhide状态
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">hide_state</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 更新settings里的magiskhide配置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">update_hide_config</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 释放锁
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Unlock here or else we&#39;ll be stuck in deadlock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">lock</span><span class="p">.</span><span class="nf">unlock</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 更新uid_proc_map，需要隐藏的app的uid对应进程名
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">update_uid_map</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">DAEMON_SUCCESS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="2-stop_magiskhide" class="headerLink">
+    <a href="#2-stop_magiskhide" class="header-mark"></a>2 STOP_MAGISKHIDE</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// native/jni/magiskhide/hide_utils.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">stop_magiskhide</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mutex_guard</span> <span class="nf">g</span><span class="p">(</span><span class="n">hide_state_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">hide_state</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">LOGI</span><span class="p">(</span><span class="s">&#34;* Disable MagiskHide</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 清理工作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">uid_proc_map</span><span class="p">.</span><span class="nf">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hide_set</span><span class="p">.</span><span class="nf">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if !ENABLE_INJECT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>        <span class="c1">// 向monitor_thread发送自定义信号SIGTERMTHRD
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">pthread_kill</span><span class="p">(</span><span class="n">monitor_thread</span><span class="p">,</span> <span class="n">SIGTERMTHRD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 更新当前magiskhide状态
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">hide_state</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 更新settings里的magiskhide配置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">update_hide_config</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">DAEMON_SUCCESS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="3-add_hidelist" class="headerLink">
+    <a href="#3-add_hidelist" class="header-mark"></a>3 ADD_HIDELIST</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// native/jni/magiskhide/hide_utils.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">add_list</span><span class="p">(</span><span class="kt">int</span> <span class="n">client</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">string</span> <span class="n">pkg</span> <span class="o">=</span> <span class="nf">read_string</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">string</span> <span class="n">proc</span> <span class="o">=</span> <span class="nf">read_string</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="nf">add_list</span><span class="p">(</span><span class="n">pkg</span><span class="p">.</span><span class="nf">data</span><span class="p">(),</span> <span class="n">proc</span><span class="p">.</span><span class="nf">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="n">DAEMON_SUCCESS</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 更新uid_proc_map
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">update_uid_map</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">add_list</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">pkg</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">proc</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">proc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;\0&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">proc</span> <span class="o">=</span> <span class="n">pkg</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">validate</span><span class="p">(</span><span class="n">pkg</span><span class="p">,</span> <span class="n">proc</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">HIDE_INVALID_PKG</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">hide</span> <span class="p">:</span> <span class="n">hide_set</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">hide</span><span class="p">.</span><span class="n">first</span> <span class="o">==</span> <span class="n">pkg</span> <span class="o">&amp;&amp;</span> <span class="n">hide</span><span class="p">.</span><span class="n">second</span> <span class="o">==</span> <span class="n">proc</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">HIDE_ITEM_EXIST</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Add to database
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">char</span> <span class="n">sql</span><span class="p">[</span><span class="mi">4096</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 写入hidelist数据表
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">snprintf</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">sql</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;INSERT INTO hidelist (package_name, process) VALUES(&#39;%s&#39;, &#39;%s&#39;)&#34;</span><span class="p">,</span> <span class="n">pkg</span><span class="p">,</span> <span class="n">proc</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">err</span> <span class="o">=</span> <span class="nf">db_exec</span><span class="p">(</span><span class="n">sql</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">db_err_cmd</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="k">return</span> <span class="n">DAEMON_ERROR</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Critical region
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">mutex_guard</span> <span class="nf">lock</span><span class="p">(</span><span class="n">hide_state_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 更新hide_set
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">add_hide_set</span><span class="p">(</span><span class="n">pkg</span><span class="p">,</span> <span class="n">proc</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">DAEMON_SUCCESS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看出，首先在Magisk Hide中有三个存储结构用来做Magisk Hide的管理工作</p>
+<ul>
+<li>hide_set: 存储需要隐藏功能的包名-进程名</li>
+<li>uid_proc_map: 根据hide_set集合来存储对应App的uid以及进程名映射</li>
+<li>hidelist: 数据表，供展示时使用</li>
+</ul>
+<p>其次，可以看到在Magisk Hide启动时会额外启动monitor_thread这个线程，而这个就是Magisk Hide隐藏功能的核心</p>
+<h3 id="三magisk-hide原理" class="headerLink">
+    <a href="#%e4%b8%89magisk-hide%e5%8e%9f%e7%90%86" class="header-mark"></a>三、Magisk Hide原理</h3><p>跟进monitor_thread</p>
+<h4 id="1-信号处理" class="headerLink">
+    <a href="#1-%e4%bf%a1%e5%8f%b7%e5%a4%84%e7%90%86" class="header-mark"></a>1 信号处理</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// native/jni/magiskhide/proc_monitor.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 设置该线程为monitor_thread，并于后续清理
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">monitor_thread</span> <span class="o">=</span> <span class="nf">pthread_self</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Backup original mask
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 获取当前线程的信号掩码保存在orin_mask
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">sigset_t</span> <span class="n">orig_mask</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">pthread_sigmask</span><span class="p">(</span><span class="n">SIG_SETMASK</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">orig_mask</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 清空信号集并初始化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">sigset_t</span> <span class="n">unblock_set</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigemptyset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">unblock_set</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">unblock_set</span><span class="p">,</span> <span class="n">SIGTERMTHRD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">unblock_set</span><span class="p">,</span> <span class="n">SIGIO</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">unblock_set</span><span class="p">,</span> <span class="n">SIGALRM</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 设置信号处理函数集合
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">sigaction</span> <span class="n">act</span><span class="p">{};</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigfillset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">act</span><span class="p">.</span><span class="n">sa_mask</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">act</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">SIG_IGN</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaction</span><span class="p">(</span><span class="n">SIGTERMTHRD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">act</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaction</span><span class="p">(</span><span class="n">SIGIO</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">act</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaction</span><span class="p">(</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">act</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 防止信号积压处理
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Temporary unblock to clear pending signals
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">pthread_sigmask</span><span class="p">(</span><span class="n">SIG_UNBLOCK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">unblock_set</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">pthread_sigmask</span><span class="p">(</span><span class="n">SIG_SETMASK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">orig_mask</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 使用term_thread来处理SIGTERMTHRD信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">act</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">term_thread</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaction</span><span class="p">(</span><span class="n">SIGTERMTHRD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">act</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 使用inotify_event处理SIGIO信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">act</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">inotify_event</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaction</span><span class="p">(</span><span class="n">SIGIO</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">act</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 使用check_zygote处理SIGALRM信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">act</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="p">[](</span><span class="kt">int</span><span class="p">){</span> <span class="nf">check_zygote</span><span class="p">();</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="nf">sigaction</span><span class="p">(</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">act</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">setup_inotify</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">setup_inotify</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建inotify实例时指定了IN_CLOEXEC标志位，表示将inotify实例设置为 close-on-exec 模式。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 在close-on-exec模式下，当进程调用exec函数时，inotify实例会自动关闭
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">inotify_fd</span> <span class="o">=</span> <span class="nf">xinotify_init1</span><span class="p">(</span><span class="n">IN_CLOEXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">inotify_fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Setup inotify asynchronous I/O
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 设置inotify文件描述符的异步通知和所有权
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">fcntl</span><span class="p">(</span><span class="n">inotify_fd</span><span class="p">,</span> <span class="n">F_SETFL</span><span class="p">,</span> <span class="n">O_ASYNC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">f_owner_ex</span> <span class="n">ex</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">F_OWNER_TID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="n">pid</span> <span class="o">=</span> <span class="nf">gettid</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fcntl</span><span class="p">(</span><span class="n">inotify_fd</span><span class="p">,</span> <span class="n">F_SETOWN_EX</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ex</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 监控/data/system的写入并关闭事件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Monitor packages.xml
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">inotify_add_watch</span><span class="p">(</span><span class="n">inotify_fd</span><span class="p">,</span> <span class="s">&#34;/data/system&#34;</span><span class="p">,</span> <span class="n">IN_CLOSE_WRITE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 监控app_process的被访问的事件，也就是监控App
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Monitor app_process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="nf">access</span><span class="p">(</span><span class="n">APP_PROC</span> <span class="s">&#34;32&#34;</span><span class="p">,</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">inotify_add_watch</span><span class="p">(</span><span class="n">inotify_fd</span><span class="p">,</span> <span class="n">APP_PROC</span> <span class="s">&#34;32&#34;</span><span class="p">,</span> <span class="n">IN_ACCESS</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">access</span><span class="p">(</span><span class="n">APP_PROC</span> <span class="s">&#34;64&#34;</span><span class="p">,</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">inotify_add_watch</span><span class="p">(</span><span class="n">inotify_fd</span><span class="p">,</span> <span class="n">APP_PROC</span> <span class="s">&#34;64&#34;</span><span class="p">,</span> <span class="n">IN_ACCESS</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">inotify_add_watch</span><span class="p">(</span><span class="n">inotify_fd</span><span class="p">,</span> <span class="n">APP_PROC</span><span class="p">,</span> <span class="n">IN_ACCESS</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个部分主要做的事是</p>
+<ul>
+<li>设置信号处理函数，信号分别是SIGTERMTHRD、SIGIO、SIGALRM</li>
+<li>启动inotify，fd写入inotify_fd，监控/system/bin/app_process的access事件，重点在于packages.xml文件的写入</li>
+</ul>
+<h4 id="2-ptrace-zygote" class="headerLink">
+    <a href="#2-ptrace-zygote" class="header-mark"></a>2 ptrace Zygote</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">check_zygote</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">is_zygote_done</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果获取到zygote，则每250ms发送SIGALRM信号触发check_zygote
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Periodic scan every 250ms
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">timeval</span> <span class="n">val</span> <span class="p">{</span> <span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">.</span><span class="n">tv_usec</span> <span class="o">=</span> <span class="mi">250000</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="n">itimerval</span> <span class="n">interval</span> <span class="p">{</span> <span class="p">.</span><span class="n">it_interval</span> <span class="o">=</span> <span class="n">val</span><span class="p">,</span> <span class="p">.</span><span class="n">it_value</span> <span class="o">=</span> <span class="n">val</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">setitimer</span><span class="p">(</span><span class="n">ITIMER_REAL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">interval</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">check_zygote</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">crawl_procfs</span><span class="p">([](</span><span class="kt">int</span> <span class="n">pid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">512</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">snprintf</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="s">&#34;/proc/%d/cmdline&#34;</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">FILE</span> <span class="o">*</span><span class="n">f</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s">&#34;re&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">fgets</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">f</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nf">strncmp</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s">&#34;zygote&#34;</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nf">parse_ppid</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">new_zygote</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">fclose</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nf">is_zygote_done</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Stop periodic scanning
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">timeval</span> <span class="n">val</span> <span class="p">{</span> <span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">.</span><span class="n">tv_usec</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">        <span class="n">itimerval</span> <span class="n">interval</span> <span class="p">{</span> <span class="p">.</span><span class="n">it_interval</span> <span class="o">=</span> <span class="n">val</span><span class="p">,</span> <span class="p">.</span><span class="n">it_value</span> <span class="o">=</span> <span class="n">val</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">setitimer</span><span class="p">(</span><span class="n">ITIMER_REAL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">interval</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="n">DIR</span> <span class="o">*</span><span class="n">procfp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// procfp在之前已经被赋值成/proc目录
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">crawl_procfs</span><span class="p">(</span><span class="k">const</span> <span class="n">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 指针重置到目录起始位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">rewinddir</span><span class="p">(</span><span class="n">procfp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">crawl_procfs</span><span class="p">(</span><span class="n">procfp</span><span class="p">,</span> <span class="n">fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 遍历proc目录，获取zygote的pid
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">crawl_procfs</span><span class="p">(</span><span class="n">DIR</span> <span class="o">*</span><span class="n">dir</span><span class="p">,</span> <span class="k">const</span> <span class="n">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">dirent</span> <span class="o">*</span><span class="n">dp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">pid</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">((</span><span class="n">dp</span> <span class="o">=</span> <span class="nf">readdir</span><span class="p">(</span><span class="n">dir</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">pid</span> <span class="o">=</span> <span class="nf">parse_int</span><span class="p">(</span><span class="n">dp</span><span class="o">-&gt;</span><span class="n">d_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nf">fn</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">new_zygote</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">stat</span> <span class="n">st</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 读取zygote挂载的namespace信息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="nf">read_ns</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">st</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 更新或者存储st到zygote_map
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">zygote_map</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">zygote_map</span><span class="p">.</span><span class="nf">end</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Update namespace info
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">=</span> <span class="n">st</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;proc_monitor: ptrace zygote PID=[%d]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">zygote_map</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ptrace attach到zygote进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_ATTACH</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 等待zygote进程状态变化 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">waitpid</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n">__WALL</span> <span class="o">|</span> <span class="n">__WNOTHREAD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="err">监控</span><span class="n">zygote</span> <span class="n">fork</span><span class="o">/</span><span class="n">vfork</span><span class="o">/</span><span class="n">exit事件</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_SETOPTIONS</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">PTRACE_O_TRACEFORK</span> <span class="o">|</span> <span class="n">PTRACE_O_TRACEVFORK</span> <span class="o">|</span> <span class="n">PTRACE_O_TRACEEXIT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 恢复zygote进程执行
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_CONT</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这一部分的作用是轮询判断zygote进程是否启动以及ptrace attach到zygote以便于监控到zygote的fork操作（引导启动App进程）</p>
+<h4 id="3-子进程信号处理" class="headerLink">
+    <a href="#3-%e5%ad%90%e8%bf%9b%e7%a8%8b%e4%bf%a1%e5%8f%b7%e5%a4%84%e7%90%86" class="header-mark"></a>3 子进程信号处理</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span><span class="lnt">199
+</span><span class="lnt">200
+</span><span class="lnt">201
+</span><span class="lnt">202
+</span><span class="lnt">203
+</span><span class="lnt">204
+</span><span class="lnt">205
+</span><span class="lnt">206
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">;;)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 解除信号阻塞，获取信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">pthread_sigmask</span><span class="p">(</span><span class="n">SIG_UNBLOCK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">unblock_set</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取待处理的pid
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="kt">int</span> <span class="n">pid</span> <span class="o">=</span> <span class="nf">waitpid</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">status</span><span class="p">,</span> <span class="n">__WALL</span> <span class="o">|</span> <span class="n">__WNOTHREAD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">errno</span> <span class="o">==</span> <span class="n">ECHILD</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Nothing to wait yet, sleep and wait till signal interruption
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;proc_monitor: nothing to monitor, wait for signal</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">struct</span> <span class="n">timespec</span> <span class="n">ts</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="n">INT_MAX</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">tv_nsec</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="p">};</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">nanosleep</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ts</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">pthread_sigmask</span><span class="p">(</span><span class="n">SIG_SETMASK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">orig_mask</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">WIFSTOPPED</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="cm">/* Ignore if not ptrace-stop */</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">DETACH_AND_CONT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取pid的信号和事件类型
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">event</span> <span class="o">=</span> <span class="nf">WEVENT</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">signal</span> <span class="o">=</span> <span class="nf">WSTOPSIG</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">signal</span> <span class="o">==</span> <span class="n">SIGTRAP</span> <span class="o">&amp;&amp;</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">msg</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_GETEVENTMSG</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 处理zygote消息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">zygote_map</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Zygote event
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">switch</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_FORK</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_VFORK</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;zygote forked: [%lu]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="c1">// 表示收到的是zygote消息，监控到zygote fork子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="c1">// 此时设置attaches map中app pid的值为true
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="n">attaches</span><span class="p">[</span><span class="n">msg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_EXIT</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;zygote exited with status: [%lu]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">[[</span><span class="n">fallthrough</span><span class="p">]];</span>
+</span></span><span class="line"><span class="cl">                <span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">zygote_map</span><span class="p">.</span><span class="nf">erase</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">DETACH_AND_CONT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// 处理用户App消息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">switch</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// 表示收到的是子进程的信号，有新的App启动，开始执行隐藏操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">case</span> <span class="nl">PTRACE_EVENT_CLONE</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;create new threads: [%lu]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="n">attaches</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nf">check_pid</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_EXEC</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">case</span> <span class="nl">PTRACE_EVENT_EXIT</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;exit or execve</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">[[</span><span class="n">fallthrough</span><span class="p">]];</span>
+</span></span><span class="line"><span class="cl">                <span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">DETACH_AND_CONT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_CONT</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">signal</span> <span class="o">==</span> <span class="n">SIGSTOP</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 收到暂停信号，继续监控
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">attaches</span><span class="p">[</span><span class="n">pid</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Double check if this is actually a process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">attaches</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="nf">is_process</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">attaches</span><span class="p">[</span><span class="n">pid</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// This is a process, continue monitoring
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;SIGSTOP from child</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_SETOPTIONS</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">PTRACE_O_TRACECLONE</span> <span class="o">|</span> <span class="n">PTRACE_O_TRACEEXEC</span> <span class="o">|</span> <span class="n">PTRACE_O_TRACEEXIT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_CONT</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// This is a thread, do NOT monitor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;SIGSTOP from thread</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">DETACH_AND_CONT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 恢复执行
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// Not caused by us, resend signal
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">xptrace</span><span class="p">(</span><span class="n">PTRACE_CONT</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n">signal</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;signal [%d]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">signal</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">bool</span> <span class="nf">check_pid</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">path</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">cmdline</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">stat</span> <span class="n">st</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">sprintf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#34;/proc/%d&#34;</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nf">stat</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">st</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Process died unexpectedly, ignore
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">detach_pid</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取进程pid
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">uid</span> <span class="o">=</span> <span class="n">st</span><span class="p">.</span><span class="n">st_uid</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// UID hasn&#39;t changed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">uid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 读取/proc/pid/cmdline的内容到cmdline
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">sprintf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#34;/proc/%d/cmdline&#34;</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="nf">open_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#34;re&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fgets</span><span class="p">(</span><span class="n">cmdline</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">cmdline</span><span class="p">),</span> <span class="n">f</span><span class="p">.</span><span class="nf">get</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Process died unexpectedly, ignore
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">detach_pid</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 必须是用户进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">cmdline</span> <span class="o">==</span> <span class="s">&#34;zygote&#34;</span><span class="n">sv</span> <span class="o">||</span> <span class="n">cmdline</span> <span class="o">==</span> <span class="s">&#34;zygote32&#34;</span><span class="n">sv</span> <span class="o">||</span> <span class="n">cmdline</span> <span class="o">==</span> <span class="s">&#34;zygote64&#34;</span><span class="n">sv</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cmdline</span> <span class="o">==</span> <span class="s">&#34;usap32&#34;</span><span class="n">sv</span> <span class="o">||</span> <span class="n">cmdline</span> <span class="o">==</span> <span class="s">&#34;usap64&#34;</span><span class="n">sv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果非需要隐藏的进程，忽略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">is_hide_target</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">cmdline</span><span class="p">,</span> <span class="mi">95</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">goto</span> <span class="n">not_target</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 同上
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Ensure ns is separated
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">read_ns</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">st</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">zit</span> <span class="p">:</span> <span class="n">zygote_map</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">zit</span><span class="p">.</span><span class="n">second</span><span class="p">.</span><span class="n">st_ino</span> <span class="o">==</span> <span class="n">st</span><span class="p">.</span><span class="n">st_ino</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">zit</span><span class="p">.</span><span class="n">second</span><span class="p">.</span><span class="n">st_dev</span> <span class="o">==</span> <span class="n">st</span><span class="p">.</span><span class="n">st_dev</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// ns not separated, abort
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nf">LOGW</span><span class="p">(</span><span class="s">&#34;proc_monitor: skip [%s] PID=[%d] UID=[%d]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">cmdline</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">uid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">goto</span> <span class="n">not_target</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Detach but the process should still remain stopped
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// The hide daemon will resume the process after hiding it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">LOGI</span><span class="p">(</span><span class="s">&#34;proc_monitor: [%s] PID=[%d] UID=[%d]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">cmdline</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">uid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">detach_pid</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">SIGSTOP</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">hide_daemon</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">not_target</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">PTRACE_LOG</span><span class="p">(</span><span class="s">&#34;[%s] is not our target</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">cmdline</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">detach_pid</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">hide_daemon</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nf">fork_dont_care</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 关键隐藏动作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">hide_unmount</span><span class="p">(</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Send resume signal
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">SIGCONT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">hide_unmount</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 切换目标pid的namespace
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nf">switch_mnt_ns</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;hide: handling PID=[%d]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">val</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 读取selinux的模式
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">xopen</span><span class="p">(</span><span class="n">SELINUX_ENFORCE</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">xxread</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">val</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">val</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Permissive
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 如果是宽容模式，则限制访问
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="sc">&#39;0&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">chmod</span><span class="p">(</span><span class="n">SELINUX_ENFORCE</span><span class="p">,</span> <span class="mo">0640</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">chmod</span><span class="p">(</span><span class="n">SELINUX_POLICY</span><span class="p">,</span> <span class="mo">0440</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">targets</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Unmount dummy skeletons and /sbin links
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// android11中为/dev/xxxx
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">targets</span><span class="p">.</span><span class="nf">push_back</span><span class="p">(</span><span class="n">MAGISKTMP</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">parse_mnt</span><span class="p">(</span><span class="s">&#34;/proc/self/mounts&#34;</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">mntent</span> <span class="o">*</span><span class="n">mentry</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">TMPFS_MNT</span><span class="p">(</span><span class="n">system</span><span class="p">)</span> <span class="o">||</span> <span class="nf">TMPFS_MNT</span><span class="p">(</span><span class="n">vendor</span><span class="p">)</span> <span class="o">||</span> <span class="nf">TMPFS_MNT</span><span class="p">(</span><span class="n">product</span><span class="p">)</span> <span class="o">||</span> <span class="nf">TMPFS_MNT</span><span class="p">(</span><span class="n">system_ext</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="n">targets</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="n">mentry</span><span class="o">-&gt;</span><span class="n">mnt_dir</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">s</span> <span class="p">:</span> <span class="nf">reversed</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">lazy_unmount</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="nf">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="n">targets</span><span class="p">.</span><span class="nf">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Unmount all Magisk created mounts
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">parse_mnt</span><span class="p">(</span><span class="s">&#34;/proc/self/mounts&#34;</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">mntent</span> <span class="o">*</span><span class="n">mentry</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">strstr</span><span class="p">(</span><span class="n">mentry</span><span class="o">-&gt;</span><span class="n">mnt_fsname</span><span class="p">,</span> <span class="n">BLOCKDIR</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="n">targets</span><span class="p">.</span><span class="nf">emplace_back</span><span class="p">(</span><span class="n">mentry</span><span class="o">-&gt;</span><span class="n">mnt_dir</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">s</span> <span class="p">:</span> <span class="nf">reversed</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">lazy_unmount</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="nf">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>核心步骤，上一步已经ptrace attach到zygote，当监听到App启动了，切换到目标进程的namespace并执行umount操作</p>
+</div>
+
+        
+
+
+<h2>相关内容</h2>
+<div class="related-container">
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/">重读Magisk内部实现细节4</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/">Magisk检测方式</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/">重读Magisk内部实现细节2</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/">重读Magisk内部实现细节</a>
+            </h2>
+        </div>
+    
+
+</div>
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2023-06-18</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3" data-hashtags="Magisk,源码分析"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-hashtag="Magisk"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/" data-title="重读Magisk内部实现细节3"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/magisk/">Magisk</a>,&nbsp;<a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" class="prev" rel="prev" title="Magisk检测方式"><i class="fas fa-angle-left fa-fw"></i>Magisk检测方式</a>
+            <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/" class="next" rel="next" title="重读Magisk内部实现细节4">重读Magisk内部实现细节4<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.121.1">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>

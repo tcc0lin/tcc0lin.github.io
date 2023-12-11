@@ -1,0 +1,21 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>riru - 分类 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/categories/riru/</link>
+        <description>riru - 分类 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 18 Aug 2023 09:07:13 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/riru/" rel="self" type="application/rss+xml" /><item>
+    <title>探讨新的riru加载方式</title>
+    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Fri, 18 Aug 2023 09:07:13 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[前言最近在搜索riru相关的项目时偶尔发现了HuskyDG riru项目中的一个实验性想法 也就是更换加载riru的方式，众所周知，riru.s]]></description>
+</item><item>
+    <title>Riru原理理解</title>
+    <link>https://tcc0lin.github.io/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
+    <pubDate>Tue, 25 Jul 2023 11:34:11 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
+    <description><![CDATA[一、前言什么是riru？正如它Github上面所提到的那样，它提供的能力是允许模块能够将自己的代码注入到各个App进程或者是system_s]]></description>
+</item></channel>
+</rss>

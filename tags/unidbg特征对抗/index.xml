@@ -1,0 +1,14 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>unidbg特征对抗 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/unidbg%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97/</link>
+        <description>unidbg特征对抗 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 31 Aug 2023 18:29:34 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/unidbg%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97/" rel="self" type="application/rss+xml" /><item>
+    <title>Unidbg特征检测汇总</title>
+    <link>https://tcc0lin.github.io/unidbg%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/</link>
+    <pubDate>Thu, 31 Aug 2023 18:29:34 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/unidbg%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/</guid>
+    <description><![CDATA[Unidbg对抗点 不支持信号机制 内存布局检测 Unidbg通过Java实现JNI的逻辑，导致JNI函数地址控制在0xfffe0000L - 0xf]]></description>
+</item></channel>
+</rss>

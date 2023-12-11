@@ -1,0 +1,487 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>StrongR Frid特征魔改 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="StrongR Frid特征魔改" />
+<meta property="og:description" content="一、背景参考项目strongR-frida对frida14.2.18进行魔改 二、魔改点patch文件总共有八个，分别是对八个主要特征进行魔改" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-08-01T18:30:58+08:00" />
+<meta property="article:modified_time" content="2023-08-01T18:30:58+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="StrongR Frid特征魔改"/>
+<meta name="twitter:description" content="一、背景参考项目strongR-frida对frida14.2.18进行魔改 二、魔改点patch文件总共有八个，分别是对八个主要特征进行魔改"/>
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" /><link rel="prev" href="https://tcc0lin.github.io/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/" /><link rel="next" href="https://tcc0lin.github.io/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "StrongR Frid特征魔改",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9\/"
+        },"genre": "posts","keywords": "frida特征魔改","wordcount":  981 ,
+        "url": "https:\/\/tcc0lin.github.io\/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9\/","datePublished": "2023-08-01T18:30:58+08:00","dateModified": "2023-08-01T18:30:58+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一背景">一、背景</a></li>
+        <li><a href="#二魔改点">二、魔改点</a>
+          <ul>
+            <li><a href="#1-0001-strongr-frida-string_frida_rpcpatch">1 0001-strongR-frida-string_frida_rpc.patch</a>
+              <ul>
+                <li><a href="#原理">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#2-0002-strongr-frida-io_re_frida_serverpatch">2 0002-strongR-frida-io_re_frida_server.patch</a>
+              <ul>
+                <li><a href="#原理-1">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#3-0003-strongr-frida-pipe_linjectorpatch">3 0003-strongR-frida-pipe_linjector.patch</a>
+              <ul>
+                <li><a href="#原理-2">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#4-0004-strongr-frida-io_frida_agent_sopatch">4 0004-strongR-frida-io_frida_agent_so.patch</a>
+              <ul>
+                <li><a href="#原理-3">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#5-0005-strongr-frida-symbol_frida_agent_mainpatch">5 0005-strongR-frida-symbol_frida_agent_main.patch</a>
+              <ul>
+                <li><a href="#原理-4">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#6-0006-strongr-frida-thread_gum_js_looppatch">6 0006-strongR-frida-thread_gum_js_loop.patch</a>
+              <ul>
+                <li><a href="#原理-5">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#7-0007-strongr-frida-thread_gmainpatch">7 0007-strongR-frida-thread_gmain.patch</a>
+              <ul>
+                <li><a href="#原理-6">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#8-0008-strongr-frida-protocol_unexpected_commandpatch">8 0008-strongR-frida-protocol_unexpected_command.patch</a>
+              <ul>
+                <li><a href="#原理-7">原理</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">StrongR Frid特征魔改</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/frida%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>frida生态</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-08-01">2023-08-01</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-08-01">2023-08-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 981 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一背景">一、背景</a></li>
+        <li><a href="#二魔改点">二、魔改点</a>
+          <ul>
+            <li><a href="#1-0001-strongr-frida-string_frida_rpcpatch">1 0001-strongR-frida-string_frida_rpc.patch</a>
+              <ul>
+                <li><a href="#原理">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#2-0002-strongr-frida-io_re_frida_serverpatch">2 0002-strongR-frida-io_re_frida_server.patch</a>
+              <ul>
+                <li><a href="#原理-1">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#3-0003-strongr-frida-pipe_linjectorpatch">3 0003-strongR-frida-pipe_linjector.patch</a>
+              <ul>
+                <li><a href="#原理-2">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#4-0004-strongr-frida-io_frida_agent_sopatch">4 0004-strongR-frida-io_frida_agent_so.patch</a>
+              <ul>
+                <li><a href="#原理-3">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#5-0005-strongr-frida-symbol_frida_agent_mainpatch">5 0005-strongR-frida-symbol_frida_agent_main.patch</a>
+              <ul>
+                <li><a href="#原理-4">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#6-0006-strongr-frida-thread_gum_js_looppatch">6 0006-strongR-frida-thread_gum_js_loop.patch</a>
+              <ul>
+                <li><a href="#原理-5">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#7-0007-strongr-frida-thread_gmainpatch">7 0007-strongR-frida-thread_gmain.patch</a>
+              <ul>
+                <li><a href="#原理-6">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#8-0008-strongr-frida-protocol_unexpected_commandpatch">8 0008-strongR-frida-protocol_unexpected_command.patch</a>
+              <ul>
+                <li><a href="#原理-7">原理</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><div class="details admonition note open">
+                <div class="details-summary admonition-title">
+                    <i class="icon fas fa-pencil-alt fa-fwnote"></i>注意<i class="details-icon fas fa-angle-right fa-fw"></i>
+                </div>
+                <div class="details-content">
+                    <div class="admonition-content">
+                        本文最后更新于 <span class="timeago" datetime="2023-08-01T18:30:58" title="August 1, 2023">2023-08-01</span>，文中内容可能已过时。</div>
+                </div>
+            </div><h3 id="一背景" class="headerLink">
+    <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="header-mark"></a>一、背景</h3><p>参考项目<a href="https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core" target="_blank" rel="noopener noreferrer">strongR-frida</a>对frida14.2.18进行魔改</p>
+<h3 id="二魔改点" class="headerLink">
+    <a href="#%e4%ba%8c%e9%ad%94%e6%94%b9%e7%82%b9" class="header-mark"></a>二、魔改点</h3><p><a href="https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core" target="_blank" rel="noopener noreferrer">patch文件</a>总共有八个，分别是对八个主要特征进行魔改，下面逐个分析下</p>
+<h4 id="1-0001-strongr-frida-string_frida_rpcpatch" class="headerLink">
+    <a href="#1-0001-strongr-frida-string_frida_rpcpatch" class="header-mark"></a>1 0001-strongR-frida-string_frida_rpc.patch</h4><p>针对frida-core/lib/interfaces/session.vala文件，修改了frida:rpc字符串，使用了base64 decode来隐去字符串的特征</p>
+<p>具体修改如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// .add_string_value (&#34;frida:rpc&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">.</span><span class="nx">add_string_value</span> <span class="p">((</span><span class="nx">string</span><span class="p">)</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Base64</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s2">&#34;ZnJpZGE6cnBj=&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// if (raw_message.index_of (&#34;\&#34;frida:rpc\&#34;&#34;) == -1)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="nx">raw_message</span><span class="p">.</span><span class="nx">index_of</span> <span class="p">((</span><span class="nx">string</span><span class="p">)</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Base64</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s2">&#34;ImZyaWRhOnJwYyI=&#34;</span><span class="p">))</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// if (type == null || type != &#34;frida:rpc&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="nx">type</span> <span class="o">!=</span> <span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Base64</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s2">&#34;ZnJpZGE6cnBj=&#34;</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86" class="header-mark"></a>原理</h5><p>应对内存特征的扫描，App会对关键代码的可读代码段进行扫描，而<code>frida:rpc</code>是很明显的字符串特征，因此对字符串做了一层base来隐藏</p>
+<h4 id="2-0002-strongr-frida-io_re_frida_serverpatch" class="headerLink">
+    <a href="#2-0002-strongr-frida-io_re_frida_serverpatch" class="header-mark"></a>2 0002-strongR-frida-io_re_frida_server.patch</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// private const string DEFAULT_DIRECTORY = &#34;re.frida.server&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">private</span> <span class="kr">static</span> <span class="nx">string</span> <span class="nx">DEFAULT_DIRECTORY</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">private</span> <span class="kr">static</span> <span class="kr">int</span> <span class="nx">main</span> <span class="p">(</span><span class="nx">string</span><span class="p">[]</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">DEFAULT_DIRECTORY</span> <span class="o">=</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Uuid</span><span class="p">.</span><span class="nx">string_random</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Environment</span><span class="p">.</span><span class="nx">init</span> <span class="p">();</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-1" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-1" class="header-mark"></a>原理</h5><p>re.frida.server是frida在启动时会创建的目录，里面有包括frida-agent等关键so，这些会在App的maps里面被检测到</p>
+<h4 id="3-0003-strongr-frida-pipe_linjectorpatch" class="headerLink">
+    <a href="#3-0003-strongr-frida-pipe_linjectorpatch" class="header-mark"></a>3 0003-strongR-frida-pipe_linjector.patch</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// self-&gt;fifo_path = g_strdup_printf (&#34;%s/linjector-%u&#34;, self-&gt;temp_path, self-&gt;id);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">self</span><span class="o">-&gt;</span><span class="n">fifo_path</span> <span class="o">=</span> <span class="nf">g_strdup_printf</span> <span class="p">(</span><span class="s">&#34;%s/%p%u&#34;</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">temp_path</span><span class="p">,</span> <span class="n">self</span> <span class="p">,</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">id</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-2" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-2" class="header-mark"></a>原理</h5><p>linjector是linux上提供注入能力的工具，当frida注入进程时，可以在App的/proc/self/fd看到某个fd的软链是指向frida目录的linjector的</p>
+<h4 id="4-0004-strongr-frida-io_frida_agent_sopatch" class="headerLink">
+    <a href="#4-0004-strongr-frida-io_frida_agent_sopatch" class="header-mark"></a>4 0004-strongR-frida-io_frida_agent_so.patch</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// agent = new AgentDescriptor (PathTemplate (&#34;frida-agent-&lt;arch&gt;.so&#34;),
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">random_prefix</span> <span class="o">=</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Uuid</span><span class="p">.</span><span class="nx">string_random</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="nx">agent</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AgentDescriptor</span> <span class="p">(</span><span class="nx">PathTemplate</span> <span class="p">(</span><span class="nx">random_prefix</span> <span class="o">+</span> <span class="s2">&#34;-&lt;arch&gt;.so&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// new AgentResource (&#34;frida-agent-arm.so&#34;, new Bytes.static (emulated_arm.data), tempdir),
+</span></span></span><span class="line"><span class="cl"><span class="c1">// new AgentResource (&#34;frida-agent-arm64.so&#34;, new Bytes.static (emulated_arm64.data), tempdir),
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">new</span> <span class="nx">AgentResource</span> <span class="p">(</span><span class="nx">random_prefix</span> <span class="o">+</span> <span class="s2">&#34;-arm.so&#34;</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Bytes</span><span class="p">.</span><span class="kr">static</span> <span class="p">(</span><span class="nx">emulated_arm</span><span class="p">.</span><span class="nx">data</span><span class="p">),</span> <span class="nx">tempdir</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="k">new</span> <span class="nx">AgentResource</span> <span class="p">(</span><span class="nx">random_prefix</span> <span class="o">+</span> <span class="s2">&#34;-arm64.so&#34;</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Bytes</span><span class="p">.</span><span class="kr">static</span> <span class="p">(</span><span class="nx">emulated_arm64</span><span class="p">.</span><span class="nx">data</span><span class="p">),</span> <span class="nx">tempdir</span><span class="p">),</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-3" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-3" class="header-mark"></a>原理</h5><p>和第二个是相同的，都是在maps中存在的特征</p>
+<h4 id="5-0005-strongr-frida-symbol_frida_agent_mainpatch" class="headerLink">
+    <a href="#5-0005-strongr-frida-symbol_frida_agent_mainpatch" class="header-mark"></a>5 0005-strongR-frida-symbol_frida_agent_main.patch</h4><p>针对frida-agent特征进行隐藏</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// frida-core/src/agent-container.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var main_func_found = container.module.symbol (&#34;frida_agent_main&#34;, out main_func_symbol);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">main_func_found</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">module</span><span class="p">.</span><span class="nx">symbol</span> <span class="p">(</span><span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">out</span> <span class="nx">main_func_symbol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/darwin/darwin-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// unowned string entrypoint = &#34;frida_agent_main&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">unowned</span> <span class="nx">string</span> <span class="nx">entrypoint</span> <span class="o">=</span> <span class="s2">&#34;main&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/tests/test-injector.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// yield injector.inject_library_file (process.id, path, &#34;frida_agent_main&#34;, data);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">yield</span> <span class="nx">injector</span><span class="p">.</span><span class="nx">inject_library_file</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/tests/test-agent.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var main_func_found = module.symbol (&#34;frida_agent_main&#34;, out main_func_symbol);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">main_func_found</span> <span class="o">=</span> <span class="nx">module</span><span class="p">.</span><span class="nx">symbol</span> <span class="p">(</span><span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">out</span> <span class="nx">main_func_symbol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/linux/linux-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// string entrypoint = &#34;frida_agent_main&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">string</span> <span class="nx">entrypoint</span> <span class="o">=</span> <span class="s2">&#34;main&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/windows/windows-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var id = yield winjector.inject_library_resource (pid, agent, &#34;frida_agent_main&#34;, t.remote_address, cancellable);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">winjector</span><span class="p">.</span><span class="nx">inject_library_resource</span> <span class="p">(</span><span class="nx">pid</span><span class="p">,</span> <span class="nx">agent</span><span class="p">,</span> <span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">remote_address</span><span class="p">,</span> <span class="nx">cancellable</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/qnx/qnx-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var id = yield qinjector.inject_library_resource (pid, agent_desc, &#34;frida_agent_main&#34;, t.remote_address,
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 				cancellable);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">qinjector</span><span class="p">.</span><span class="nx">inject_library_resource</span> <span class="p">(</span><span class="nx">pid</span><span class="p">,</span> <span class="nx">agent_desc</span><span class="p">,</span> <span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">remote_address</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">cancellable</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-4" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-4" class="header-mark"></a>原理</h5><p>定位所有frida_agent_main进行隐藏</p>
+<h4 id="6-0006-strongr-frida-thread_gum_js_looppatch" class="headerLink">
+    <a href="#6-0006-strongr-frida-thread_gum_js_looppatch" class="header-mark"></a>6 0006-strongR-frida-thread_gum_js_loop.patch</h4><p>无</p>
+<h5 id="原理-5" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-5" class="header-mark"></a>原理</h5><h4 id="7-0007-strongr-frida-thread_gmainpatch" class="headerLink">
+    <a href="#7-0007-strongr-frida-thread_gmainpatch" class="header-mark"></a>7 0007-strongR-frida-thread_gmain.patch</h4><p>无</p>
+<h5 id="原理-6" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-6" class="header-mark"></a>原理</h5><h4 id="8-0008-strongr-frida-protocol_unexpected_commandpatch" class="headerLink">
+    <a href="#8-0008-strongr-frida-protocol_unexpected_commandpatch" class="header-mark"></a>8 0008-strongR-frida-protocol_unexpected_command.patch</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="k">case</span> <span class="s2">&#34;OPEN&#34;</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="s2">&#34;CLSE&#34;</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="s2">&#34;WRTE&#34;</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// throw new Error.PROTOCOL (&#34;Unexpected command&#34;);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">break</span><span class="p">;</span> <span class="c1">//throw new Error.PROTOCOL (&#34;Unexpected command&#34;);
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-7" class="headerLink">
+    <a href="#%e5%8e%9f%e7%90%86-7" class="header-mark"></a>原理</h5></div>
+
+        
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2023-08-01</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改" data-hashtags="frida特征魔改"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-hashtag="frida特征魔改"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frid特征魔改"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/">frida特征魔改</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/" class="prev" rel="prev" title="Super分区定制"><i class="fas fa-angle-left fa-fw"></i>Super分区定制</a>
+            <a href="/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" class="next" rel="next" title="Maps特征检测对抗">Maps特征检测对抗<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.121.1">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>

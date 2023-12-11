@@ -1,0 +1,42 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>frida生态 - 分类 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/categories/frida%E7%94%9F%E6%80%81/</link>
+        <description>frida生态 - 分类 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 21 Aug 2023 19:29:35 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/frida%E7%94%9F%E6%80%81/" rel="self" type="application/rss+xml" /><item>
+    <title>Frida特征检测汇总</title>
+    <link>https://tcc0lin.github.io/frida%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/</link>
+    <pubDate>Mon, 21 Aug 2023 19:29:35 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/frida%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/</guid>
+    <description><![CDATA[端口检测：frida默认暴露端口为27047 通信方式检测：frida使用App低频使用的D-Bus通信协议来进行通信，可以遍历端口对它们发送]]></description>
+</item><item>
+    <title>Frida源码编译说明</title>
+    <link>https://tcc0lin.github.io/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/</link>
+    <pubDate>Sun, 20 Aug 2023 22:27:03 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/</guid>
+    <description><![CDATA[一、编译环境搭建这次编译的目标版本是14.2.18 1 物料准备 设备：红米note11（MIUI12 Android11） frida源码：http]]></description>
+</item><item>
+    <title>Frida特征对抗案例2</title>
+    <link>https://tcc0lin.github.io/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/</link>
+    <pubDate>Sat, 19 Aug 2023 23:05:38 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/</guid>
+    <description><![CDATA[一、资源准备 com.jingdong.app.mall 12.1.0 pixel2 android10.0 frida 14.2.2 二、分析思路使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试 1 2 3 Spawned `com.jingdong.app.mall`. Resuming main thread! [Pixel 2::com.jingdong.app.mall]-&gt; Process terminated [Pixel 2::com.jingdong.app.mall]-&gt; 通常]]></description>
+</item><item>
+    <title>Frida特征对抗案例1</title>
+    <link>https://tcc0lin.github.io/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B1/</link>
+    <pubDate>Fri, 18 Aug 2023 22:43:19 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B1/</guid>
+    <description><![CDATA[一、资源准备 tv.danmaku.bili 7.43.0 pixel2 android10.0 frida 14.2.2 二、分析思路使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试 1 2 3 Spawned `tv.danmaku.bili`. Resuming main thread! [Pixel 2::tv.danmaku.bili]-&gt; Process terminated [Pixel 2::tv.danmaku.bili]-&gt; 通常]]></description>
+</item><item>
+    <title>StrongR Frid特征魔改</title>
+    <link>https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</link>
+    <pubDate>Tue, 01 Aug 2023 18:30:58 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</guid>
+    <description><![CDATA[一、背景参考项目strongR-frida对frida14.2.18进行魔改 二、魔改点patch文件总共有八个，分别是对八个主要特征进行魔改]]></description>
+</item></channel>
+</rss>

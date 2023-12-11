@@ -1,0 +1,42 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>源码分析 - 标签 - tcc0lin&#39;s blog</title>
+        <link>https://tcc0lin.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
+        <description>源码分析 - 标签 - tcc0lin&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="self" type="application/rss+xml" /><item>
+    <title>重读Magisk内部实现细节4</title>
+    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</link>
+    <pubDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</guid>
+    <description><![CDATA[前言Magisk内部实现细节的第四篇，在前两篇着重讲了Magisk的三个重要功能的两个&mdash;su以及hide，这篇就来分析下最后一个]]></description>
+</item><item>
+    <title>重读Magisk内部实现细节3</title>
+    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</link>
+    <pubDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</guid>
+    <description><![CDATA[前言Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide]]></description>
+</item><item>
+    <title>Magisk检测方式</title>
+    <link>https://tcc0lin.github.io/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Sat, 17 Jun 2023 11:45:41 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[一、市面现存的检测方式 1 Magisk Detector来源于Magisk Detector（现已停止维护），我们可以从官方的细节文档看出它之前的设计思路 ，]]></description>
+</item><item>
+    <title>重读Magisk内部实现细节2</title>
+    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</link>
+    <pubDate>Sun, 11 Jun 2023 11:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</guid>
+    <description><![CDATA[前言承接上文，经过Magisk修补后的boot.img在启动引导过程中为了实现Root的功能很关键的一步在于patch了init.rc和se]]></description>
+</item><item>
+    <title>重读Magisk内部实现细节</title>
+    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/</link>
+    <pubDate>Fri, 09 Jun 2023 22:36:47 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/</guid>
+    <description><![CDATA[前言相信Magisk对于移动安全从业者来说都不陌生了，我虽然也是一个版本接着一个版本的使用，但是始终没有去摸透Magisk的生态，希望借助之]]></description>
+</item></channel>
+</rss>
