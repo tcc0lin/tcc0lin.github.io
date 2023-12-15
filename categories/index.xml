@@ -3,7 +3,14 @@
         <title>Categories - 分类 - tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/categories/</link>
         <description>Categories - 分类 - tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 15 Dec 2023 22:34:31 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+    <title>Android ROOT</title>
+    <link>https://tcc0lin.github.io/categories/android-root/</link>
+    <pubDate>Fri, 15 Dec 2023 22:34:31 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/categories/android-root/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
     <title>KeyAttestation</title>
     <link>https://tcc0lin.github.io/categories/keyattestation/</link>
     <pubDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</pubDate><author>
@@ -65,13 +72,6 @@
     <pubDate>Sun, 06 Aug 2023 14:39:32 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/categories/%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/</guid>
-    <description><![CDATA[]]></description>
-</item><item>
-    <title>Magisk生态</title>
-    <link>https://tcc0lin.github.io/categories/magisk%E7%94%9F%E6%80%81/</link>
-    <pubDate>Sun, 16 Jul 2023 00:28:08 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/categories/magisk%E7%94%9F%E6%80%81/</guid>
     <description><![CDATA[]]></description>
 </item></channel>
 </rss>
