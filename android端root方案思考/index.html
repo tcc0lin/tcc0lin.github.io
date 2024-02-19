@@ -7,35 +7,35 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noodp" />
-    <title>系统so防篡改思考 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="系统so防篡改思考" />
+    <title>Android端Root方案思考 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Android端Root方案思考" />
 <meta property="og:description" content="" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2024-02-19T10:16:00+08:00" />
-<meta property="article:modified_time" content="2024-02-19T10:16:00+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+<meta property="og:url" content="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-02-19T10:24:58+08:00" />
+<meta property="article:modified_time" content="2024-02-19T10:24:58+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
 
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="系统so防篡改思考"/>
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Android端Root方案思考"/>
 <meta name="twitter:description" content=""/>
 <meta name="application-name" content="DoIt">
 <meta name="apple-mobile-web-app-title" content="DoIt">
 
 <meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" /><link rel="prev" href="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" /><link rel="next" href="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" /><link rel="prev" href="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" />
 <link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
         <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
         <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
-        "headline": "系统so防篡改思考",
+        "headline": "Android端Root方案思考",
         "inLanguage": "zh-CN",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "https:\/\/tcc0lin.github.io\/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83\/"
-        },"genre": "posts","keywords": "文件防篡改","wordcount":  0 ,
-        "url": "https:\/\/tcc0lin.github.io\/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83\/","datePublished": "2024-02-19T10:16:00+08:00","dateModified": "2024-02-19T10:16:00+08:00","publisher": {
+            "@id": "https:\/\/tcc0lin.github.io\/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83\/"
+        },"genre": "posts","wordcount":  0 ,
+        "url": "https:\/\/tcc0lin.github.io\/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83\/","datePublished": "2024-02-19T10:24:58+08:00","dateModified": "2024-02-19T10:24:58+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -130,10 +130,10 @@
             <div class="container"><div class="toc" id="toc-auto">
         <h2 class="toc-title">目录</h2>
         <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
-    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">系统so防篡改思考</h1><div class="post-meta">
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android端Root方案思考</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
-                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%AE%89%E5%85%A8%E9%98%B2%E6%8A%A4/"><i class="far fa-folder fa-fw"></i>安全防护</a></span></div>
+                </span></div>
             <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-02-19">2024-02-19</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-02-19">2024-02-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 0 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 0 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
@@ -154,23 +154,22 @@
             <div class="post-info-license"></div>
         </div>
         <div class="post-info-line">
-            <div class="post-info-md"><span><a class="link-to-mardown" href=/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
                     </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
                     </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
                     </span></div>
-            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考" data-hashtags="文件防篡改"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-hashtag="文件防篡改"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" data-title="系统so防篡改思考"><span class="fab fa-evernote fa-fw"></span></button></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" data-title="Android端Root方案思考"><span class="fab fa-evernote fa-fw"></span></button></div>
         </div>
     </div>
 
     <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/%E6%96%87%E4%BB%B6%E9%98%B2%E7%AF%A1%E6%94%B9/">文件防篡改</a></section>
+        <section class="post-tags"></section>
         <section>
             <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
         </section>
     </div>
 
-    <div class="post-nav"><a href="/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" class="prev" rel="prev" title="SKRoot原理分析"><i class="fas fa-angle-left fa-fw"></i>SKRoot原理分析</a>
-            <a href="/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/" class="next" rel="next" title="Android端Root方案思考">Android端Root方案思考<i class="fas fa-angle-right fa-fw"></i></a></div>
+    <div class="post-nav"><a href="/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" class="prev" rel="prev" title="系统so防篡改思考"><i class="fas fa-angle-left fa-fw"></i>系统so防篡改思考</a></div>
 </div>
 <div id="comments"></div></article></div>
         </main><footer class="footer">
