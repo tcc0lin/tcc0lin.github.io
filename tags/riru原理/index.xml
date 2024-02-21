@@ -1,8 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>riru原理 - 标签 - tcc0lin&#39;s blog</title>
+        <title>Riru原理 - 标签 - tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/tags/riru%E5%8E%9F%E7%90%86/</link>
-        <description>riru原理 - 标签 - tcc0lin&#39;s blog</description>
+        <description>Riru原理 - 标签 - tcc0lin&#39;s blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 18 Aug 2023 09:07:13 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/riru%E5%8E%9F%E7%90%86/" rel="self" type="application/rss+xml" /><item>
     <title>探讨新的riru加载方式</title>
     <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/</link>
