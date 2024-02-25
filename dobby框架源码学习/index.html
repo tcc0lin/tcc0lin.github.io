@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noodp" />
     <title>Dobby框架源码学习 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Dobby框架源码学习" />
-<meta property="og:description" content="" />
+<meta property="og:description" content="Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://tcc0lin.github.io/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2024-02-21T14:54:39+08:00" />
@@ -16,7 +16,7 @@
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Dobby框架源码学习"/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:description" content="Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了"/>
 <meta name="application-name" content="DoIt">
 <meta name="apple-mobile-web-app-title" content="DoIt">
 
@@ -34,7 +34,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/"
-        },"genre": "posts","keywords": "源码分析","wordcount":  0 ,
+        },"genre": "posts","keywords": "源码分析","wordcount":  4074 ,
         "url": "https:\/\/tcc0lin.github.io\/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/","datePublished": "2024-02-21T14:54:39+08:00","dateModified": "2024-02-21T14:54:39+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -129,19 +129,958 @@
 <main class="main">
             <div class="container"><div class="toc" id="toc-auto">
         <h2 class="toc-title">目录</h2>
-        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一从调试角度看dobby的原理">一、从调试角度看Dobby的原理</a></li>
+        <li><a href="#参考">参考</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
     </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Dobby框架源码学习</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/"><i class="far fa-folder fa-fw"></i>Hook框架学习</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 0 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 0 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4074 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
                     <span><i class="details-icon fas fa-angle-right"></i></span>
                 </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
-            </div><div class="content" id="content"></div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一从调试角度看dobby的原理">一、从调试角度看Dobby的原理</a></li>
+        <li><a href="#参考">参考</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了解，但是还是没有从源码上入手分析，这次想完整的梳理下Dobby的实现流程，也就有了这次的文章。</p>
+<p>对于Dobby这类inline hook框架的认识，大多数人都知道它的实现是在hook函数时，修改了函数对应汇编代码的前几行指令实现跳转到自定义函数上的，那么就沿着这个角度先从汇编调试上看看Dobby从我们原始程序的修改</p>
+<h3 id="一从调试角度看dobby的原理" class="headerLink">
+    <a href="#%e4%b8%80%e4%bb%8e%e8%b0%83%e8%af%95%e8%a7%92%e5%ba%a6%e7%9c%8bdobby%e7%9a%84%e5%8e%9f%e7%90%86" class="header-mark"></a>一、从调试角度看Dobby的原理</h3><p>使用一个最基本的Demo来作为调试对象</p>
+<blockquote>
+<p>注意：这里直接将Dobby源码作用三方库引入，目前Dobby最新Commit无法编译，需要切换到Commit：0932d69c320e786672361ab53825ba8f4245e9d3</p>
+</blockquote>
+<p>对Java_com_example_dobbytest1_MainActivity_stringFromJNI方法的hook，hook后主动回调原始方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;jni.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;Dobby/include/dobby.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;logging.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="n">JNIEXPORT</span> <span class="n">jstring</span> <span class="n">JNICALL</span>
+</span></span><span class="line"><span class="cl"><span class="n">Java_com_example_dobbytest1_MainActivity_stringFromJNI</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobject</span> <span class="cm">/* this */</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">hello</span> <span class="o">=</span> <span class="s">&#34;no be hooked&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">env</span><span class="o">-&gt;</span><span class="n">NewStringUTF</span><span class="p">(</span><span class="n">hello</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="nf">jstring</span> <span class="p">(</span><span class="o">*</span><span class="n">orgin_Java_com_example_dobbytest1_MainActivity_stringFromJNI</span><span class="p">)(</span><span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span><span class="n">jobject</span> <span class="cm">/* this */</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="n">JNIEXPORT</span> <span class="n">jstring</span> <span class="n">JNICALL</span>
+</span></span><span class="line"><span class="cl"><span class="n">new_Java_com_example_dobbytest1_MainActivity_stringFromJNI</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobject</span> <span class="n">jobject1</span><span class="cm">/* this */</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">LOGI</span><span class="p">(</span><span class="s">&#34;be hooked&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">orgin_Java_com_example_dobbytest1_MainActivity_stringFromJNI</span><span class="p">(</span><span class="n">env</span><span class="p">,</span><span class="n">jobject1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="k">static</span> <span class="kt">void</span> <span class="n">ctor</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 构造函数 静态插入hook调用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 原函数名
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 新函数地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 旧函数地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">DobbyHook</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">DobbySymbolResolver</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">&#34;Java_com_example_dobbytest1_MainActivity_stringFromJNI&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">              <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">new_Java_com_example_dobbytest1_MainActivity_stringFromJNI</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">              <span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">orgin_Java_com_example_dobbytest1_MainActivity_stringFromJNI</span>
+</span></span><span class="line"><span class="cl">              <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可能是由于Android Studio版本太新，没找到在Android Studio上使用lldb调试的方式，我就直接使用命令行来操作了</p>
+<p>设备端开启lldb-server并启动App</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./lldb-server platform --listen <span class="s1">&#39;*:1234&#39;</span> --server
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>本地使用lldb连接</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">选择调试平台
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> platform <span class="k">select</span> remote-android
+</span></span><span class="line"><span class="cl">  Platform: remote-android
+</span></span><span class="line"><span class="cl"> Connected: no
+</span></span><span class="line"><span class="cl">连接lldb-server创建的端口
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> platform connect connect://:1234
+</span></span><span class="line"><span class="cl">  Platform: remote-android
+</span></span><span class="line"><span class="cl">    Triple: aarch64-unknown-linux-android
+</span></span><span class="line"><span class="cl">OS Version: <span class="m">30</span> <span class="o">(</span>4.14.186-perf-g42f990859d35<span class="o">)</span>
+</span></span><span class="line"><span class="cl">  Hostname: localhost
+</span></span><span class="line"><span class="cl"> Connected: yes
+</span></span><span class="line"><span class="cl">WorkingDir: /data/local/tmp
+</span></span><span class="line"><span class="cl">    Kernel: <span class="c1">#1 SMP PREEMPT Tue Mar 1 19:09:49 CST 2022</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>此时设备端会显示Connection established.，接下里就可以attach对应的pid进行调试了</p>
+<p>首先确定断点位置，因为代码中是对Java_com_example_dobbytest1_MainActivity_stringFromJNI进行hook，那么可以断点在该方法的首个指令地址
+<figure><a class="lightgallery" href="https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png" title="https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png" data-thumbnail="https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png">
+        <img
+            
+            loading="lazy"
+            src="https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png"
+            srcset="https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png, https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png 1.5x, https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png 2x"
+            sizes="auto"
+            alt="https://raw.githubusercontent.com/tcc0lin/self_pic/main/WX20240225-152526%402x.png">
+    </a></figure></p>
+<p>地址计算可以参考下面的方法</p>
+<ol>
+<li>通过image list -o -f命令获取so的基地址 0x00000070ece49000</li>
+<li>基地址+偏移=断点地址 0x00000070ece49000+0x000000000000b110=0x70ece54110</li>
+</ol>
+<p>0xb110位置断点</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> br <span class="nb">set</span> -a 0x70ece54110
+</span></span><span class="line"><span class="cl">Breakpoint 1: <span class="nv">address</span> <span class="o">=</span> 0x00000070ece54110
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>得到结果如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">断点信息
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = breakpoint 1.1</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece54110</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece54110: adrp   x17, <span class="m">0</span>
+</span></span><span class="line"><span class="cl">    0x70ece54114: add    x17, x17, <span class="c1">#0x290</span>
+</span></span><span class="line"><span class="cl">    0x70ece54118: br     x17
+</span></span><span class="line"><span class="cl">    0x70ece5411c: mrs    x8, TPIDR_EL0
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl">对比原始汇编代码
+</span></span><span class="line"><span class="cl">.text:000000000000B110                 SUB             SP, SP, <span class="c1">#0x70</span>
+</span></span><span class="line"><span class="cl">.text:000000000000B114                 STP             X29, X30, <span class="o">[</span>SP,#0x60+var_s0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">.text:000000000000B118                 ADD             X29, SP, <span class="c1">#0x60</span>
+</span></span><span class="line"><span class="cl">.text:000000000000B11C                 MRS             X8, <span class="c1">#3, c13, c0, #2</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到Java_com_example_dobbytest1_MainActivity_stringFromJNI函数的头三个指令发生了变化，原本的栈拉伸、寄存器入栈保护等固定指令被替换了，替换成了针对x17地址的跳转指令，看下x17对应的值是什么</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step over</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece54114</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece54114: add    x17, x17, <span class="c1">#0x290</span>
+</span></span><span class="line"><span class="cl">    0x70ece54118: br     x17
+</span></span><span class="line"><span class="cl">    0x70ece5411c: mrs    x8, TPIDR_EL0
+</span></span><span class="line"><span class="cl">    0x70ece54120: ldr    x8, <span class="o">[</span>x8, <span class="c1">#0x28]</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> register <span class="nb">read</span> x17
+</span></span><span class="line"><span class="cl">     <span class="nv">x17</span> <span class="o">=</span> 0x00000070ece54000
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> n
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step over</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece54118</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece54118: br     x17
+</span></span><span class="line"><span class="cl">    0x70ece5411c: mrs    x8, TPIDR_EL0
+</span></span><span class="line"><span class="cl">    0x70ece54120: ldr    x8, <span class="o">[</span>x8, <span class="c1">#0x28]</span>
+</span></span><span class="line"><span class="cl">    0x70ece54124: stur   x8, <span class="o">[</span>x29, <span class="c1">#-0x8]</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> register <span class="nb">read</span> x17
+</span></span><span class="line"><span class="cl">     <span class="nv">x17</span> <span class="o">=</span> 0x00000070ece54290
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>x17对应的值是0x00000070ece54290，偏移是0xb290，也就对应着new_Java_com_example_dobbytest1_MainActivity_stringFromJNI方法
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/WX20240225-154141@2x.png?raw=true">
+    </a></figure>
+那么从这里可以看出，Dobby对函数的hook是通过修改原始函数的前三个指令来完成跳转的，那么指令替换的逻辑是什么我们后续在源码分析中继续跟踪，现在接着往下看</p>
+<p>在替换函数中最后我们主动回调了原始函数，在0xb2cc的位置可以再下个断点</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> br <span class="nb">set</span> -a 0x70ece542cc
+</span></span><span class="line"><span class="cl">Breakpoint 3: <span class="nv">address</span> <span class="o">=</span> 0x00000070ece542cc
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> c
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> resuming
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = breakpoint 3.1</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece542cc</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece542cc: blr    x8
+</span></span><span class="line"><span class="cl">    0x70ece542d0: ldp    x29, x30, <span class="o">[</span>sp, <span class="c1">#0x10]</span>
+</span></span><span class="line"><span class="cl">    0x70ece542d4: add    sp, sp, <span class="c1">#0x20</span>
+</span></span><span class="line"><span class="cl">    0x70ece542d8: ret
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> s
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x0000007183933000</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x7183933000: sub    sp, sp, <span class="c1">#0x70</span>
+</span></span><span class="line"><span class="cl">    0x7183933004: stp    x29, x30, <span class="o">[</span>sp, <span class="c1">#0x60]</span>
+</span></span><span class="line"><span class="cl">    0x7183933008: add    x29, sp, <span class="c1">#0x60</span>
+</span></span><span class="line"><span class="cl">    0x718393300c: ldr    x17, <span class="c1">#0x8</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> s
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x0000007183933004</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x7183933004: stp    x29, x30, <span class="o">[</span>sp, <span class="c1">#0x60]</span>
+</span></span><span class="line"><span class="cl">    0x7183933008: add    x29, sp, <span class="c1">#0x60</span>
+</span></span><span class="line"><span class="cl">    0x718393300c: ldr    x17, <span class="c1">#0x8</span>
+</span></span><span class="line"><span class="cl">    0x7183933010: br     x17
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在0xb2cc的位置是跳回到原始函数，从调试信息中可以看到，首先是栈拉伸、寄存器入栈保护</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> s
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x000000718393300c</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x718393300c: ldr    x17, <span class="c1">#0x8</span>
+</span></span><span class="line"><span class="cl">    0x7183933010: br     x17
+</span></span><span class="line"><span class="cl">    0x7183933014: .long  0xece5411c                <span class="p">;</span> unknown opcode
+</span></span><span class="line"><span class="cl">    0x7183933018: udf    <span class="c1">#0x70</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> register <span class="nb">read</span> x17
+</span></span><span class="line"><span class="cl">     <span class="nv">x17</span> <span class="o">=</span> 0x0000007185f8e970  libc.so<span class="sb">`</span>pthread_mutex_unlock
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> s
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x0000007183933010</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x7183933010: br     x17
+</span></span><span class="line"><span class="cl">    0x7183933014: .long  0xece5411c                <span class="p">;</span> unknown opcode
+</span></span><span class="line"><span class="cl">    0x7183933018: udf    <span class="c1">#0x70</span>
+</span></span><span class="line"><span class="cl">    0x718393301c: udf    <span class="c1">#0x0</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> register <span class="nb">read</span> x17
+</span></span><span class="line"><span class="cl">     <span class="nv">x17</span> <span class="o">=</span> 0x00000070ece5411c
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> s
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece5411c</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece5411c: mrs    x8, TPIDR_EL0
+</span></span><span class="line"><span class="cl">    0x70ece54120: ldr    x8, <span class="o">[</span>x8, <span class="c1">#0x28]</span>
+</span></span><span class="line"><span class="cl">    0x70ece54124: stur   x8, <span class="o">[</span>x29, <span class="c1">#-0x8]</span>
+</span></span><span class="line"><span class="cl">    0x70ece54128: stur   x0, <span class="o">[</span>x29, <span class="c1">#-0x28]</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到，x17被重新赋予了地址，而这个地址是原始函数的第四行指令，但是这个地址又是怎么被保存下来的呢？同样放在后续源码分析中</p>
+<p>在原始函数中继续执行代码会最终走到</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = breakpoint 4.1</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece54188</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece54188: ldr    x0, <span class="o">[</span>sp, <span class="c1">#0x18]</span>
+</span></span><span class="line"><span class="cl">    0x70ece5418c: ldp    x29, x30, <span class="o">[</span>sp, <span class="c1">#0x60]</span>
+</span></span><span class="line"><span class="cl">    0x70ece54190: add    sp, sp, <span class="c1">#0x70</span>
+</span></span><span class="line"><span class="cl">    0x70ece54194: ret
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>完成寄存器恢复以及栈平衡，接着返回到新函数流程内</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece54194</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece54194: ret
+</span></span><span class="line"><span class="cl">    0x70ece54198: str    x0, <span class="o">[</span>sp, <span class="c1">#0x28]</span>
+</span></span><span class="line"><span class="cl">    0x70ece5419c: mov    w8, w1
+</span></span><span class="line"><span class="cl">    0x70ece541a0: str    w8, <span class="o">[</span>sp, <span class="c1">#0x24]</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span><span class="line"><span class="cl"><span class="o">(</span>lldb<span class="o">)</span> s
+</span></span><span class="line"><span class="cl">Process <span class="m">20161</span> stopped
+</span></span><span class="line"><span class="cl">* thread <span class="c1">#1, name = &#39;mple.dobbytest1&#39;, stop reason = instruction step into</span>
+</span></span><span class="line"><span class="cl">    frame <span class="c1">#0: 0x00000070ece542d0</span>
+</span></span><span class="line"><span class="cl">-&gt;  0x70ece542d0: ldp    x29, x30, <span class="o">[</span>sp, <span class="c1">#0x10]</span>
+</span></span><span class="line"><span class="cl">    0x70ece542d4: add    sp, sp, <span class="c1">#0x20</span>
+</span></span><span class="line"><span class="cl">    0x70ece542d8: ret
+</span></span><span class="line"><span class="cl">    0x70ece542dc: stp    x29, x30, <span class="o">[</span>sp, <span class="c1">#-0x10]!</span>
+</span></span><span class="line"><span class="cl">Target 0: <span class="o">(</span>app_process64<span class="o">)</span> stopped.
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>下面以完整的流程图来展示Dobby inline hook的流程
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true, https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/%E6%9C%AA%E5%91%BD%E5%90%8D%E7%BB%98%E5%9B%BE.jpg?raw=true">
+    </a></figure>
+###二、源码分析
+源码上从dobby.h的DobbyHook入手，源码实现在</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// source/InterceptRouting/Routing/FunctionInlineHook/FunctionInlineHook.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">PUBLIC</span> <span class="kt">int</span> <span class="nf">DobbyHook</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">address</span><span class="p">,</span> <span class="n">dobby_dummy_func_t</span> <span class="n">replace_func</span><span class="p">,</span> <span class="n">dobby_dummy_func_t</span> <span class="o">*</span><span class="n">origin_func</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(ANDROID)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="kt">void</span> <span class="o">*</span><span class="n">page_align_address</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">ALIGN_FLOOR</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">OSMemory</span><span class="o">::</span><span class="n">PageSize</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">OSMemory</span><span class="o">::</span><span class="n">SetPermission</span><span class="p">(</span><span class="n">page_align_address</span><span class="p">,</span> <span class="n">OSMemory</span><span class="o">::</span><span class="n">PageSize</span><span class="p">(),</span> <span class="n">kReadExecute</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">  <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;----- [DobbyHook:%p] -----&#34;</span><span class="p">,</span> <span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// check if already register
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">Interceptor</span><span class="o">::</span><span class="n">SharedInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">find</span><span class="p">((</span><span class="n">addr_t</span><span class="p">)</span><span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">entry</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ERROR_LOG</span><span class="p">(</span><span class="s">&#34;%p already been hooked.&#34;</span><span class="p">,</span> <span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">entry</span> <span class="o">=</span> <span class="k">new</span> <span class="n">InterceptEntry</span><span class="p">(</span><span class="n">kFunctionInlineHook</span><span class="p">,</span> <span class="p">(</span><span class="n">addr_t</span><span class="p">)</span><span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="o">*</span><span class="n">routing</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FunctionInlineHookRouting</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">replace_func</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">routing</span><span class="o">-&gt;</span><span class="n">Prepare</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">routing</span><span class="o">-&gt;</span><span class="n">DispatchRouting</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// set origin func entry with as relocated instructions
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">origin_func</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">origin_func</span> <span class="o">=</span> <span class="p">(</span><span class="n">dobby_dummy_func_t</span><span class="p">)</span><span class="n">entry</span><span class="o">-&gt;</span><span class="n">relocated_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(__APPLE__) &amp;&amp; defined(__arm64__)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="o">*</span><span class="n">origin_func</span> <span class="o">=</span> <span class="n">pac_sign</span><span class="p">(</span><span class="o">*</span><span class="n">origin_func</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">routing</span><span class="o">-&gt;</span><span class="n">Commit</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">Interceptor</span><span class="o">::</span><span class="n">SharedInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="n">entry</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol>
+<li>首先会对地址所在的内存页权限进行修改，修改成可读可执行（PROT_READ | PROT_EXEC），这是为了能够修改内存中的代码并且保证系统能够正常执行该段代码</li>
+<li>以地址创建InterceptEntry对象entry，并用Interceptor管理起来</li>
+<li>以entry和replace_func创建FunctionInlineHookRouting，并分别调用Prepare、DispatchRouting、Commit</li>
+<li>如果有origin_func，设置origin_func作为entry的relocated_addr</li>
+</ol>
+<p>关键在于第三步FunctionInlineHookRouting对象的处理，FunctionInlineHookRouting，从命名上看是关于inline hook跳转规则的配置。FunctionInlineHookRouting的Prepare函数为空，且父类InterceptRouting的Prepare函数也为空，可以先忽略</p>
+<p>主要看下面这个函数DispatchRouting</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// source/InterceptRouting/Routing/FunctionInlineHook/RoutingImpl.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">FunctionInlineHookRouting</span><span class="o">::</span><span class="n">DispatchRouting</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">BuildRouting</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// generate relocated code which size == trampoline size
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">GenerateRelocatedCode</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">FunctionInlineHookRouting</span><span class="o">::</span><span class="n">BuildRouting</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">SetTrampolineTarget</span><span class="p">((</span><span class="n">addr_t</span><span class="p">)</span><span class="n">replace_func</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// generate trampoline buffer, run before GenerateRelocatedCode
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">addr_t</span> <span class="n">from</span> <span class="o">=</span> <span class="n">entry_</span><span class="o">-&gt;</span><span class="n">patched_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(TARGET_ARCH_ARM)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">entry_</span><span class="o">-&gt;</span><span class="n">thumb_mode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">from</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="n">addr_t</span> <span class="n">to</span> <span class="o">=</span> <span class="n">GetTrampolineTarget</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">GenerateTrampolineBuffer</span><span class="p">(</span><span class="n">from</span><span class="p">,</span> <span class="n">to</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// source/InterceptRouting/InterceptRouting.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">bool</span> <span class="n">InterceptRouting</span><span class="o">::</span><span class="n">GenerateTrampolineBuffer</span><span class="p">(</span><span class="n">addr_t</span> <span class="n">src</span><span class="p">,</span> <span class="n">addr_t</span> <span class="n">dst</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// if near branch trampoline plugin enabled
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">RoutingPluginManager</span><span class="o">::</span><span class="n">near_branch_trampoline</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">plugin</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">RoutingPluginInterface</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">RoutingPluginManager</span><span class="o">::</span><span class="n">near_branch_trampoline</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">plugin</span><span class="o">-&gt;</span><span class="n">GenerateTrampolineBuffer</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="o">==</span> <span class="nb">false</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;Failed enable near branch trampoline plugin&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">GetTrampolineBuffer</span><span class="p">()</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">tramp_buffer</span> <span class="o">=</span> <span class="n">GenerateNormalTrampolineBuffer</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">SetTrampolineBuffer</span><span class="p">(</span><span class="n">tramp_buffer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// source/TrampolineBridge/Trampoline/arm64/trampoline_arm64.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">CodeBufferBase</span> <span class="o">*</span><span class="nf">GenerateNormalTrampolineBuffer</span><span class="p">(</span><span class="n">addr_t</span> <span class="n">from</span><span class="p">,</span> <span class="n">addr_t</span> <span class="n">to</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">TurboAssembler</span> <span class="n">turbo_assembler_</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">from</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define _ turbo_assembler_.
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">  <span class="kt">uint64_t</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">llabs</span><span class="p">((</span><span class="kt">int64_t</span><span class="p">)(</span><span class="n">from</span> <span class="o">-</span> <span class="n">to</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">uint64_t</span> <span class="n">adrp_range</span> <span class="o">=</span> <span class="p">((</span><span class="kt">uint64_t</span><span class="p">)</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">19</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">-</span> <span class="mi">1</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="n">adrp_range</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// adrp, add, br
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">_</span> <span class="n">AdrpAdd</span><span class="p">(</span><span class="n">TMP_REG_0</span><span class="p">,</span> <span class="n">from</span><span class="p">,</span> <span class="n">to</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">_</span> <span class="n">br</span><span class="p">(</span><span class="n">TMP_REG_0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;[trampoline] use [adrp, add, br]&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ldr, br, branch-address
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">CodeGen</span> <span class="n">codegen</span><span class="p">(</span><span class="o">&amp;</span><span class="n">turbo_assembler_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">codegen</span><span class="p">.</span><span class="n">LiteralLdrBranch</span><span class="p">((</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">to</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;[trampoline] use [ldr, br, #label]&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#undef _
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Bind all labels
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">turbo_assembler_</span><span class="p">.</span><span class="n">RelocBind</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">turbo_assembler_</span><span class="p">.</span><span class="n">GetCodeBuffer</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">Copy</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>从BuildRouting函数流程中来看下它做的事，to对应的是replace_func，from对应的是patched_addr，也就是origin_func对应的地址，得到这两个地址之后就调用GenerateNormalTrampolineBuffer生成trampoline_buffer_</p>
+<p>可以看到生成了三行指令adrp, add, br，对应了上文调试中origin_func的前三行代码替换后的代码，借助assembler-arm64.h生成buffer，对应到调试指令中</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mh">0x70ece54110</span><span class="o">:</span> <span class="n">adrp</span>   <span class="n">x17</span><span class="p">,</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x70ece54114</span><span class="o">:</span> <span class="n">add</span>    <span class="n">x17</span><span class="p">,</span> <span class="n">x17</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x290</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x70ece54118</span><span class="o">:</span> <span class="n">br</span>     <span class="n">x17</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>第一行x17表示当前内存页的地址，0表示origin_func与replace_func地址之间的内存页差值
+第二行表示replace_func在当前内存页的偏移量
+第三行就是跳转指令</p>
+<p>BuildRouting生成完Trampoline指令后调用GenerateRelocatedCode</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// source/InterceptRouting/InterceptRouting.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">bool</span> <span class="n">InterceptRouting</span><span class="o">::</span><span class="n">GenerateRelocatedCode</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">uint32_t</span> <span class="n">tramp_size</span> <span class="o">=</span> <span class="n">GetTrampolineBuffer</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">GetBufferSize</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">origin_</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CodeMemBlock</span><span class="p">(</span><span class="n">entry_</span><span class="o">-&gt;</span><span class="n">patched_addr</span><span class="p">,</span> <span class="n">tramp_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">relocated_</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CodeMemBlock</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">entry_</span><span class="o">-&gt;</span><span class="n">patched_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(TARGET_ARCH_ARM)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">entry_</span><span class="o">-&gt;</span><span class="n">thumb_mode</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)((</span><span class="n">addr_t</span><span class="p">)</span><span class="n">buffer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="n">GenRelocateCodeAndBranch</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">origin_</span><span class="p">,</span> <span class="n">relocated_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">relocated_</span><span class="o">-&gt;</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ERROR_LOG</span><span class="p">(</span><span class="s">&#34;[insn relocate]] failed&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// set the relocated instruction address
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">entry_</span><span class="o">-&gt;</span><span class="n">relocated_addr</span> <span class="o">=</span> <span class="n">relocated_</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// save original prologue
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">memcpy</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">entry_</span><span class="o">-&gt;</span><span class="n">origin_insns</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">origin_</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">origin_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">entry_</span><span class="o">-&gt;</span><span class="n">origin_insn_size</span> <span class="o">=</span> <span class="n">origin_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// log
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;[insn relocate] origin %p - %d&#34;</span><span class="p">,</span> <span class="n">origin_</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">origin_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">log_hex_format</span><span class="p">((</span><span class="kt">uint8_t</span> <span class="o">*</span><span class="p">)</span><span class="n">origin_</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">origin_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;[insn relocate] relocated %p - %d&#34;</span><span class="p">,</span> <span class="n">relocated_</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">relocated_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">log_hex_format</span><span class="p">((</span><span class="kt">uint8_t</span> <span class="o">*</span><span class="p">)</span><span class="n">relocated_</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">relocated_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// source/InstructionRelocation/arm64/InstructionRelocationARM64.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">GenRelocateCode</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">CodeMemBlock</span> <span class="o">*</span><span class="n">origin</span><span class="p">,</span> <span class="n">CodeMemBlock</span> <span class="o">*</span><span class="n">relocated</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">branch</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">relo_ctx_t</span> <span class="n">ctx</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">ctx</span><span class="p">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">.</span><span class="n">buffer_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint8_t</span> <span class="o">*</span><span class="p">)</span><span class="n">buffer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ctx</span><span class="p">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">origin</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">ctx</span><span class="p">.</span><span class="n">src_vmaddr</span> <span class="o">=</span> <span class="p">(</span><span class="n">addr_t</span><span class="p">)</span><span class="n">origin</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ctx</span><span class="p">.</span><span class="n">dst_vmaddr</span> <span class="o">=</span> <span class="p">(</span><span class="n">addr_t</span><span class="p">)</span><span class="n">relocated</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">ctx</span><span class="p">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">origin</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">relo_relocate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ctx</span><span class="p">,</span> <span class="n">branch</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">relocated</span><span class="o">-&gt;</span><span class="n">reset</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">relocated</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">ctx</span><span class="p">.</span><span class="n">relocated</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">GenRelocateCodeAndBranch</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">CodeMemBlock</span> <span class="o">*</span><span class="n">origin</span><span class="p">,</span> <span class="n">CodeMemBlock</span> <span class="o">*</span><span class="n">relocated</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">GenRelocateCode</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">relocated</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol>
+<li>获取origin_func的前三行指令</li>
+<li>设置entry的relocated_addr</li>
+<li>保存origin_func的地址到entry的origin_insns属性上</li>
+</ol>
+<p>到这里为止，对于指令的重定向都设置完了，接下来调用了Commit函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// source/InterceptRouting/InterceptRouting.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">InterceptRouting</span><span class="o">::</span><span class="n">Active</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">DobbyCodePatch</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">entry_</span><span class="o">-&gt;</span><span class="n">patched_addr</span><span class="p">,</span> <span class="n">trampoline_buffer_</span><span class="o">-&gt;</span><span class="n">GetBuffer</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">trampoline_buffer_</span><span class="o">-&gt;</span><span class="n">GetBufferSize</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ERROR_LOG</span><span class="p">(</span><span class="s">&#34;[intercept routing] active failed&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">DEBUG_LOG</span><span class="p">(</span><span class="s">&#34;[intercept routing] active&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// source/Backend/UserMode/ExecMemory/code-patch-tool-posix.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">PUBLIC</span> <span class="kt">int</span> <span class="nf">DobbyCodePatch</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">address</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">buffer_size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(__ANDROID__) || defined(__linux__)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="kt">int</span> <span class="n">page_size</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">sysconf</span><span class="p">(</span><span class="n">_SC_PAGESIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uintptr_t</span> <span class="n">patch_page</span> <span class="o">=</span> <span class="n">ALIGN_FLOOR</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">page_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uintptr_t</span> <span class="n">patch_end_page</span> <span class="o">=</span> <span class="n">ALIGN_FLOOR</span><span class="p">((</span><span class="n">uintptr_t</span><span class="p">)</span><span class="n">address</span> <span class="o">+</span> <span class="n">buffer_size</span><span class="p">,</span> <span class="n">page_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// change page permission as rwx
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">mprotect</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">patch_page</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">PROT_READ</span> <span class="o">|</span> <span class="n">PROT_WRITE</span> <span class="o">|</span> <span class="n">PROT_EXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">patch_page</span> <span class="o">!=</span> <span class="n">patch_end_page</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mprotect</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">patch_end_page</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">PROT_READ</span> <span class="o">|</span> <span class="n">PROT_WRITE</span> <span class="o">|</span> <span class="n">PROT_EXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// patch buffer
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">memcpy</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// restore page permission
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">mprotect</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">patch_page</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">PROT_READ</span> <span class="o">|</span> <span class="n">PROT_EXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">patch_page</span> <span class="o">!=</span> <span class="n">patch_end_page</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mprotect</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">patch_end_page</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">PROT_READ</span> <span class="o">|</span> <span class="n">PROT_EXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">addr_t</span> <span class="n">clear_start_</span> <span class="o">=</span> <span class="p">(</span><span class="n">addr_t</span><span class="p">)</span><span class="n">address</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ClearCache</span><span class="p">((</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">clear_start_</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)(</span><span class="n">clear_start_</span> <span class="o">+</span> <span class="n">buffer_size</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>DobbyCodePatch是直接对于指令产生修改的函数，原理也很简单，因为内存页通常的权限都是可读权限，无法修改代码。因此需要在修改时通过mprotect修改内存页权限变成可读可写可执行，修改后再将原始权限写回完成对于代码的修改</p>
+<h3 id="参考" class="headerLink">
+    <a href="#%e5%8f%82%e8%80%83" class="header-mark"></a>参考</h3><ol>
+<li><a href="https://juejin.cn/post/7019115197931470855" target="_blank" rel="noopener noreferrer">ARM64汇编入门小记</a></li>
+<li><a href="https://leylfl.github.io/2018/05/15/%E6%B5%85%E8%B0%88ARM64%E6%B1%87%E7%BC%96/" target="_blank" rel="noopener noreferrer">浅谈ARM64汇编</a></li>
+<li><a href="https://bbs.kanxue.com/thread-273487.htm" target="_blank" rel="noopener noreferrer">指令级工具Dobby源码阅读</a></li>
+</ol>
+</div>
 
         
 
@@ -206,7 +1145,7 @@
 <div id="comments"></div></article></div>
         </main><footer class="footer">
         <div class="footer-container"><div class="footer-line">
-                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.123.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.123.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
                 </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
             <div class="footer-line"></div>
             <div class="footer-line">
