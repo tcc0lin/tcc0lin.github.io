@@ -361,6 +361,8 @@ CodeBufferBase *GenerateNormalTrampolineBuffer(addr_t from, addr_t to) {
 第二行表示replace_func在当前内存页的偏移量
 第三行就是跳转指令
 
+最后会生成这三行跳转指令对应的字节码
+
 BuildRouting生成完Trampoline指令后调用GenerateRelocatedCode
 ```c++
 // source/InterceptRouting/InterceptRouting.cpp
@@ -418,10 +420,55 @@ void GenRelocateCode(void *buffer, CodeMemBlock *origin, CodeMemBlock *relocated
 void GenRelocateCodeAndBranch(void *buffer, CodeMemBlock *origin, CodeMemBlock *relocated) {
   GenRelocateCode(buffer, origin, relocated, true);
 }
+
+int relo_relocate(relo_ctx_t *ctx, bool branch) {
+  int relocated_insn_count = 0;
+
+  TurboAssembler turbo_assembler_(0);
+#define _ turbo_assembler_.
+
+  auto relocated_buffer = turbo_assembler_.GetCodeBuffer();
+
+  ......
+  // update origin
+  int new_origin_len = (addr_t)ctx->buffer_cursor - (addr_t)ctx->buffer;
+  ctx->origin->reset(ctx->origin->addr, new_origin_len);
+
+  // TODO: if last instr is unlink branch, ignore it
+  if (branch) {
+    CodeGen codegen(&turbo_assembler_);
+    codegen.LiteralLdrBranch(ctx->origin->addr + ctx->origin->size);
+  }
+
+  // Bind all labels
+  turbo_assembler_.RelocBind();
+
+  // Generate executable code
+  {
+    auto code = AssemblyCodeBuilder::FinalizeFromTurboAssembler(&turbo_assembler_);
+    ctx->relocated = code;
+  }
+  return 0;
+}
+
+// source/core/codegen/codegen-arm64.cc
+void CodeGen::LiteralLdrBranch(uint64_t address) {
+  auto turbo_assembler_ = reinterpret_cast<TurboAssembler *>(this->assembler_);
+#define _ turbo_assembler_->
+
+  auto label = RelocLabel::withData(address);
+  turbo_assembler_->AppendRelocLabel(label);
+
+  _ Ldr(TMP_REG_0, label);
+  _ br(TMP_REG_0);
+
+#undef _
+}
 ```
 1. 获取origin_func的前三行指令
 2. 设置entry的relocated_addr
 3. 保存origin_func的地址到entry的origin_insns属性上
+4. 设置origin_func的原始三条指令+lrd、br指令
 
 到这里为止，对于指令的重定向都设置完了，接下来调用了Commit函数
 ```c++

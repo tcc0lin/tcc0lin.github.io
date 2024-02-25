@@ -34,7 +34,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/"
-        },"genre": "posts","keywords": "源码分析","wordcount":  4074 ,
+        },"genre": "posts","keywords": "源码分析","wordcount":  4263 ,
         "url": "https:\/\/tcc0lin.github.io\/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/","datePublished": "2024-02-21T14:54:39+08:00","dateModified": "2024-02-21T14:54:39+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -143,7 +143,7 @@
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/"><i class="far fa-folder fa-fw"></i>Hook框架学习</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4074 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-02-21">2024-02-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4263 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -868,6 +868,7 @@
 </div><p>第一行x17表示当前内存页的地址，0表示origin_func与replace_func地址之间的内存页差值
 第二行表示replace_func在当前内存页的偏移量
 第三行就是跳转指令</p>
+<p>最后会生成这三行跳转指令对应的字节码</p>
 <p>BuildRouting生成完Trampoline指令后调用GenerateRelocatedCode</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -926,6 +927,50 @@
 </span><span class="lnt">53
 </span><span class="lnt">54
 </span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span><span class="lnt">93
+</span><span class="lnt">94
+</span><span class="lnt">95
+</span><span class="lnt">96
+</span><span class="lnt">97
+</span><span class="lnt">98
+</span><span class="lnt">99
 </span></code></pre></td>
 <td class="lntd">
 <pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// source/InterceptRouting/InterceptRouting.cpp
@@ -983,12 +1028,57 @@
 </span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">GenRelocateCodeAndBranch</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">CodeMemBlock</span> <span class="o">*</span><span class="n">origin</span><span class="p">,</span> <span class="n">CodeMemBlock</span> <span class="o">*</span><span class="n">relocated</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">  <span class="n">GenRelocateCode</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">relocated</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">relo_relocate</span><span class="p">(</span><span class="n">relo_ctx_t</span> <span class="o">*</span><span class="n">ctx</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">branch</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">relocated_insn_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">TurboAssembler</span> <span class="n">turbo_assembler_</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define _ turbo_assembler_.
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">relocated_buffer</span> <span class="o">=</span> <span class="n">turbo_assembler_</span><span class="p">.</span><span class="n">GetCodeBuffer</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="p">......</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// update origin
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int</span> <span class="n">new_origin_len</span> <span class="o">=</span> <span class="p">(</span><span class="n">addr_t</span><span class="p">)</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">buffer_cursor</span> <span class="o">-</span> <span class="p">(</span><span class="n">addr_t</span><span class="p">)</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">buffer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">origin</span><span class="o">-&gt;</span><span class="n">reset</span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">origin</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">new_origin_len</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// TODO: if last instr is unlink branch, ignore it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">branch</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">CodeGen</span> <span class="n">codegen</span><span class="p">(</span><span class="o">&amp;</span><span class="n">turbo_assembler_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">codegen</span><span class="p">.</span><span class="n">LiteralLdrBranch</span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">origin</span><span class="o">-&gt;</span><span class="n">addr</span> <span class="o">+</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">origin</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Bind all labels
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">turbo_assembler_</span><span class="p">.</span><span class="n">RelocBind</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Generate executable code
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">code</span> <span class="o">=</span> <span class="n">AssemblyCodeBuilder</span><span class="o">::</span><span class="n">FinalizeFromTurboAssembler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">turbo_assembler_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">relocated</span> <span class="o">=</span> <span class="n">code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// source/core/codegen/codegen-arm64.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">CodeGen</span><span class="o">::</span><span class="n">LiteralLdrBranch</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">address</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">turbo_assembler_</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">TurboAssembler</span> <span class="o">*&gt;</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">assembler_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define _ turbo_assembler_-&gt;
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">label</span> <span class="o">=</span> <span class="n">RelocLabel</span><span class="o">::</span><span class="n">withData</span><span class="p">(</span><span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">turbo_assembler_</span><span class="o">-&gt;</span><span class="n">AppendRelocLabel</span><span class="p">(</span><span class="n">label</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">_</span> <span class="nf">Ldr</span><span class="p">(</span><span class="n">TMP_REG_0</span><span class="p">,</span> <span class="n">label</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">_</span> <span class="nf">br</span><span class="p">(</span><span class="n">TMP_REG_0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#undef _
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
 </div><ol>
 <li>获取origin_func的前三行指令</li>
 <li>设置entry的relocated_addr</li>
 <li>保存origin_func的地址到entry的origin_insns属性上</li>
+<li>设置origin_func的原始三条指令+lrd、br指令</li>
 </ol>
 <p>到这里为止，对于指令的重定向都设置完了，接下来调用了Commit函数</p>
 <div class="highlight"><div class="chroma">
