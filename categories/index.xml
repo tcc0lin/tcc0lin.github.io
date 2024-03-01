@@ -3,7 +3,14 @@
         <title>Categories - 分类 - tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/categories/</link>
         <description>Categories - 分类 - tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 27 Feb 2024 16:46:38 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 01 Mar 2024 19:51:22 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+    <title>Android</title>
+    <link>https://tcc0lin.github.io/categories/android/</link>
+    <pubDate>Fri, 01 Mar 2024 19:51:22 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/categories/android/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
     <title>汇编基础</title>
     <link>https://tcc0lin.github.io/categories/%E6%B1%87%E7%BC%96%E5%9F%BA%E7%A1%80/</link>
     <pubDate>Tue, 27 Feb 2024 16:46:38 &#43;0800</pubDate><author>
@@ -37,13 +44,6 @@
     <pubDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/categories/keyattestation/</guid>
-    <description><![CDATA[]]></description>
-</item><item>
-    <title>Android</title>
-    <link>https://tcc0lin.github.io/categories/android/</link>
-    <pubDate>Wed, 15 Nov 2023 19:43:25 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/categories/android/</guid>
     <description><![CDATA[]]></description>
 </item><item>
     <title>协议研究</title>
