@@ -91,6 +91,7 @@ JniInvocation.Init方法中即进行了第二部分接口的初始化操作，�
 - JNI_GetDefaultJavaVMInitArgs:获取默认的JVM初始化参数；
 - JNI_CreateJavaVM:创建Java虚拟机；
 - JNI_GetCreatedJavaVMs:获取已经创建的Java虚拟机实例；
+
 例如，在上述zygote的AndroidRuntime::startVm方法实现中，就是通过指定参数最终调用JNI_CreateJavaVM来完成Java虚拟机的创建工作。
 
 通过这三个接口实现了对于不同Java虚拟机细节的隐藏，既可以用ART无缝替换Dalvik虚拟机，也可以在未来用某个新的虚拟机无缝替换掉ART虚拟机。
@@ -112,6 +113,7 @@ dexopt将dex文件优化为odex文件，即optimized-dex的缩写，其中包含
 - java.lang.Class 对应 art::mirror::Class
 - java.lang.String 对应 art::mirror::String
 - java.lang.reflect.Method 对应 art::mirror::Method
+
 当创建一个Java对象时，内存中会创建对应的C++对象并调用其构造函数，JVM管理者这些C++对象的引用。为了加速启动过程，避免对这些常见类的初始化，Android使用了.art格式来保存这些C++对象的实例，简单来说，art文件可以看做是一系列常用C++对象的内存dump
 
 不论是oat、vdex还是art，都是Android定义的内部文件格式，官方并不保证其兼容性，事实上在Android各个版本中这些文件格式都有不同程度的变化，这些变化是不反映在文档中的，只能通过代码去一窥究竟。因此对于这些文件格式我们现在只需要知道其大致作用，无需关心其实现细节
@@ -135,6 +137,7 @@ APP最终在ActivityThread中完成Application的创建和初始化，最终调�
 8. DexFile.openDexFileNative
 9. DexFile_openDexFileNative
 10. OatFileManager::OpenDexFilesFromOat	
+
 在OpenDexFilesFromOat中执行了真正的代码加载工作，伪代码如下:
 ```c++
 std::vector<std::unique_ptr<const DexFile>> OatFileManager::OpenDexFilesFromOat() {
@@ -331,6 +334,7 @@ void EnterInterpreterFromInvoke(Thread* self,
 3. ExecuteSwitchImpl
 4. ExecuteSwitchImplAsm
 5. ExecuteSwitchImplCpp
+
 ExecuteSwitchImplAsm为了速度直接使用汇编实现，在ARM64平台中的定义如下:
 ```c
 //  Wrap ExecuteSwitchImpl in assembly method which specifies DEX PC for unwinding.

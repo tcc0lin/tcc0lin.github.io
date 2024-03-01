@@ -372,9 +372,9 @@
 <ul>
 <li>JNI_GetDefaultJavaVMInitArgs:获取默认的JVM初始化参数；</li>
 <li>JNI_CreateJavaVM:创建Java虚拟机；</li>
-<li>JNI_GetCreatedJavaVMs:获取已经创建的Java虚拟机实例；
-例如，在上述zygote的AndroidRuntime::startVm方法实现中，就是通过指定参数最终调用JNI_CreateJavaVM来完成Java虚拟机的创建工作。</li>
+<li>JNI_GetCreatedJavaVMs:获取已经创建的Java虚拟机实例；</li>
 </ul>
+<p>例如，在上述zygote的AndroidRuntime::startVm方法实现中，就是通过指定参数最终调用JNI_CreateJavaVM来完成Java虚拟机的创建工作。</p>
 <p>通过这三个接口实现了对于不同Java虚拟机细节的隐藏，既可以用ART无缝替换Dalvik虚拟机，也可以在未来用某个新的虚拟机无缝替换掉ART虚拟机。</p>
 <p>总的来说，Java虚拟机只在Zygote进程中创建一次，子进程通过fork获得虚拟机的一个副本，因此zygote才被称为所有Java进程的父进程；同时，也因为每个子进程拥有独立的虚拟机副本，所以某个进程的虚拟机崩溃后不影响其他进程，从而实现安全的运行时隔离</p>
 <h3 id="二art" class="headerLink">
@@ -397,9 +397,9 @@
 <ul>
 <li>java.lang.Class 对应 art::mirror::Class</li>
 <li>java.lang.String 对应 art::mirror::String</li>
-<li>java.lang.reflect.Method 对应 art::mirror::Method
-当创建一个Java对象时，内存中会创建对应的C++对象并调用其构造函数，JVM管理者这些C++对象的引用。为了加速启动过程，避免对这些常见类的初始化，Android使用了.art格式来保存这些C++对象的实例，简单来说，art文件可以看做是一系列常用C++对象的内存dump</li>
+<li>java.lang.reflect.Method 对应 art::mirror::Method</li>
 </ul>
+<p>当创建一个Java对象时，内存中会创建对应的C++对象并调用其构造函数，JVM管理者这些C++对象的引用。为了加速启动过程，避免对这些常见类的初始化，Android使用了.art格式来保存这些C++对象的实例，简单来说，art文件可以看做是一系列常用C++对象的内存dump</p>
 <p>不论是oat、vdex还是art，都是Android定义的内部文件格式，官方并不保证其兼容性，事实上在Android各个版本中这些文件格式都有不同程度的变化，这些变化是不反映在文档中的，只能通过代码去一窥究竟。因此对于这些文件格式我们现在只需要知道其大致作用，无需关心其实现细节</p>
 <h4 id="22-文件加载" class="headerLink">
     <a href="#22-%e6%96%87%e4%bb%b6%e5%8a%a0%e8%bd%bd" class="header-mark"></a>2.2 文件加载</h4><p>APP最终在ActivityThread中完成Application的创建和初始化，最终调用Activity.onCreate进入视图组件的生命周期。但这里其实忽略了一个问题: APP的代码(DEX/OAT文件)是如何加载到进程中的？</p>
@@ -421,9 +421,9 @@
 <li>DexFile.openDexFile</li>
 <li>DexFile.openDexFileNative</li>
 <li>DexFile_openDexFileNative</li>
-<li>OatFileManager::OpenDexFilesFromOat
-在OpenDexFilesFromOat中执行了真正的代码加载工作，伪代码如下:</li>
+<li>OatFileManager::OpenDexFilesFromOat</li>
 </ol>
+<p>在OpenDexFilesFromOat中执行了真正的代码加载工作，伪代码如下:</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
@@ -791,9 +791,9 @@
 <li>ExecuteSwitch</li>
 <li>ExecuteSwitchImpl</li>
 <li>ExecuteSwitchImplAsm</li>
-<li>ExecuteSwitchImplCpp
-ExecuteSwitchImplAsm为了速度直接使用汇编实现，在ARM64平台中的定义如下:</li>
+<li>ExecuteSwitchImplCpp</li>
 </ol>
+<p>ExecuteSwitchImplAsm为了速度直接使用汇编实现，在ARM64平台中的定义如下:</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
