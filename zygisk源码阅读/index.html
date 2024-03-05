@@ -34,7 +34,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/"
-        },"genre": "posts","keywords": "Zygisk, 源码分析","wordcount":  4587 ,
+        },"genre": "posts","keywords": "Zygisk, 源码分析","wordcount":  4690 ,
         "url": "https:\/\/tcc0lin.github.io\/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/","datePublished": "2024-03-04T23:43:17+08:00","dateModified": "2024-03-04T23:43:17+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -153,7 +153,7 @@
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/magisk%E7%94%9F%E6%80%81/"><i class="far fa-folder fa-fw"></i>Magisk生态</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-04">2024-03-04</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-04">2024-03-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4587 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 10 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-04">2024-03-04</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-04">2024-03-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4690 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 10 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -1107,7 +1107,56 @@
 </div>
 </div><p>它调用的nativeSpecializeAppProcess_pre会做zygisk模块的加载，也就是说zygisk为了让fork后的进程加载模块，就得提前fork，这样还在它自己的代码空间，它可以根据denylist决定是否加载模块</p>
 <p>zygisk这种在fork后加载模块的方式使得它可以在不重启的情况下更新lsposed代码</p>
+<p>fork_post没有特殊的处理逻辑，zygisk环境清理</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">fork_post</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigmask</span><span class="p">(</span><span class="n">SIG_UNBLOCK</span><span class="p">,</span> <span class="n">SIGCHLD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_ctx</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unload_zygisk</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">unload_zygisk</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="n">CAN_DLCLOSE</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Do NOT call the destructor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="n">jni_method_map</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Directly unmap the whole memory block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">jni_hook</span><span class="o">::</span><span class="n">memory_block</span><span class="o">::</span><span class="n">release</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// Strip out all API function pointers
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">m</span> <span class="p">:</span> <span class="n">modules</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">.</span><span class="n">api</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">api</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">new_daemon_thread</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">thread_entry</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">dlclose</span><span class="p">),</span> <span class="n">self_handle</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
+</div></div>
 
         
 

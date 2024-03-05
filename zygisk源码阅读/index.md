@@ -481,3 +481,28 @@ void HookContext::nativeSpecializeAppProcess_pre() {
 它调用的nativeSpecializeAppProcess_pre会做zygisk模块的加载，也就是说zygisk为了让fork后的进程加载模块，就得提前fork，这样还在它自己的代码空间，它可以根据denylist决定是否加载模块
 
 zygisk这种在fork后加载模块的方式使得它可以在不重启的情况下更新lsposed代码
+
+fork_post没有特殊的处理逻辑，zygisk环境清理
+```c++
+void HookContext::fork_post() {
+    sigmask(SIG_UNBLOCK, SIGCHLD);
+    g_ctx = nullptr;
+    unload_zygisk();
+}
+
+void HookContext::unload_zygisk() {
+    if (state[CAN_DLCLOSE]) {
+        // Do NOT call the destructor
+        operator delete(jni_method_map);
+        // Directly unmap the whole memory block
+        jni_hook::memory_block::release();
+
+        // Strip out all API function pointers
+        for (auto &m : modules) {
+            memset(&m.api, 0, sizeof(m.api));
+        }
+
+        new_daemon_thread(reinterpret_cast<thread_entry>(&dlclose), self_handle);
+    }
+}
+```
