@@ -7,35 +7,35 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noodp" />
-    <title>SKRoot原理分析 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="SKRoot原理分析" />
-<meta property="og:description" content="" />
+    <title>Zygisk-v27.0源码阅读 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Zygisk-v27.0源码阅读" />
+<meta property="og:description" content="隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2023-12-17T14:07:07+08:00" />
-<meta property="article:modified_time" content="2023-12-17T14:07:07+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+<meta property="og:url" content="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-03-06T22:56:31+08:00" />
+<meta property="article:modified_time" content="2024-03-06T22:56:31+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
 
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="SKRoot原理分析"/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Zygisk-v27.0源码阅读"/>
+<meta name="twitter:description" content="隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的"/>
 <meta name="application-name" content="DoIt">
 <meta name="apple-mobile-web-app-title" content="DoIt">
 
 <meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" /><link rel="prev" href="https://tcc0lin.github.io/kernelsu%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" /><link rel="next" href="https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" /><link rel="prev" href="https://tcc0lin.github.io/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/" />
 <link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
         <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
         <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
-        "headline": "SKRoot原理分析",
+        "headline": "Zygisk-v27.0源码阅读",
         "inLanguage": "zh-CN",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "https:\/\/tcc0lin.github.io\/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90\/"
-        },"genre": "posts","keywords": "SKRoot, 源码分析","wordcount":  0 ,
-        "url": "https:\/\/tcc0lin.github.io\/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90\/","datePublished": "2023-12-17T14:07:07+08:00","dateModified": "2023-12-17T14:07:07+08:00","publisher": {
+            "@id": "https:\/\/tcc0lin.github.io\/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/"
+        },"genre": "posts","wordcount":  308 ,
+        "url": "https:\/\/tcc0lin.github.io\/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/","datePublished": "2024-03-06T22:56:31+08:00","dateModified": "2024-03-06T22:56:31+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -130,79 +130,56 @@
             <div class="container"><div class="toc" id="toc-auto">
         <h2 class="toc-title">目录</h2>
         <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
-    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">SKRoot原理分析</h1><div class="post-meta">
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Zygisk-v27.0源码阅读</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
-                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/android-root/"><i class="far fa-folder fa-fw"></i>Android ROOT</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-12-17">2023-12-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-12-17">2023-12-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 0 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 0 分钟&nbsp;</div>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-06">2024-03-06</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-06">2024-03-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 308 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
                     <span><i class="details-icon fas fa-angle-right"></i></span>
                 </div>
                 <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
-            </div><div class="content" id="content"></div>
+            </div><div class="content" id="content"><p>隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以<code>(zygisk_enabled)</code>作为关键搜索词切入</p>
+<p>load_modules
+if (zygisk_enabled){
+设置native_bridge变成libzygisk.so+native_bridge_orig
+如果native_bridge_orig为空则变成libzygisk.so
+}</p>
+<p>inject_zygisk_libs 如果有/system/bin/linker64，把libzygisk.so加入/system/lib64</p>
+<p>handle_modules
+if (zygisk_enabled)
+每个模块的info.z32 对应jit-cache fd</p>
+</div>
 
         
-
-
-<h2>相关内容</h2>
-<div class="related-container">
-    <div class="related-item-container">
-            <h2 class="related-title">
-                <a href="/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/">Art方法调用流程分析</a>
-            </h2>
-        </div>
-    <div class="related-item-container">
-            <h2 class="related-title">
-                <a href="/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">Dobby框架源码学习</a>
-            </h2>
-        </div>
-    <div class="related-item-container">
-            <h2 class="related-title">
-                <a href="/kernelsu%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/">KernelSU原理分析</a>
-            </h2>
-        </div>
-    <div class="related-item-container">
-            <h2 class="related-title">
-                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/">重读Magisk内部实现细节4</a>
-            </h2>
-        </div>
-    <div class="related-item-container">
-            <h2 class="related-title">
-                <a href="/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/">重读Magisk内部实现细节3</a>
-            </h2>
-        </div>
-    
-
-</div>
 
 <div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2023-12-17</span>
+                <span>更新于 2024-03-06</span>
             </div>
             <div class="post-info-license"></div>
         </div>
         <div class="post-info-line">
-            <div class="post-info-md"><span><a class="link-to-mardown" href=/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
                     </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
                     </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
                     </span></div>
-            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析" data-hashtags="SKRoot,源码分析"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-hashtag="SKRoot"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" data-title="SKRoot原理分析"><span class="fab fa-evernote fa-fw"></span></button></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk-v27.0源码阅读"><span class="fab fa-evernote fa-fw"></span></button></div>
         </div>
     </div>
 
     <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/skroot/">SKRoot</a>,&nbsp;<a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></section>
+        <section class="post-tags"></section>
         <section>
             <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
         </section>
     </div>
 
-    <div class="post-nav"><a href="/kernelsu%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" class="prev" rel="prev" title="KernelSU原理分析"><i class="fas fa-angle-left fa-fw"></i>KernelSU原理分析</a>
-            <a href="/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/" class="next" rel="next" title="系统so防篡改思考">系统so防篡改思考<i class="fas fa-angle-right fa-fw"></i></a></div>
+    <div class="post-nav"><a href="/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/" class="prev" rel="prev" title="Art方法调用流程分析"><i class="fas fa-angle-left fa-fw"></i>Art方法调用流程分析</a></div>
 </div>
 <div id="comments"></div></article></div>
         </main><footer class="footer">
