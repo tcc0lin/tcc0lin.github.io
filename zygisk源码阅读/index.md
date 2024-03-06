@@ -1,5 +1,6 @@
 # Zygisk源码阅读
 
+基于Magisk v25.0
 
 ### 一、Zygisk注入到Zygote进程
 
@@ -203,6 +204,108 @@ static void setup_files(int client, const sock_cred *cred) {
 4. fexecve开始执行原生的app_process，此时LD_PRELOAD已经被替换
 
 目前为止，可以看到zygisk的注入思路，通过类似hook的方式hook app_process，用LD_PRELOAD的方式完成自身注入，而不是像riru那样通过修改native_bridge或者xposed直接修改app_process
+
+再细看下LD_PRELOAD的执行逻辑
+```c++
+// linker_main.cpp
+
+static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load) {
+  ProtectedDataGuard guard;
+
+  // These should have been sanitized by __libc_init_AT_SECURE, but the test
+  // doesn't cost us anything.
+  const char* ldpath_env = nullptr;
+  const char* ldpreload_env = nullptr;
+  if (!getauxval(AT_SECURE)) {
+    ldpath_env = getenv("LD_LIBRARY_PATH");
+    if (ldpath_env != nullptr) {
+      INFO("[ LD_LIBRARY_PATH set to \"%s\" ]", ldpath_env);
+    }
+    ldpreload_env = getenv("LD_PRELOAD");
+    if (ldpreload_env != nullptr) {
+      INFO("[ LD_PRELOAD set to \"%s\" ]", ldpreload_env);
+    }
+  }
+  ......
+
+  // Use LD_LIBRARY_PATH and LD_PRELOAD (but only if we aren't setuid/setgid).
+  parse_LD_LIBRARY_PATH(ldpath_env);
+  parse_LD_PRELOAD(ldpreload_env);
+
+  std::vector<android_namespace_t*> namespaces = init_default_namespaces(exe_info.path.c_str());
+
+  if (!si->prelink_image()) __linker_cannot_link(g_argv[0]);
+
+  // add somain to global group
+  si->set_dt_flags_1(si->get_dt_flags_1() | DF_1_GLOBAL);
+  // ... and add it to all other linked namespaces
+  for (auto linked_ns : namespaces) {
+    if (linked_ns != &g_default_namespace) {
+      linked_ns->add_soinfo(somain);
+      somain->add_secondary_namespace(linked_ns);
+    }
+  }
+
+  linker_setup_exe_static_tls(g_argv[0]);
+
+  // Load ld_preloads and dependencies.
+  std::vector<const char*> needed_library_name_list;
+  size_t ld_preloads_count = 0;
+
+  for (const auto& ld_preload_name : g_ld_preload_names) {
+    needed_library_name_list.push_back(ld_preload_name.c_str());
+    ++ld_preloads_count;
+  }
+  ......
+
+  if (needed_libraries_count > 0 &&
+      !find_libraries(&g_default_namespace,
+                      si,
+                      needed_library_names,
+                      needed_libraries_count,
+                      nullptr,
+                      &g_ld_preloads,
+                      ld_preloads_count,
+                      RTLD_GLOBAL,
+                      nullptr,
+                      true /* add_as_children */,
+                      true /* search_linked_namespaces */,
+                      &namespaces)) {
+    __linker_cannot_link(g_argv[0]);
+  } else if (needed_libraries_count == 0) {
+    if (!si->link_image(SymbolLookupList(si), si, nullptr, nullptr)) {
+      __linker_cannot_link(g_argv[0]);
+    }
+    si->increment_ref_count();
+  }
+
+  linker_finalize_static_tls();
+  __libc_init_main_thread_final();
+
+  if (!get_cfi_shadow()->InitialLinkDone(solist)) __linker_cannot_link(g_argv[0]);
+
+  si->call_pre_init_constructors();
+  si->call_constructors();
+  ......
+  return entry;
+}
+
+static void parse_LD_PRELOAD(const char* path) {
+  g_ld_preload_names.clear();
+  if (path != nullptr) {
+    // We have historically supported ':' as well as ' ' in LD_PRELOAD.
+    g_ld_preload_names = android::base::Split(path, " :");
+    g_ld_preload_names.erase(std::remove_if(g_ld_preload_names.begin(), g_ld_preload_names.end(),
+                                            [](const std::string& s) { return s.empty(); }),
+                             g_ld_preload_names.end());
+  }
+}
+```
+linker_main这里关于LD_PRELOAD做了三件事
+1. 获取了环境变量中的值ldpreload_env = getenv("LD_PRELOAD");
+2. parse_LD_PRELOAD(ldpreload_env);解析LD_PRELOAD的值写入全局变量g_ld_preload_names
+3. 遍历g_ld_preload_names添加至needed_library_name_list
+4. so加载流程：find_library、call_pre_init_constructors、call_constructors调用DT_INIT、DT_INIT_ARRAY段的函数
 
 ### 二、Zygisk加载
 ```c++
