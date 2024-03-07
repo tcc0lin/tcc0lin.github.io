@@ -34,7 +34,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/"
-        },"genre": "posts","wordcount":  308 ,
+        },"genre": "posts","wordcount":  2351 ,
         "url": "https:\/\/tcc0lin.github.io\/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/","datePublished": "2024-03-06T22:56:31+08:00","dateModified": "2024-03-06T22:56:31+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -129,28 +129,477 @@
 <main class="main">
             <div class="container"><div class="toc" id="toc-auto">
         <h2 class="toc-title">目录</h2>
-        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一zygisk注入方式改变">一、Zygisk注入方式改变</a></li>
+        <li><a href="#二ld_preload其他的用处">二、LD_PRELOAD其他的用处</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
     </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Zygisk-v27.0源码阅读</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-06">2024-03-06</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-06">2024-03-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 308 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-06">2024-03-06</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-06">2024-03-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2351 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
                     <span><i class="details-icon fas fa-angle-right"></i></span>
                 </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一zygisk注入方式改变">一、Zygisk注入方式改变</a></li>
+        <li><a href="#二ld_preload其他的用处">二、LD_PRELOAD其他的用处</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
             </div><div class="content" id="content"><p>隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以<code>(zygisk_enabled)</code>作为关键搜索词切入</p>
-<p>load_modules
-if (zygisk_enabled){
-设置native_bridge变成libzygisk.so+native_bridge_orig
-如果native_bridge_orig为空则变成libzygisk.so
-}</p>
-<p>inject_zygisk_libs 如果有/system/bin/linker64，把libzygisk.so加入/system/lib64</p>
-<p>handle_modules
-if (zygisk_enabled)
-每个模块的info.z32 对应jit-cache fd</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">load_modules</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">zygisk_enabled</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">string</span> <span class="n">native_bridge_orig</span> <span class="o">=</span> <span class="n">get_prop</span><span class="p">(</span><span class="n">NBPROP</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">native_bridge_orig</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">native_bridge_orig</span> <span class="o">=</span> <span class="s">&#34;0&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">native_bridge</span> <span class="o">=</span> <span class="n">native_bridge_orig</span> <span class="o">!=</span> <span class="s">&#34;0&#34;</span> <span class="o">?</span> <span class="n">ZYGISKLDR</span> <span class="o">+</span> <span class="nl">native_bridge_orig</span> <span class="p">:</span> <span class="n">ZYGISKLDR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">set_prop</span><span class="p">(</span><span class="n">NBPROP</span><span class="p">,</span> <span class="n">native_bridge</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Weather Huawei&#39;s Maple compiler is enabled.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// If so, system server will be created by a special Zygote which ignores the native bridge
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// and make system server out of our control. Avoid it by disabling.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">get_prop</span><span class="p">(</span><span class="s">&#34;ro.maple.enable&#34;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#34;1&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">set_prop</span><span class="p">(</span><span class="s">&#34;ro.maple.enable&#34;</span><span class="p">,</span> <span class="s">&#34;0&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">inject_zygisk_libs</span><span class="p">(</span><span class="n">system</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>定位到load_modules函数，发现这里竟然使用了native_bridge_orig，对应的变量名也做了个效果，NBPROP？</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#define NBPROP          &#34;ro.dalvik.vm.native.bridge&#34;
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这是也要仿照riru了吗？</p>
+<h3 id="一zygisk注入方式改变" class="headerLink">
+    <a href="#%e4%b8%80zygisk%e6%b3%a8%e5%85%a5%e6%96%b9%e5%bc%8f%e6%94%b9%e5%8f%98" class="header-mark"></a>一、Zygisk注入方式改变</h3><p>继续load_modules，ZYGISKLDR对应的是<code>libzygisk.so</code>，也就是<code>src/core/zygisk</code>目录，从之前的<a href="https://tcc0lin.github.io/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" target="_blank" rel="noopener noreferrer">riru原理理解</a>这篇文章中，已经知道对于native_bridge的使用大概流程如下</p>
+<ul>
+<li>调用LoadNativeBridge函数</li>
+<li>dlopen native_bridge对应的so动态库</li>
+<li>dlsym kNativeBridgeInterfaceSymbol获取callbacks，kNativeBridgeInterfaceSymbol的值是NativeBridgeItf</li>
+<li>调用isCompatibleWith处理</li>
+</ul>
+<p>对应的看下Zygisk相对应的实现</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// src/core/zygisk/entry.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="na">[[maybe_unused]]</span> <span class="n">NativeBridgeCallbacks</span> <span class="n">NativeBridgeItf</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">version</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">padding</span> <span class="o">=</span> <span class="p">{},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">isCompatibleWith</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">is_compatible_with</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">bool</span> <span class="nf">is_compatible_with</span><span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">zygisk_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hook_functions</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ZLOGD</span><span class="p">(</span><span class="s">&#34;load success</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里注意两点：</p>
+<ol>
+<li>hook_functions根据之前版本的的Zygisk实现来看，应该就是JNI hook的地方</li>
+<li>既然是JNI hook，那么表明Zygisk并没有像riru那样存在中转的riruloader.so，相当于直接调用了riru.so</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// src/core/zygisk/hook.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">hook_functions</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">default_new</span><span class="p">(</span><span class="n">g_hook</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">hook_plt</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">hook_plt</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ino_t</span> <span class="n">android_runtime_inode</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dev_t</span> <span class="n">android_runtime_dev</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ino_t</span> <span class="n">native_bridge_inode</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dev_t</span> <span class="n">native_bridge_dev</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">map</span> <span class="p">:</span> <span class="n">lsplt</span><span class="o">::</span><span class="n">MapInfo</span><span class="o">::</span><span class="n">Scan</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">map</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">ends_with</span><span class="p">(</span><span class="s">&#34;/libandroid_runtime.so&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">android_runtime_inode</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">inode</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">android_runtime_dev</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">dev</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">map</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">ends_with</span><span class="p">(</span><span class="s">&#34;/libnativebridge.so&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">native_bridge_inode</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">inode</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">native_bridge_dev</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">dev</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">PLT_HOOK_REGISTER</span><span class="p">(</span><span class="n">native_bridge_dev</span><span class="p">,</span> <span class="n">native_bridge_inode</span><span class="p">,</span> <span class="n">dlclose</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PLT_HOOK_REGISTER</span><span class="p">(</span><span class="n">android_runtime_dev</span><span class="p">,</span> <span class="n">android_runtime_inode</span><span class="p">,</span> <span class="n">fork</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PLT_HOOK_REGISTER</span><span class="p">(</span><span class="n">android_runtime_dev</span><span class="p">,</span> <span class="n">android_runtime_inode</span><span class="p">,</span> <span class="n">unshare</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PLT_HOOK_REGISTER</span><span class="p">(</span><span class="n">android_runtime_dev</span><span class="p">,</span> <span class="n">android_runtime_inode</span><span class="p">,</span> <span class="n">androidSetCreateThreadFunc</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PLT_HOOK_REGISTER</span><span class="p">(</span><span class="n">android_runtime_dev</span><span class="p">,</span> <span class="n">android_runtime_inode</span><span class="p">,</span> <span class="n">selinux_android_setcontext</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PLT_HOOK_REGISTER_SYM</span><span class="p">(</span><span class="n">android_runtime_dev</span><span class="p">,</span> <span class="n">android_runtime_inode</span><span class="p">,</span> <span class="s">&#34;__android_log_close&#34;</span><span class="p">,</span> <span class="n">android_log_close</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">lsplt</span><span class="o">::</span><span class="n">CommitHook</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGE</span><span class="p">(</span><span class="s">&#34;plt_hook failed</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Remove unhooked methods
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">plt_backup</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">std</span><span class="o">::</span><span class="n">remove_if</span><span class="p">(</span><span class="n">plt_backup</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">plt_backup</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">            <span class="p">[](</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">t</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">3</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">;}),</span>
+</span></span><span class="line"><span class="cl">            <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">plt_backup</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>替换了XHOOK框架使用了自己实现的PLT_HOOK，对应的这个项目<a href="https://github.com/LSPosed/LSPlt" target="_blank" rel="noopener noreferrer">LSPlt</a></p>
+<ol>
+<li>fork机制和之前是相同的，提前fork</li>
+<li>unshare对于新的namespace划分时unmount掉其中的Magisk特征</li>
+<li>androidSetCreateThreadFunc
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">DCL_HOOK_FUNC</span><span class="p">(</span><span class="k">static</span> <span class="kt">void</span><span class="p">,</span> <span class="n">androidSetCreateThreadFunc</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">func</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ZLOGD</span><span class="p">(</span><span class="s">&#34;androidSetCreateThreadFunc</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">hook_jni_env</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">old_androidSetCreateThreadFunc</span><span class="p">(</span><span class="n">func</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">hook_jni_env</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">using</span> <span class="n">method_sig</span> <span class="o">=</span> <span class="n">jint</span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">JavaVM</span> <span class="o">**</span><span class="p">,</span> <span class="n">jsize</span><span class="p">,</span> <span class="n">jsize</span> <span class="o">*</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">get_created_vms</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">method_sig</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_DEFAULT</span><span class="p">,</span> <span class="s">&#34;JNI_GetCreatedJavaVMs&#34;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">get_created_vms</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">map</span><span class="p">:</span> <span class="n">lsplt</span><span class="o">::</span><span class="n">MapInfo</span><span class="o">::</span><span class="n">Scan</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">map</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">ends_with</span><span class="p">(</span><span class="s">&#34;/libnativehelper.so&#34;</span><span class="p">))</span> <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">void</span> <span class="o">*</span><span class="n">h</span> <span class="o">=</span> <span class="n">dlopen</span><span class="p">(</span><span class="n">map</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">RTLD_LAZY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">h</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">ZLOGW</span><span class="p">(</span><span class="s">&#34;Cannot dlopen libnativehelper.so: %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">dlerror</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">get_created_vms</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">method_sig</span><span class="o">&gt;</span><span class="p">(</span><span class="n">dlsym</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="s">&#34;JNI_GetCreatedJavaVMs&#34;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">            <span class="n">dlclose</span><span class="p">(</span><span class="n">h</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">get_created_vms</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ZLOGW</span><span class="p">(</span><span class="s">&#34;JNI_GetCreatedJavaVMs not found</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">JavaVM</span> <span class="o">*</span><span class="n">vm</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jsize</span> <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jint</span> <span class="n">res</span> <span class="o">=</span> <span class="n">get_created_vms</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">!=</span> <span class="n">JNI_OK</span> <span class="o">||</span> <span class="n">vm</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGW</span><span class="p">(</span><span class="s">&#34;JavaVM not found</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">res</span> <span class="o">=</span> <span class="n">vm</span><span class="o">-&gt;</span><span class="n">GetEnv</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">**&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">env</span><span class="p">),</span> <span class="n">JNI_VERSION_1_6</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">!=</span> <span class="n">JNI_OK</span> <span class="o">||</span> <span class="n">env</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGW</span><span class="p">(</span><span class="s">&#34;JNIEnv not found</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Replace the function table in JNIEnv to hook RegisterNatives
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">new_env</span><span class="p">,</span> <span class="n">env</span><span class="o">-&gt;</span><span class="n">functions</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">env</span><span class="o">-&gt;</span><span class="n">functions</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">new_env</span><span class="p">.</span><span class="n">RegisterNatives</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">env_RegisterNatives</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">old_env</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="n">functions</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">env</span><span class="o">-&gt;</span><span class="n">functions</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">new_env</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="n">jint</span> <span class="nf">env_RegisterNatives</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="p">,</span> <span class="k">const</span> <span class="n">JNINativeMethod</span> <span class="o">*</span><span class="n">methods</span><span class="p">,</span> <span class="n">jint</span> <span class="n">numMethods</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">className</span> <span class="o">=</span> <span class="n">get_class_name</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">className</span> <span class="o">==</span> <span class="s">&#34;com/android/internal/os/Zygote&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Restore JNIEnv as we no longer need to replace anything
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">env</span><span class="o">-&gt;</span><span class="n">functions</span> <span class="o">=</span> <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">old_env</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">vector</span><span class="o">&lt;</span><span class="n">JNINativeMethod</span><span class="o">&gt;</span> <span class="n">newMethods</span><span class="p">(</span><span class="n">methods</span><span class="p">,</span> <span class="n">methods</span> <span class="o">+</span> <span class="n">numMethods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">vector</span><span class="o">&lt;</span><span class="n">JNINativeMethod</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">backup</span> <span class="o">=</span> <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">jni_backup</span><span class="p">[</span><span class="n">className</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HOOK_JNI</span><span class="p">(</span><span class="n">nativeForkAndSpecialize</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HOOK_JNI</span><span class="p">(</span><span class="n">nativeSpecializeAppProcess</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HOOK_JNI</span><span class="p">(</span><span class="n">nativeForkSystemServer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">old_env</span><span class="o">-&gt;</span><span class="n">RegisterNatives</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">newMethods</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">numMethods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">g_hook</span><span class="o">-&gt;</span><span class="n">old_env</span><span class="o">-&gt;</span><span class="n">RegisterNatives</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">methods</span><span class="p">,</span> <span class="n">numMethods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>这里就不多说了，还是熟系的配方</li>
+</ol>
+<h3 id="二ld_preload其他的用处" class="headerLink">
+    <a href="#%e4%ba%8cld_preload%e5%85%b6%e4%bb%96%e7%9a%84%e7%94%a8%e5%a4%84" class="header-mark"></a>二、LD_PRELOAD其他的用处</h3><p>Magisk团队找了更直接的方法来修改sepolicy，像他们在details.md所说的</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-md" data-lang="md"><span class="line"><span class="cl"><span class="gu">## Pre-Init
+</span></span></span><span class="line"><span class="cl"><span class="gu"></span>
+</span></span><span class="line"><span class="cl"><span class="sb">`magiskinit`</span> will replace <span class="sb">`init`</span> as the first program to run.
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">-</span> Early mount required partitions. On legacy system-as-root devices, we switch root to system; on 2SI devices, we patch the original <span class="sb">`init`</span> to redirect the 2nd stage init file to magiskinit and execute it to mount partitions for us.
+</span></span><span class="line"><span class="cl"><span class="k">-</span> Inject magisk services into <span class="sb">`init.rc`</span>
+</span></span><span class="line"><span class="cl"><span class="k">-</span> On devices using monolithic policy, load sepolicy from <span class="sb">`/sepolicy`</span>; otherwise we hijack nodes in selinuxfs with FIFO, set <span class="sb">`LD_PRELOAD`</span> to hook <span class="sb">`security_load_policy`</span> and assist hijacking on 2SI devices, and start a daemon to wait until init tries to load sepolicy.
+</span></span><span class="line"><span class="cl"><span class="k">-</span> Patch sepolicy rules. If we are using &#34;hijack&#34; method, load patched sepolicy into kernel, unblock init and exit daemon
+</span></span><span class="line"><span class="cl"><span class="k">-</span> Execute the original <span class="sb">`init`</span> to continue the boot process
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>使用LD_PRELOAD hook security_load_policy</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// src/init/selinux.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">access</span><span class="p">(</span><span class="s">&#34;/system/bin/init&#34;</span><span class="p">,</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// On 2SI devices, the 2nd stage init file is always a dynamic executable.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// This meant that instead of going through convoluted methods trying to alter
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// and block init&#39;s control flow, we can just LD_PRELOAD and replace the
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// security_load_policy function with our own implementation.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">dump_preload</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">setenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">,</span> <span class="s">&#34;/dev/preload.so&#34;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>preload.so对应的是preload.c</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// src/init/preload.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">preload_init</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Make sure our next exec won&#39;t get bugged
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">unsetenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unlink</span><span class="p">(</span><span class="s">&#34;/dev/preload.so&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">security_load_policy</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">load_policy</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="n">size_t</span><span class="p">)</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_NEXT</span><span class="p">,</span> <span class="s">&#34;security_load_policy&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Skip checking errors, because if we cannot find the symbol, there
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// isn&#39;t much we can do other than crashing anyways.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">load_policy</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">len</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Wait for ack
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&#34;/sys/fs/selinux/enforce&#34;</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在使用monolithic策略的设备上，Magisk直接从/sepolicy文件中加载sepolicy规则。这个文件通常位于系统的根目录下，用于存储selinux策略。这种方式比较简单直接，不需要进行额外的hook操作</p>
+<p>但是在其他的设备上，Magisk使用FIFO（命名管道）劫持selinuxfs中的节点，以实现selinux hook。具体来说，Magisk会创建一个FIFO文件，并挂载到selinuxfs中的&quot;load&quot;和&quot;enforce&quot;节点上，用于接收selinux策略和enforce值。这样一来，即使系统中没有/sepolicy文件，Magisk也可以通过劫持selinuxfs中的节点，来实现selinux hook</p>
+<p>在2SI设备上，由于第二阶段的init文件是一个动态可执行文件，而不是静态的/init可执行文件，因此Magisk还需要协助劫持selinuxfs。具体来说，Magisk会在init进程启动之前，通过LD_PRELOAD的方式，将自己的preload.so库注入到init进程中，并替换security_load_policy函数为自己的实现，以实现selinux hook。后面Magisk启动守护程序，等待init进程尝试加载selinux策略文件。当init进程启动时，Magisk的钩子函数会拦截security_load_policy的调用，并将selinux策略文件和enforce值写入FIFO文件中，以实现自定义的selinux策略</p>
 </div>
 
         

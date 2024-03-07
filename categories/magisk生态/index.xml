@@ -44,7 +44,7 @@
     <pubDate>Sun, 11 Jun 2023 11:36:47 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
-    <description><![CDATA[基于Magisk v25.0 一、Zygisk注入到Zygote进程 1. magic_mount挂载app_processmagic_mount的原理是挂载]]></description>
+    <description><![CDATA[基于Magisk v25.0 一、Zygisk注入 1. magic_mount挂载app_processmagic_mount的原理是挂载tmpfs作为目录]]></description>
 </item><item>
     <title>重读Magisk内部实现细节2</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</link>

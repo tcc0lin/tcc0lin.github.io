@@ -2,7 +2,7 @@
 
 基于Magisk v25.0
 
-### 一、Zygisk注入到Zygote进程
+### 一、Zygisk注入
 
 #### 1. magic_mount挂载app_process
 magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的
