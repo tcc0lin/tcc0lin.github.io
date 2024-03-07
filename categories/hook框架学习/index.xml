@@ -3,7 +3,14 @@
         <title>Hook框架学习 - 分类 - tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/</link>
         <description>Hook框架学习 - 分类 - tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 21 Feb 2024 14:54:39 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/" rel="self" type="application/rss+xml" /><item>
+    <title>LSPlant源码学习</title>
+    <link>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
+    <pubDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
+    <description><![CDATA[LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架 从官方README上看，对于L]]></description>
+</item><item>
     <title>Dobby框架源码学习</title>
     <link>https://tcc0lin.github.io/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
     <pubDate>Wed, 21 Feb 2024 14:54:39 &#43;0800</pubDate><author>

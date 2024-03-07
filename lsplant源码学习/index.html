@@ -1,0 +1,1399 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>LSPlant源码学习 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="LSPlant源码学习" />
+<meta property="og:description" content="LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架 从官方README上看，对于L" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-03-07T23:09:44+08:00" />
+<meta property="article:modified_time" content="2024-03-07T23:09:44+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="LSPlant源码学习"/>
+<meta name="twitter:description" content="LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架 从官方README上看，对于L"/>
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" /><link rel="prev" href="https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "LSPlant源码学习",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/"
+        },"genre": "posts","keywords": "源码分析","wordcount":  3100 ,
+        "url": "https:\/\/tcc0lin.github.io\/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/","datePublished": "2024-03-07T23:09:44+08:00","dateModified": "2024-03-07T23:09:44+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一lsplant框架初始化">一、LSPlant框架初始化</a>
+          <ul>
+            <li><a href="#11-initconfig">1.1 InitConfig</a></li>
+            <li><a href="#12-initjni">1.2 InitJNI</a></li>
+            <li><a href="#13-initnative">1.3 InitNative</a></li>
+          </ul>
+        </li>
+        <li><a href="#二lsplant-art-hook原理">二、LSPlant ART hook原理</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">LSPlant源码学习</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/"><i class="far fa-folder fa-fw"></i>Hook框架学习</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-07">2024-03-07</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-07">2024-03-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 3100 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 7 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一lsplant框架初始化">一、LSPlant框架初始化</a>
+          <ul>
+            <li><a href="#11-initconfig">1.1 InitConfig</a></li>
+            <li><a href="#12-initjni">1.2 InitJNI</a></li>
+            <li><a href="#13-initnative">1.3 InitNative</a></li>
+          </ul>
+        </li>
+        <li><a href="#二lsplant-art-hook原理">二、LSPlant ART hook原理</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架</p>
+<p>从官方README上看，对于LSPlant的使用分为几种</p>
+<ol>
+<li>
+<p>Init LSPlant within JNI_OnLoad（在JNI_OnLoad时初始化LSPlant）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">Init</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">       <span class="k">const</span> <span class="n">InitInfo</span> <span class="o">&amp;</span><span class="n">info</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>Hook</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">jobject</span> <span class="nf">Hook</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="n">jobject</span> <span class="n">target_method</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="n">jobject</span> <span class="n">hooker_object</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="n">jobject</span> <span class="n">callback_method</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里存在三个入参，分别是目标方法、上下文、回调方法</p>
+</li>
+<li>
+<p>Check</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">IsHooked</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">           <span class="n">jobject</span> <span class="n">method</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>Unhook</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">UnHook</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">         <span class="n">jobject</span> <span class="n">target_method</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>Deoptimize</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">Deoptimize</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">             <span class="n">jobject</span> <span class="n">method</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>防止某些短函数被内联导致hook失效</p>
+</li>
+</ol>
+<h3 id="一lsplant框架初始化" class="headerLink">
+    <a href="#%e4%b8%80lsplant%e6%a1%86%e6%9e%b6%e5%88%9d%e5%a7%8b%e5%8c%96" class="header-mark"></a>一、LSPlant框架初始化</h3><p>lsplant的函数都实现在lsplant.cc中，看下init函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// lsplant\src\main\jni\lsplant.cc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="na">[[maybe_unused]]</span> <span class="kt">bool</span> <span class="n">Init</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="k">const</span> <span class="n">InitInfo</span> <span class="o">&amp;</span><span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="k">static</span> <span class="n">kInit</span> <span class="o">=</span> <span class="n">InitConfig</span><span class="p">(</span><span class="n">info</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">InitJNI</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">InitNative</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">info</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">kInit</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>以三个子流程的初始化状态来判断框架的状态</p>
+<h4 id="11-initconfig" class="headerLink">
+    <a href="#11-initconfig" class="header-mark"></a>1.1 InitConfig</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">InitConfig</span><span class="p">(</span><span class="k">const</span> <span class="n">InitInfo</span> <span class="o">&amp;</span><span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">generated_class_name</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;generated class name cannot be empty&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">generated_class_name</span> <span class="o">=</span> <span class="n">info</span><span class="p">.</span><span class="n">generated_class_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">generated_field_name</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;generated field name cannot be empty&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">generated_field_name</span> <span class="o">=</span> <span class="n">info</span><span class="p">.</span><span class="n">generated_field_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">generated_method_name</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;generated method name cannot be empty&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">generated_method_name</span> <span class="o">=</span> <span class="n">info</span><span class="p">.</span><span class="n">generated_method_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">generated_source_name</span> <span class="o">=</span> <span class="n">info</span><span class="p">.</span><span class="n">generated_source_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里说明入参必须要参照结构体InitInfo，需要配置的generated_class_name、generated_field_name、generated_method_name等字段</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">InitInfo</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief Type of inline hook function.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// In \ref std::function form so that user can use lambda expression with capture list.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p target is the target function to be hooked.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p hooker is the hooker function to replace the \p target function.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p return is the backup function that points to the previous target function.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// it should return null if hook fails and nonnull if successes.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">using</span> <span class="n">InlineHookFunType</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">*</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">target</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">hooker</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief Type of inline unhook function.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// In \ref std::function form so that user can use lambda expression with capture list.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p func is the target function that is previously hooked.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p return should indicate the status of unhooking.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">using</span> <span class="n">InlineUnhookFunType</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">func</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief Type of symbol resolver to \p libart.so.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// In \ref std::function form so that user can use lambda expression with capture list.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p symbol_name is the symbol name that needs to retrieve.&lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \p return is the absolute address in the memory that points to the target symbol. It should
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// be null if the symbol cannot be found. &lt;br&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// \note It should be able to resolve symbols from both .dynsym and .symtab.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">using</span> <span class="n">ArtSymbolResolver</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">*</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">symbol_name</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">using</span> <span class="n">ArtSymbolPrefixResolver</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">*</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">symbol_prefix</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The inline hooker function. Must not be null.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">InlineHookFunType</span> <span class="n">inline_hooker</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The inline unhooker function. Must not be null.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">InlineUnhookFunType</span> <span class="n">inline_unhooker</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The symbol resolver to \p libart.so. Must not be null.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ArtSymbolResolver</span> <span class="n">art_symbol_resolver</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The symbol prefix resolver to \p libart.so. May be null.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ArtSymbolPrefixResolver</span> <span class="n">art_symbol_prefix_resolver</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The generated class name. Must not be empty. It contains a field and a method
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// and they could be set by \p generated_field_name and \p generated_method_name respectively.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">generated_class_name</span> <span class="o">=</span> <span class="s">&#34;LSPHooker_&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The generated source name. Could be empty.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">generated_source_name</span> <span class="o">=</span> <span class="s">&#34;LSP&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The generated field name. Must not be empty.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">generated_field_name</span> <span class="o">=</span> <span class="s">&#34;hooker&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">/// \brief The generated class name. Must not be emtpy. If {target} is set,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">/// it will follows the name of the target.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">generated_method_name</span> <span class="o">=</span> <span class="s">&#34;{target}&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到name相关的字段都是默认的，因此可以不关注，最主要需要配置的是art_symbol_resolver、art_symbol_prefix_resolver这两个对于libart.so的hook，参考LSPosed的使用</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span>
+</span></span><span class="line"><span class="cl">    <span class="n">MagiskLoader</span><span class="o">::</span><span class="n">OnNativeForkAndSpecializePost</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">nice_name</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">app_dir</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">const</span> <span class="n">JUTFString</span> <span class="nf">process_name</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">nice_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="o">*</span><span class="n">instance</span> <span class="o">=</span> <span class="n">Service</span><span class="o">::</span><span class="n">instance</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">binder</span> <span class="o">=</span> <span class="n">skip_</span> <span class="o">?</span> <span class="n">ScopedLocalRef</span><span class="o">&lt;</span><span class="n">jobject</span><span class="o">&gt;</span><span class="p">{</span><span class="n">env</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">                            <span class="o">:</span> <span class="n">instance</span><span class="o">-&gt;</span><span class="n">RequestBinder</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">nice_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">binder</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">lsplant</span><span class="o">::</span><span class="n">InitInfo</span> <span class="n">initInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">inline_hooker</span> <span class="o">=</span> <span class="p">[](</span><span class="k">auto</span> <span class="n">t</span><span class="p">,</span> <span class="k">auto</span> <span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="kt">void</span><span class="o">*</span> <span class="n">bk</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">return</span> <span class="nf">HookFunction</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bk</span><span class="p">)</span> <span class="o">==</span> <span class="n">RS_SUCCESS</span> <span class="o">?</span> <span class="nl">bk</span> <span class="p">:</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">inline_unhooker</span> <span class="o">=</span> <span class="p">[](</span><span class="k">auto</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">return</span> <span class="nf">UnhookFunction</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_SUCCESS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">art_symbol_resolver</span> <span class="o">=</span> <span class="p">[](</span><span class="k">auto</span> <span class="n">symbol</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">return</span> <span class="nf">GetArt</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getSymbAddress</span><span class="p">(</span><span class="n">symbol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">art_symbol_prefix_resolver</span> <span class="o">=</span> <span class="p">[](</span><span class="k">auto</span> <span class="n">symbol</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">return</span> <span class="nf">GetArt</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getSymbPrefixFirstAddress</span><span class="p">(</span><span class="n">symbol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="p">};</span>
+</span></span><span class="line"><span class="cl">            <span class="p">......</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">context</span> <span class="o">=</span> <span class="n">Context</span><span class="o">::</span><span class="n">ReleaseInstance</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">service</span> <span class="o">=</span> <span class="n">Service</span><span class="o">::</span><span class="n">ReleaseInstance</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">GetArt</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;skipped {}&#34;</span><span class="p">,</span> <span class="n">process_name</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="n">setAllowUnload</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="12-initjni" class="headerLink">
+    <a href="#12-initjni" class="header-mark"></a>1.2 InitJNI</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">InitJNI</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">sdk_int</span> <span class="o">=</span> <span class="n">GetAndroidApiLevel</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">&gt;=</span> <span class="n">__ANDROID_API_O__</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">executable</span> <span class="o">=</span> <span class="n">JNI_NewGlobalRef</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/Executable&#34;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">executable</span> <span class="o">=</span> <span class="n">JNI_NewGlobalRef</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/AbstractMethod&#34;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">executable</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to found Executable/AbstractMethod&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">method_get_name</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="s">&#34;getName&#34;</span><span class="p">,</span> <span class="s">&#34;()Ljava/lang/String;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">method_get_name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getName method&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">method_get_declaring_class</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="s">&#34;getDeclaringClass&#34;</span><span class="p">,</span> <span class="s">&#34;()Ljava/lang/Class;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">method_get_declaring_class</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getDeclaringClass method&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">method_get_parameter_types</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="s">&#34;getParameterTypes&#34;</span><span class="p">,</span> <span class="s">&#34;()[Ljava/lang/Class;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">method_get_parameter_types</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getParameterTypes method&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">method_get_return_type</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/Method&#34;</span><span class="p">),</span> <span class="s">&#34;getReturnType&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                            <span class="s">&#34;()Ljava/lang/Class;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">method_get_return_type</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getReturnType method&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/Class&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">clazz</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find Class&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">class_get_class_loader</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="s">&#34;getClassLoader&#34;</span><span class="p">,</span> <span class="s">&#34;()Ljava/lang/ClassLoader;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">class_get_class_loader</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getClassLoader&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">class_get_declared_constructors</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="s">&#34;getDeclaredConstructors&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                                          <span class="s">&#34;()[Ljava/lang/reflect/Constructor;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">class_get_declared_constructors</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getDeclaredConstructors&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">class_get_name</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="s">&#34;getName&#34;</span><span class="p">,</span> <span class="s">&#34;()Ljava/lang/String;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">class_get_name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find getName&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">class_access_flags</span> <span class="o">=</span> <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="s">&#34;accessFlags&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span> <span class="o">!</span><span class="n">class_access_flags</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find Class.accessFlags&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">path_class_loader</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;dalvik/system/PathClassLoader&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">path_class_loader</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find PathClassLoader&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">path_class_loader_init</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">path_class_loader</span><span class="p">,</span> <span class="s">&#34;&lt;init&gt;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                                 <span class="s">&#34;(Ljava/lang/String;Ljava/lang/ClassLoader;)V&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">path_class_loader_init</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find PathClassLoader.&lt;init&gt;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">dex_file_class</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;dalvik/system/DexFile&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">dex_file_class</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find DexFile&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">&gt;=</span> <span class="n">__ANDROID_API_Q__</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dex_file_init_with_cl</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">env</span><span class="p">,</span> <span class="n">dex_file_class</span><span class="p">,</span> <span class="s">&#34;&lt;init&gt;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;([Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;[Ldalvik/system/DexPathList$Element;)V&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">&gt;=</span> <span class="n">__ANDROID_API_O__</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dex_file_init</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">dex_file_class</span><span class="p">,</span> <span class="s">&#34;&lt;init&gt;&#34;</span><span class="p">,</span> <span class="s">&#34;(Ljava/nio/ByteBuffer;)V&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">&gt;=</span> <span class="n">__ANDROID_API_O__</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">dex_file_init_with_cl</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">dex_file_init</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find DexFile.&lt;init&gt;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">load_class</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">dex_file_class</span><span class="p">,</span> <span class="s">&#34;loadClass&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                            <span class="s">&#34;(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">load_class</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find a suitable way to load class&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">accessible_object</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/AccessibleObject&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">accessible_object</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find AccessibleObject&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">set_accessible</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">accessible_object</span><span class="p">,</span> <span class="s">&#34;setAccessible&#34;</span><span class="p">,</span> <span class="s">&#34;(Z)V&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">!</span><span class="n">set_accessible</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to find AccessibleObject.setAccessible&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>InitJNI的部分没什么可说的，入参是JNIEnv，根据不同版本获取JNI方法并设置成全局变量</p>
+<h4 id="13-initnative" class="headerLink">
+    <a href="#13-initnative" class="header-mark"></a>1.3 InitNative</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">InitNative</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="k">const</span> <span class="n">HookHandler</span> <span class="o">&amp;</span><span class="n">handler</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler</span><span class="p">.</span><span class="n">inline_hooker</span> <span class="o">||</span> <span class="o">!</span><span class="n">handler</span><span class="p">.</span><span class="n">inline_unhooker</span> <span class="o">||</span> <span class="o">!</span><span class="n">handler</span><span class="p">.</span><span class="n">art_symbol_resolver</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ArtMethod</span><span class="o">::</span><span class="n">Init</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">handler</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to init art method&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">UpdateTrampoline</span><span class="p">(</span><span class="n">ArtMethod</span><span class="o">::</span><span class="n">GetEntryPointOffset</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">Thread</span><span class="o">::</span><span class="n">Init</span><span class="p">(</span><span class="n">handler</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to init thread&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ClassLinker</span><span class="o">::</span><span class="n">Init</span><span class="p">(</span><span class="n">handler</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to init class linker&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// This should always be the last one
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">IsJavaDebuggable</span><span class="p">(</span><span class="n">env</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Make the runtime non-debuggable as a workaround
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// when ShouldUseInterpreterEntrypoint inlined
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">Runtime</span><span class="o">::</span><span class="n">Current</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">SetJavaDebuggable</span><span class="p">(</span><span class="n">Runtime</span><span class="o">::</span><span class="n">RuntimeDebugState</span><span class="o">::</span><span class="n">kNonJavaDebuggable</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>InitNative主要是对libart.so当中的方法做了hook，先看看ArtMethod::Init</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">bool</span> <span class="nf">Init</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="k">const</span> <span class="n">HookHandler</span> <span class="n">handler</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 根据不同版本获取Executable
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">executable</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/Executable&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">executable</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to found Executable/AbstractMethod/ArtMethod&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// 获取artMethod的FieldID
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">art_method_field</span> <span class="o">=</span> <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="s">&#34;artMethod&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// 获取art_method_size，采用的方法是通过两个相邻方法的指针地址相减
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">auto</span> <span class="n">throwable</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/Throwable&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">throwable</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to found Executable&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/Class&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span><span class="o">::</span><span class="n">BaseType</span><span class="p">,</span> <span class="n">jclass</span><span class="o">&gt;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jmethodID</span> <span class="n">get_declared_constructors</span> <span class="o">=</span> <span class="n">JNI_GetMethodID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="s">&#34;getDeclaredConstructors&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                                              <span class="s">&#34;()[Ljava/lang/reflect/Constructor;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">const</span> <span class="k">auto</span> <span class="n">constructors</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_Cast</span><span class="o">&lt;</span><span class="n">jobjectArray</span><span class="o">&gt;</span><span class="p">(</span><span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">throwable</span><span class="p">,</span> <span class="n">get_declared_constructors</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">constructors</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Throwable has less than 2 constructors&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">first_ctor</span> <span class="o">=</span> <span class="n">constructors</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">second_ctor</span> <span class="o">=</span> <span class="n">constructors</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="o">*</span><span class="n">first</span> <span class="o">=</span> <span class="n">FromReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">first_ctor</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="o">*</span><span class="n">second</span> <span class="o">=</span> <span class="n">FromReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">second_ctor</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">        <span class="n">art_method_size</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">second</span><span class="p">)</span> <span class="o">-</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">first</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod size: %zu&#34;</span><span class="p">,</span> <span class="n">art_method_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// kPointerSize对应一个指针的大小 sizeof(void *)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">entry_point_offset</span> <span class="o">=</span> <span class="n">art_method_size</span> <span class="o">-</span> <span class="n">kPointerSize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">data_offset</span> <span class="o">=</span> <span class="n">entry_point_offset</span> <span class="o">-</span> <span class="n">kPointerSize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">&gt;=</span> <span class="n">__ANDROID_API_M__</span><span class="p">)</span> <span class="na">[[likely]]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">access_flags_field</span> <span class="o">=</span> <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="s">&#34;accessFlags&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">access_flags_field</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kt">uint32_t</span> <span class="n">real_flags</span> <span class="o">=</span> <span class="n">JNI_GetIntField</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">first_ctor</span><span class="p">,</span> <span class="n">access_flags_field</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">art_method_size</span><span class="p">;</span> <span class="n">i</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint32_t</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">uint32_t</span> <span class="o">*&gt;</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">first</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">==</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">real_flags</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">access_flags_offset</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">access_flags_offset</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">LOGW</span><span class="p">(</span><span class="s">&#34;Failed to find accessFlags field. Fallback to 4.&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">access_flags_offset</span> <span class="o">=</span> <span class="mi">4U</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">art_field</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/ArtField&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">field</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/Field&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">art_field_field</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">                <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="s">&#34;artField&#34;</span><span class="p">,</span> <span class="s">&#34;Ljava/lang/reflect/ArtField;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">field_offset</span> <span class="o">=</span> <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">art_field</span><span class="p">,</span> <span class="s">&#34;offset&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">get_offset_from_art_method</span> <span class="o">=</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">sig</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">JNI_GetIntField</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">JNI_GetObjectField</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">env</span><span class="o">-&gt;</span><span class="n">ToReflectedField</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                              <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sig</span><span class="p">),</span> <span class="nb">false</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">art_field_field</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">field_offset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">};</span>
+</span></span><span class="line"><span class="cl">            <span class="n">access_flags_offset</span> <span class="o">=</span> <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;accessFlags&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">declaring_class_offset</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">                <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;declaringClass&#34;</span><span class="p">,</span> <span class="s">&#34;Ljava/lang/Class;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">==</span> <span class="n">__ANDROID_API_L__</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">entry_point_offset</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;entryPointFromQuickCompiledCode&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">interpreter_entry_point_offset</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;entryPointFromInterpreter&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">data_offset</span> <span class="o">=</span> <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;entryPointFromJni&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::declaring_class offset: %zu&#34;</span><span class="p">,</span> <span class="n">declaring_class_offset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::entrypoint offset: %zu&#34;</span><span class="p">,</span> <span class="n">entry_point_offset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::data offset: %zu&#34;</span><span class="p">,</span> <span class="n">data_offset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::access_flags offset: %zu&#34;</span><span class="p">,</span> <span class="n">access_flags_offset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="p">......</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里关键在于获取art_method_field、entry_point_offset、data_offset</p>
+<p>接着是UpdateTrampoline</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// offset来自之前获取的entry_point_offset
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">UpdateTrampoline</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">offset</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">trampoline</span><span class="p">[</span><span class="n">entry_point_offset</span> <span class="o">/</span> <span class="n">CHAR_BIT</span><span class="p">]</span> <span class="o">|=</span> <span class="n">offset</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">entry_point_offset</span> <span class="o">%</span> <span class="n">CHAR_BIT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">trampoline</span><span class="p">[</span><span class="n">entry_point_offset</span> <span class="o">/</span> <span class="n">CHAR_BIT</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">|=</span>
+</span></span><span class="line"><span class="cl">        <span class="n">offset</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">CHAR_BIT</span> <span class="o">-</span> <span class="n">entry_point_offset</span> <span class="o">%</span> <span class="n">CHAR_BIT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="二lsplant-art-hook原理" class="headerLink">
+    <a href="#%e4%ba%8clsplant-art-hook%e5%8e%9f%e7%90%86" class="header-mark"></a>二、LSPlant ART hook原理</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="na">[[maybe_unused]]</span> <span class="n">jobject</span> <span class="n">Hook</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">target_method</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">hooker_object</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">jobject</span> <span class="n">callback_method</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">jmethodID</span> <span class="n">hook_method</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jmethodID</span> <span class="n">backup_method</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jfieldID</span> <span class="n">hooker_field</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">target_class</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNI_Cast</span><span class="o">&lt;</span><span class="n">jclass</span><span class="o">&gt;</span><span class="p">(</span><span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">target_method</span><span class="p">,</span> <span class="n">method_get_declaring_class</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">constexpr</span> <span class="k">static</span> <span class="kt">uint32_t</span> <span class="n">kAccClassIsProxy</span> <span class="o">=</span> <span class="mh">0x00040000</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">is_proxy</span> <span class="o">=</span> <span class="n">JNI_GetIntField</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">target_class</span><span class="p">,</span> <span class="n">class_access_flags</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">kAccClassIsProxy</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="o">*</span><span class="n">target</span> <span class="o">=</span> <span class="n">ArtMethod</span><span class="o">::</span><span class="n">FromReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">target_method</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">is_static</span> <span class="o">=</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">IsStatic</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 避免重复hook
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">IsHooked</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">true</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGW</span><span class="p">(</span><span class="s">&#34;Skip duplicate hook&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">ScopedLocalRef</span><span class="o">&lt;</span><span class="n">jclass</span><span class="o">&gt;</span> <span class="n">built_class</span><span class="p">{</span><span class="n">env</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">callback_name</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_Cast</span><span class="o">&lt;</span><span class="n">jstring</span><span class="o">&gt;</span><span class="p">(</span><span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">callback_method</span><span class="p">,</span> <span class="n">method_get_name</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JUTFString</span> <span class="nf">callback_method_name</span><span class="p">(</span><span class="n">callback_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">target_name</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_Cast</span><span class="o">&lt;</span><span class="n">jstring</span><span class="o">&gt;</span><span class="p">(</span><span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">target_method</span><span class="p">,</span> <span class="n">method_get_name</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JUTFString</span> <span class="nf">target_method_name</span><span class="p">(</span><span class="n">target_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">callback_class</span> <span class="o">=</span> <span class="n">JNI_Cast</span><span class="o">&lt;</span><span class="n">jclass</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">callback_method</span><span class="p">,</span> <span class="n">method_get_declaring_class</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">callback_class_loader</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">callback_class</span><span class="p">,</span> <span class="n">class_get_class_loader</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">callback_class_name</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">            <span class="n">JNI_Cast</span><span class="o">&lt;</span><span class="n">jstring</span><span class="o">&gt;</span><span class="p">(</span><span class="n">JNI_CallObjectMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">callback_class</span><span class="p">,</span> <span class="n">class_get_name</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JUTFString</span> <span class="nf">class_name</span><span class="p">(</span><span class="n">callback_class_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">JNI_IsInstanceOf</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">hooker_object</span><span class="p">,</span> <span class="n">callback_class</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;callback_method is not a method of hooker_object&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">tie</span><span class="p">(</span><span class="n">built_class</span><span class="p">,</span> <span class="n">hooker_field</span><span class="p">,</span> <span class="n">hook_method</span><span class="p">,</span> <span class="n">backup_method</span><span class="p">)</span> <span class="o">=</span> <span class="n">WrapScope</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">BuildDex</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">callback_class_loader</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">__builtin_expect</span><span class="p">(</span><span class="n">is_proxy</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="n">GetProxyMethodShorty</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">target_method</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                                   <span class="o">:</span> <span class="n">ArtMethod</span><span class="o">::</span><span class="n">GetMethodShorty</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">target_method</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">is_static</span><span class="p">,</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">IsConstructor</span><span class="p">()</span> <span class="o">?</span> <span class="s">&#34;constructor&#34;</span> <span class="o">:</span> <span class="n">target_method_name</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">class_name</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">callback_method_name</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">built_class</span> <span class="o">||</span> <span class="o">!</span><span class="n">hooker_field</span> <span class="o">||</span> <span class="o">!</span><span class="n">hook_method</span> <span class="o">||</span> <span class="o">!</span><span class="n">backup_method</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to generate hooker&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">reflected_hook</span> <span class="o">=</span> <span class="n">JNI_ToReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">built_class</span><span class="p">,</span> <span class="n">hook_method</span><span class="p">,</span> <span class="n">is_static</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">reflected_backup</span> <span class="o">=</span> <span class="n">JNI_ToReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">built_class</span><span class="p">,</span> <span class="n">backup_method</span><span class="p">,</span> <span class="n">is_static</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">JNI_CallVoidMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">reflected_backup</span><span class="p">,</span> <span class="n">set_accessible</span><span class="p">,</span> <span class="n">JNI_TRUE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="o">*</span><span class="n">hook</span> <span class="o">=</span> <span class="n">ArtMethod</span><span class="o">::</span><span class="n">FromReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">reflected_hook</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="o">*</span><span class="n">backup</span> <span class="o">=</span> <span class="n">ArtMethod</span><span class="o">::</span><span class="n">FromReflectedMethod</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">reflected_backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">JNI_SetStaticObjectField</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">built_class</span><span class="p">,</span> <span class="n">hooker_field</span><span class="p">,</span> <span class="n">hooker_object</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">DoHook</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">hook</span><span class="p">,</span> <span class="n">backup</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">apply</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="p">[</span><span class="n">backup_method</span><span class="p">,</span> <span class="n">target_method_id</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="n">FromReflectedMethod</span><span class="p">(</span><span class="n">target_method</span><span class="p">)](</span><span class="k">auto</span><span class="p">...</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="p">((</span><span class="o">*</span><span class="n">v</span> <span class="o">==</span> <span class="n">target_method_id</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">                  <span class="p">(</span><span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;Propagate internal used method because of hook&#34;</span><span class="p">),</span> <span class="o">*</span><span class="n">v</span> <span class="o">=</span> <span class="n">backup_method</span><span class="p">))</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                 <span class="p">...);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="n">kInternalMethods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobject</span> <span class="n">global_backup</span> <span class="o">=</span> <span class="n">JNI_NewGlobalRef</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">reflected_backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">RecordHooked</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">GetDeclaringClass</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">GetClassDef</span><span class="p">(),</span> <span class="n">global_backup</span><span class="p">,</span> <span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">is_proxy</span><span class="p">)</span> <span class="na">[[likely]]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">RecordJitMovement</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Always record backup as deoptimized since we dont want its entrypoint to be updated
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// by FixupStaticTrampolines on hooker class
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// Used hook&#39;s declaring class here since backup&#39;s is no longer the same with hook&#39;s
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">RecordDeoptimized</span><span class="p">(</span><span class="n">hook</span><span class="o">-&gt;</span><span class="n">GetDeclaringClass</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">GetClassDef</span><span class="p">(),</span> <span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">global_backup</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>核心函数DoHook</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">DoHook</span><span class="p">(</span><span class="n">ArtMethod</span> <span class="o">*</span><span class="n">target</span><span class="p">,</span> <span class="n">ArtMethod</span> <span class="o">*</span><span class="n">hook</span><span class="p">,</span> <span class="n">ArtMethod</span> <span class="o">*</span><span class="n">backup</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ScopedGCCriticalSection</span> <span class="n">section</span><span class="p">(</span><span class="n">art</span><span class="o">::</span><span class="n">Thread</span><span class="o">::</span><span class="n">Current</span><span class="p">(),</span> <span class="n">art</span><span class="o">::</span><span class="n">gc</span><span class="o">::</span><span class="n">kGcCauseDebugger</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                    <span class="n">art</span><span class="o">::</span><span class="n">gc</span><span class="o">::</span><span class="n">kCollectorTypeDebugger</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ScopedSuspendAll</span> <span class="n">suspend</span><span class="p">(</span><span class="s">&#34;LSPlant Hook&#34;</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">LOGV</span><span class="p">(</span><span class="s">&#34;Hooking: target = %s(%p), hook = %s(%p), backup = %s(%p)&#34;</span><span class="p">,</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">PrettyMethod</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">         <span class="n">target</span><span class="p">,</span> <span class="n">hook</span><span class="o">-&gt;</span><span class="n">PrettyMethod</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">hook</span><span class="p">,</span> <span class="n">backup</span><span class="o">-&gt;</span><span class="n">PrettyMethod</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 生成trampoline
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="o">*</span><span class="n">entrypoint</span> <span class="o">=</span> <span class="n">GenerateTrampolineFor</span><span class="p">(</span><span class="n">hook</span><span class="p">);</span> <span class="o">!</span><span class="n">entrypoint</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to generate trampoline&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// NOLINTNEXTLINE
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGV</span><span class="p">(</span><span class="s">&#34;Generated trampoline %p&#34;</span><span class="p">,</span> <span class="n">entrypoint</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">target</span><span class="o">-&gt;</span><span class="n">SetNonCompilable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hook</span><span class="o">-&gt;</span><span class="n">SetNonCompilable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// copy after setNonCompilable
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">backup</span><span class="o">-&gt;</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">target</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">target</span><span class="o">-&gt;</span><span class="n">ClearFastInterpretFlag</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">target</span><span class="o">-&gt;</span><span class="n">SetEntryPoint</span><span class="p">(</span><span class="n">entrypoint</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">backup</span><span class="o">-&gt;</span><span class="n">IsStatic</span><span class="p">())</span> <span class="n">backup</span><span class="o">-&gt;</span><span class="n">SetPrivate</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">LOGV</span><span class="p">(</span><span class="s">&#34;Done hook: target(%p:0x%x) -&gt; %p; backup(%p:0x%x) -&gt; %p; hook(%p:0x%x) -&gt; %p&#34;</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">             <span class="n">target</span><span class="o">-&gt;</span><span class="n">GetAccessFlags</span><span class="p">(),</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">GetEntryPoint</span><span class="p">(),</span> <span class="n">backup</span><span class="p">,</span> <span class="n">backup</span><span class="o">-&gt;</span><span class="n">GetAccessFlags</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">             <span class="n">backup</span><span class="o">-&gt;</span><span class="n">GetEntryPoint</span><span class="p">(),</span> <span class="n">hook</span><span class="p">,</span> <span class="n">hook</span><span class="o">-&gt;</span><span class="n">GetAccessFlags</span><span class="p">(),</span> <span class="n">hook</span><span class="o">-&gt;</span><span class="n">GetEntryPoint</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">GenerateTrampolineFor</span><span class="p">(</span><span class="n">art</span><span class="o">::</span><span class="n">ArtMethod</span> <span class="o">*</span><span class="n">hook</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="n">count</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">uintptr_t</span> <span class="n">address</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="n">tl</span> <span class="o">=</span> <span class="n">Trampoline</span><span class="p">{.</span><span class="n">address</span> <span class="o">=</span> <span class="n">trampoline_pool</span><span class="p">.</span><span class="n">fetch_add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">)};</span>
+</span></span><span class="line"><span class="cl">        <span class="n">count</span> <span class="o">=</span> <span class="n">tl</span><span class="p">.</span><span class="n">count</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">address</span> <span class="o">=</span> <span class="n">tl</span><span class="p">.</span><span class="n">address</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">kAddressMask</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">address</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="n">kTrampolineNumPerPage</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">trampoline_lock</span><span class="p">.</span><span class="n">test_and_set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acq_rel</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">trampoline_lock</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">address</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mmap</span><span class="p">(</span><span class="k">nullptr</span><span class="p">,</span> <span class="n">kPageSize</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                                       <span class="n">PROT_READ</span> <span class="o">|</span> <span class="n">PROT_WRITE</span> <span class="o">|</span> <span class="n">PROT_EXEC</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                                       <span class="n">MAP_ANONYMOUS</span> <span class="o">|</span> <span class="n">MAP_PRIVATE</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">address</span> <span class="o">==</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">MAP_FAILED</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">PLOGE</span><span class="p">(</span><span class="s">&#34;mmap trampoline&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">trampoline_lock</span><span class="p">.</span><span class="n">clear</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="n">trampoline_lock</span><span class="p">.</span><span class="n">notify_all</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tl</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tl</span><span class="p">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">trampoline_pool</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="n">tl</span><span class="p">.</span><span class="n">address</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">trampoline_lock</span><span class="p">.</span><span class="n">clear</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">trampoline_lock</span><span class="p">.</span><span class="n">notify_all</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">LOGV</span><span class="p">(</span><span class="s">&#34;trampoline: count = %u, address = %zx, target = %zx&#34;</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">             <span class="n">address</span> <span class="o">+</span> <span class="n">count</span> <span class="o">*</span> <span class="n">kTrampolineSize</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">address</span> <span class="o">=</span> <span class="n">address</span> <span class="o">+</span> <span class="n">count</span> <span class="o">*</span> <span class="n">kTrampolineSize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="o">*</span><span class="n">address_ptr</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">char</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">memcpy</span><span class="p">(</span><span class="n">address_ptr</span><span class="p">,</span> <span class="n">trampoline</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">trampoline</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">art</span><span class="o">::</span><span class="n">ArtMethod</span> <span class="o">**&gt;</span><span class="p">(</span><span class="n">address_ptr</span> <span class="o">+</span> <span class="n">art_method_offset</span><span class="p">)</span> <span class="o">=</span> <span class="n">hook</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">__builtin___clear_cache</span><span class="p">(</span><span class="n">address_ptr</span><span class="p">,</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">char</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">address</span> <span class="o">+</span> <span class="n">trampoline</span><span class="p">.</span><span class="n">size</span><span class="p">()));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">address_ptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+
+        
+
+
+<h2>相关内容</h2>
+<div class="related-container">
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/">Zygisk-v27.0源码阅读</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/">Art方法调用流程分析</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">Dobby框架源码学习</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/skroot%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/">SKRoot原理分析</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/kernelsu%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/">KernelSU原理分析</a>
+            </h2>
+        </div>
+    
+
+</div>
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-03-07</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习" data-hashtags="源码分析"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-hashtag="源码分析"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" data-title="LSPlant源码学习"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" class="prev" rel="prev" title="Zygisk-v27.0源码阅读"><i class="fas fa-angle-left fa-fw"></i>Zygisk-v27.0源码阅读</a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.123.7">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>

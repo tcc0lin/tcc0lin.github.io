@@ -3,7 +3,14 @@
         <title>源码分析 - 标签 - tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
         <description>源码分析 - 标签 - tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="self" type="application/rss+xml" /><item>
+    <title>LSPlant源码学习</title>
+    <link>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
+    <pubDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
+    <description><![CDATA[LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架 从官方README上看，对于L]]></description>
+</item><item>
     <title>Zygisk-v27.0源码阅读</title>
     <link>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
     <pubDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</pubDate><author>
@@ -66,12 +73,5 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
     <description><![CDATA[基于Magisk v25.0 一、Zygisk注入 1. magic_mount挂载app_processmagic_mount的原理是挂载tmpfs作为目录]]></description>
-</item><item>
-    <title>重读Magisk内部实现细节2</title>
-    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</link>
-    <pubDate>Sun, 11 Jun 2023 11:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</guid>
-    <description><![CDATA[前言承接上文，经过Magisk修补后的boot.img在启动引导过程中为了实现Root的功能很关键的一步在于patch了init.rc和se]]></description>
 </item></channel>
 </rss>

@@ -3,9 +3,16 @@
         <title>tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>LSPlant源码学习</title>
+    <link>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
+    <pubDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
+    <description><![CDATA[LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架 从官方README上看，对于L]]></description>
+</item><item>
     <title>Zygisk-v27.0源码阅读</title>
     <link>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
     <pubDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</pubDate><author>
@@ -68,12 +75,5 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/kernelsu%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/</guid>
     <description><![CDATA[]]></description>
-</item><item>
-    <title>KeyAttestation原理理解</title>
-    <link>https://tcc0lin.github.io/keyattestationke%E5%8F%AF%E7%94%A8%E6%80%A7%E6%B5%8B%E8%AF%95/</link>
-    <pubDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/keyattestationke%E5%8F%AF%E7%94%A8%E6%80%A7%E6%B5%8B%E8%AF%95/</guid>
-    <description><![CDATA[一、Key Attestation密钥认证根据官方文档的阐述 Keymaster在Android7.0 (Keymaster 2) 中引入了密钥认证 在 Android8.0 (Keymaster 3) 中引入了ID认]]></description>
 </item></channel>
 </rss>
