@@ -297,7 +297,7 @@ bool InitNative(JNIEnv *env, const HookHandler &handler) {
     return true;
 }
 ```
-InitNative主要是对libart.so当中的方法做了hook，先看看ArtMethod::Init
+InitNative主要是对libart.so当中的方法做了hook，先看看ArtMethod::Init, 函数里面关于版本适配的代码很多，我们就以Android11以上的视角来看
 ```c++
 static bool Init(JNIEnv *env, const HookHandler handler) {
         // 根据不同版本获取Executable
@@ -334,53 +334,10 @@ static bool Init(JNIEnv *env, const HookHandler handler) {
         LOGD("ArtMethod size: %zu", art_method_size);
 
 
-        // kPointerSize对应一个指针的大小 sizeof(void *)
+        // kPointerSize对应一个void *指针的大小 sizeof(void *)
         entry_point_offset = art_method_size - kPointerSize;
         data_offset = entry_point_offset - kPointerSize;
 
-        if (sdk_int >= __ANDROID_API_M__) [[likely]] {
-            if (auto access_flags_field = JNI_GetFieldID(env, executable, "accessFlags", "I");
-                access_flags_field) {
-                uint32_t real_flags = JNI_GetIntField(env, first_ctor, access_flags_field);
-                for (size_t i = 0; i < art_method_size; i += sizeof(uint32_t)) {
-                    if (*reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(first) + i) ==
-                        real_flags) {
-                        access_flags_offset = i;
-                        break;
-                    }
-                }
-            }
-            if (access_flags_offset == 0) {
-                LOGW("Failed to find accessFlags field. Fallback to 4.");
-                access_flags_offset = 4U;
-            }
-        } else {
-            auto art_field = JNI_FindClass(env, "java/lang/reflect/ArtField");
-            auto field = JNI_FindClass(env, "java/lang/reflect/Field");
-            auto art_field_field =
-                JNI_GetFieldID(env, field, "artField", "Ljava/lang/reflect/ArtField;");
-            auto field_offset = JNI_GetFieldID(env, art_field, "offset", "I");
-            auto get_offset_from_art_method = [&](const char *name, const char *sig) {
-                return JNI_GetIntField(
-                    env,
-                    JNI_GetObjectField(
-                        env,
-                        env->ToReflectedField(executable,
-                                              JNI_GetFieldID(env, executable, name, sig), false),
-                        art_field_field),
-                    field_offset);
-            };
-            access_flags_offset = get_offset_from_art_method("accessFlags", "I");
-            declaring_class_offset =
-                get_offset_from_art_method("declaringClass", "Ljava/lang/Class;");
-            if (sdk_int == __ANDROID_API_L__) {
-                entry_point_offset =
-                    get_offset_from_art_method("entryPointFromQuickCompiledCode", "J");
-                interpreter_entry_point_offset =
-                    get_offset_from_art_method("entryPointFromInterpreter", "J");
-                data_offset = get_offset_from_art_method("entryPointFromJni", "J");
-            }
-        }
         LOGD("ArtMethod::declaring_class offset: %zu", declaring_class_offset);
         LOGD("ArtMethod::entrypoint offset: %zu", entry_point_offset);
         LOGD("ArtMethod::data offset: %zu", data_offset);
@@ -392,6 +349,57 @@ static bool Init(JNIEnv *env, const HookHandler handler) {
 ```
 这里关键在于获取art_method_field、entry_point_offset、data_offset
 
+entry_point_offset怎么理解呢？从art_method.h的ArtMethod类中看
+```c++
+protected:
+  // Field order required by test "ValidateFieldOrderOfJavaCppUnionClasses".
+  // The class we are a part of.
+  GcRoot<mirror::Class> declaring_class_;
+  // Access flags; low 16 bits are defined by spec.
+  // Getting and setting this flag needs to be atomic when concurrency is
+  // possible, e.g. after this method's class is linked. Such as when setting
+  // verifier flags and single-implementation flag.
+  std::atomic<std::uint32_t> access_flags_;
+  /* Dex file fields. The defining dex file is available via declaring_class_->dex_cache_ */
+  // Offset to the CodeItem.
+  uint32_t dex_code_item_offset_;
+  // Index into method_ids of the dex file associated with this method.
+  uint32_t dex_method_index_;
+  /* End of dex file fields. */
+  // Entry within a dispatch table for this method. For static/direct methods the index is into
+  // the declaringClass.directMethods, for virtual methods the vtable and for interface methods the
+  // ifTable.
+  uint16_t method_index_;
+  union {
+    // Non-abstract methods: The hotness we measure for this method. Not atomic,
+    // as we allow missing increments: if the method is hot, we will see it eventually.
+    uint16_t hotness_count_;
+    // Abstract methods: IMT index (bitwise negated) or zero if it was not cached.
+    // The negation is needed to distinguish zero index and missing cached entry.
+    uint16_t imt_index_;
+  };
+  // Fake padding field gets inserted here.
+  // Must be the last fields in the method.
+  struct PtrSizedFields {
+    // Depending on the method type, the data is
+    //   - native method: pointer to the JNI function registered to this method
+    //                    or a function to resolve the JNI function,
+    //   - conflict method: ImtConflictTable,
+    //   - abstract/interface method: the single-implementation if any,
+    //   - proxy method: the original interface method or constructor,
+    //   - other methods: the profiling data.
+    void* data_;
+    // Method dispatch from quick compiled code invokes this pointer which may cause bridging into
+    // the interpreter.
+    void* entry_point_from_quick_compiled_code_;
+  } ptr_sized_fields_;
+```
+art_method_size对应的是ArtMethod类实例的大小，也等于所有protected字段的大小总和
+1. entry_point_offset = art_method_size - kPointerSize;
+    对应的是使用总和-void*，从类中来看，减去的部分是entry_point_from_quick_compiled_code_所对应的指针大小，那么也就得到了entry_point_from_quick_compiled_code_指针的偏移量
+2. data_offset = entry_point_offset - kPointerSize;
+    同理，data_也对应了void*，也就相当于得到了data_指针的偏移量
+
 接着是UpdateTrampoline
 ```c++
 // offset来自之前获取的entry_point_offset
@@ -401,6 +409,88 @@ inline void UpdateTrampoline(uint8_t offset) {
         offset >> (CHAR_BIT - entry_point_offset % CHAR_BIT);
 }
 ```
+trampoline的由来
+```c++
+auto [trampoline, entry_point_offset, art_method_offset] = GetTrampoline();
+
+consteval inline auto GetTrampoline() {
+    if constexpr (kArch == Arch::kArm) {
+        return std::make_tuple("\x00\x00\x9f\xe5\x00\xf0\x90\xe5\x78\x56\x34\x12"_uarr,
+                               // NOLINTNEXTLINE
+                               uint8_t{32u}, uintptr_t{8u});
+    }
+    if constexpr (kArch == Arch::kArm64) {
+        return std::make_tuple(
+            "\x60\x00\x00\x58\x10\x00\x40\xf8\x00\x02\x1f\xd6\x78\x56\x34\x12\x78\x56\x34\x12"_uarr,
+            // NOLINTNEXTLINE
+            uint8_t{44u}, uintptr_t{12u});
+    }
+    if constexpr (kArch == Arch::kX86) {
+        return std::make_tuple("\xb8\x78\x56\x34\x12\xff\x70\x00\xc3"_uarr,
+                               // NOLINTNEXTLINE
+                               uint8_t{56u}, uintptr_t{1u});
+    }
+    if constexpr (kArch == Arch::kX86_64) {
+        return std::make_tuple("\x48\xbf\x78\x56\x34\x12\x78\x56\x34\x12\xff\x77\x00\xc3"_uarr,
+                               // NOLINTNEXTLINE
+                               uint8_t{96u}, uintptr_t{2u});
+    }
+    if constexpr (kArch == Arch::kRiscv64) {
+        return std::make_tuple(
+            "\x17\x05\x00\x00\x03\x35\xc5\x00\x67\x00\x05\x00\x78\x56\x34\x12\x78\x56\x34\x12"_uarr,
+            // NOLINTNEXTLINE
+            uint8_t{84u}, uintptr_t{12u});
+    }
+}
+```
+entry_point_offset表示ArtMethod的entry_point_from_quick_compiled_code_偏移在指令中的位置（按位）
+- x86-64
+    ```c++
+    0x0000000000000000:  48 BF 78 56 34 12 78 56 34 12    movabs rdi, 0x1234567812345678 # ArtMethod 地址置于 rdi 中
+    0x000000000000000a:  FF 77 xx                         push   qword ptr [rdi + xx] # 取 hook ArtMethod 的 entry_point_from_quick_compiled_code_ 放到栈上
+    0x000000000000000d:  C3                               ret    # 跳转到 hook 的 entry_point_from_quick_compiled_code_
+    ```
+- arm64
+    ```c++
+    0x0000000000000000:  60 00 00 58    ldr  x0, #0xc # 读相对第一条指令 0xc 偏移的位置的内存，即 hook 的 ArtMethod 地址到第一个参数 (x0)
+    0x0000000000000004:  10 00 40 F8    ldur x16, [x0] # 取 entry_point_from_quick_compiled_code_
+    0x0000000000000008:  00 02 1F D6    br   x16 # 跳转到 hook
+    0x000000000000000c:  78 56 34 12    and  w24, w19, #0xfffff003 # ArtMethod 地址
+    0x0000000000000010:  78 56 34 12    and  w24, w19, #0xfffff003
+    ```
+- arm
+    ```c++
+    0: e59f0000      ldr     r0, [pc] # 加载 pc+8 到第一个参数，即 hook ArtMethod 地址
+    4: e590f0xx      ldr     pc, [r0, #xx] # hook entry_point_from_quick_compiled_code_ 送 pc 直接跳转
+    8: 12345678      # hook ArtMethod 地址
+    ```
+- x86
+    ```c++
+    0: b8 78 56 34 12                movl    $0x12345678, %eax       # imm = 0x12345678
+    5: ff 70 xx                      pushl   (%eax + xx)
+    8: c3 
+    ```
+这里以arm64来看下UpdateTrampoline的作用是什么
+```
+0x0000000000000000:  60 00 00 58 ldr  x0, #0xc
+0x0000000000000004:  10 00 40 F8 ldur x16, [x0]
+0x0000000000000008:  00 02 1F D6 br x16
+0x000000000000000c:  78 56 34 12
+0x000000000000000c:  78 56 34 12
+```
+前三行可以看出是跳转使用的，后两行应该会站位使用，编译测试可以得到
+- art_method_size 40
+- entry_point_offset 44
+- offset 32
+- CHAR_BIT 8
+- kPointerSize 8
+代入UpdateTrampoline，也就得到
+```c++
+trampoline[5] |= offset << 4;
+trampoline[6] |= offset >> 4;
+```
+替换掉x0 4x变成00 42， arm64指令为ldur x16, [x0, #0x20]，目前x是未知的，从指令上看是获取x0+12位置的地址，也就是第四行的地址，继续往下看第四行什么时候被赋值的
+
 
 ### 二、LSPlant ART hook原理
 ```c++
@@ -499,7 +589,7 @@ bool DoHook(ArtMethod *target, ArtMethod *hook, ArtMethod *backup) {
     LOGV("Hooking: target = %s(%p), hook = %s(%p), backup = %s(%p)", target->PrettyMethod().c_str(),
          target, hook->PrettyMethod().c_str(), hook, backup->PrettyMethod().c_str(), backup);
 
-    // 生成trampoline
+    // 为hook函数生成trampoline
     if (auto *entrypoint = GenerateTrampolineFor(hook); !entrypoint) {
         LOGE("Failed to generate trampoline");
         return false;
@@ -526,7 +616,9 @@ bool DoHook(ArtMethod *target, ArtMethod *hook, ArtMethod *backup) {
         return true;
     }
 }
-
+```
+#### 2.1 GenerateTrampolineFor
+```c++
 void *GenerateTrampolineFor(art::ArtMethod *hook) {
     unsigned count;
     uintptr_t address;
@@ -570,3 +662,40 @@ void *GenerateTrampolineFor(art::ArtMethod *hook) {
     return address_ptr;
 }
 ```
+DoHook首先会当前hook函数生成trampoine，通过调用GenerateTrampolineFor函数，它的流程是
+1. 首先通过mmap创建rwx内存来保存trampoline，这里出现了trampoline_pool的概念，先忽略
+2. address转化成指针address_ptr
+3. 把之前调整好的trampoline对应的值memcpy到address_ptr指针指向地址
+4. address_ptr指针+art_method_offset地址写入hook指针地址，在arm64中art_method_offset对应12，那么回顾之前那5行trampoline模版代码，也就是把第四、五行替换成了hook的指针地址
+5. 返回address_ptr指针
+
+实际上GenerateTrampolineFor的作用就是在trampoline中补充好hook函数地址
+
+#### 2.2 SetNonCompilable
+```c++
+void SetNonCompilable() {
+    auto access_flags = GetAccessFlags();
+    access_flags |= kAccCompileDontBother;
+    access_flags &= ~kAccPreCompiled;
+    SetAccessFlags(access_flags);
+}
+```
+为函数加上kAccCompileDontBother标志位，防止ART对函数进行JIT编译替换函数
+
+#### 2.3 SetEntryPoint
+```c++
+backup->CopyFrom(target);
+void CopyFrom(const ArtMethod *other) { memcpy(this, other, art_method_size); }
+
+target->SetEntryPoint(entrypoint);
+void SetEntryPoint(void *entry_point) {
+    *reinterpret_cast<void **>(reinterpret_cast<uintptr_t>(this) + entry_point_offset) = entry_point;
+}
+```
+接下来的过程就是把target保存在backup指针里面做备份，设置target的entry_point_offset偏移，对应的就是entry_point_from_quick_compiled_code_指针被替换成trampoline
+
+看到这里发现一点LSPlant的不同的地方，因为它有跳转到hook的trampoline，但是没有跳转到backup(target)的trampoline，而是返回了jobject的global_backup
+
+### 参考
+1. [ART hook 框架 - YAHFA 源码分析](https://www.jianshu.com/p/994db0f1c8c9)
+2. [ART上的动态Java方法hook框架](https://blog.canyie.top/2020/04/27/dynamic-hooking-framework-on-art/)

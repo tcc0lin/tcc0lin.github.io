@@ -34,7 +34,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/"
-        },"genre": "posts","keywords": "源码分析","wordcount":  3100 ,
+        },"genre": "posts","keywords": "源码分析","wordcount":  4974 ,
         "url": "https:\/\/tcc0lin.github.io\/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0\/","datePublished": "2024-03-07T23:09:44+08:00","dateModified": "2024-03-07T23:09:44+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -140,7 +140,14 @@
             <li><a href="#13-initnative">1.3 InitNative</a></li>
           </ul>
         </li>
-        <li><a href="#二lsplant-art-hook原理">二、LSPlant ART hook原理</a></li>
+        <li><a href="#二lsplant-art-hook原理">二、LSPlant ART hook原理</a>
+          <ul>
+            <li><a href="#21-generatetrampolinefor">2.1 GenerateTrampolineFor</a></li>
+            <li><a href="#22-setnoncompilable">2.2 SetNonCompilable</a></li>
+            <li><a href="#23-setentrypoint">2.3 SetEntryPoint</a></li>
+          </ul>
+        </li>
+        <li><a href="#参考">参考</a></li>
       </ul>
     </li>
   </ul>
@@ -149,7 +156,7 @@
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/"><i class="far fa-folder fa-fw"></i>Hook框架学习</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-07">2024-03-07</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-07">2024-03-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 3100 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 7 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-07">2024-03-07</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-07">2024-03-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4974 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 10 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -166,7 +173,14 @@
             <li><a href="#13-initnative">1.3 InitNative</a></li>
           </ul>
         </li>
-        <li><a href="#二lsplant-art-hook原理">二、LSPlant ART hook原理</a></li>
+        <li><a href="#二lsplant-art-hook原理">二、LSPlant ART hook原理</a>
+          <ul>
+            <li><a href="#21-generatetrampolinefor">2.1 GenerateTrampolineFor</a></li>
+            <li><a href="#22-setnoncompilable">2.2 SetNonCompilable</a></li>
+            <li><a href="#23-setentrypoint">2.3 SetEntryPoint</a></li>
+          </ul>
+        </li>
+        <li><a href="#参考">参考</a></li>
       </ul>
     </li>
   </ul>
@@ -767,7 +781,7 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>InitNative主要是对libart.so当中的方法做了hook，先看看ArtMethod::Init</p>
+</div><p>InitNative主要是对libart.so当中的方法做了hook，先看看ArtMethod::Init, 函数里面关于版本适配的代码很多，我们就以Android11以上的视角来看</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -817,49 +831,6 @@
 </span><span class="lnt">45
 </span><span class="lnt">46
 </span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span><span class="lnt">68
-</span><span class="lnt">69
-</span><span class="lnt">70
-</span><span class="lnt">71
-</span><span class="lnt">72
-</span><span class="lnt">73
-</span><span class="lnt">74
-</span><span class="lnt">75
-</span><span class="lnt">76
-</span><span class="lnt">77
-</span><span class="lnt">78
-</span><span class="lnt">79
-</span><span class="lnt">80
-</span><span class="lnt">81
-</span><span class="lnt">82
-</span><span class="lnt">83
-</span><span class="lnt">84
-</span><span class="lnt">85
-</span><span class="lnt">86
-</span><span class="lnt">87
-</span><span class="lnt">88
-</span><span class="lnt">89
-</span><span class="lnt">90
 </span></code></pre></td>
 <td class="lntd">
 <pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">bool</span> <span class="nf">Init</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="k">const</span> <span class="n">HookHandler</span> <span class="n">handler</span><span class="p">)</span> <span class="p">{</span>
@@ -897,53 +868,10 @@
 </span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod size: %zu&#34;</span><span class="p">,</span> <span class="n">art_method_size</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// kPointerSize对应一个指针的大小 sizeof(void *)
+</span></span><span class="line"><span class="cl">        <span class="c1">// kPointerSize对应一个void *指针的大小 sizeof(void *)
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">entry_point_offset</span> <span class="o">=</span> <span class="n">art_method_size</span> <span class="o">-</span> <span class="n">kPointerSize</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">        <span class="n">data_offset</span> <span class="o">=</span> <span class="n">entry_point_offset</span> <span class="o">-</span> <span class="n">kPointerSize</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">&gt;=</span> <span class="n">__ANDROID_API_M__</span><span class="p">)</span> <span class="na">[[likely]]</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">access_flags_field</span> <span class="o">=</span> <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="s">&#34;accessFlags&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="n">access_flags_field</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="kt">uint32_t</span> <span class="n">real_flags</span> <span class="o">=</span> <span class="n">JNI_GetIntField</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">first_ctor</span><span class="p">,</span> <span class="n">access_flags_field</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">art_method_size</span><span class="p">;</span> <span class="n">i</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint32_t</span><span class="p">))</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">uint32_t</span> <span class="o">*&gt;</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">first</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">==</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">real_flags</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">access_flags_offset</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                        <span class="k">break</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">                <span class="p">}</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">access_flags_offset</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="n">LOGW</span><span class="p">(</span><span class="s">&#34;Failed to find accessFlags field. Fallback to 4.&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="n">access_flags_offset</span> <span class="o">=</span> <span class="mi">4U</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">art_field</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/ArtField&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">field</span> <span class="o">=</span> <span class="n">JNI_FindClass</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;java/lang/reflect/Field&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">art_field_field</span> <span class="o">=</span>
-</span></span><span class="line"><span class="cl">                <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="s">&#34;artField&#34;</span><span class="p">,</span> <span class="s">&#34;Ljava/lang/reflect/ArtField;&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">field_offset</span> <span class="o">=</span> <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">art_field</span><span class="p">,</span> <span class="s">&#34;offset&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">get_offset_from_art_method</span> <span class="o">=</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">sig</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">JNI_GetIntField</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">env</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">JNI_GetObjectField</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">env</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">env</span><span class="o">-&gt;</span><span class="n">ToReflectedField</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                                              <span class="n">JNI_GetFieldID</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sig</span><span class="p">),</span> <span class="nb">false</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">art_field_field</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">field_offset</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="p">};</span>
-</span></span><span class="line"><span class="cl">            <span class="n">access_flags_offset</span> <span class="o">=</span> <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;accessFlags&#34;</span><span class="p">,</span> <span class="s">&#34;I&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="n">declaring_class_offset</span> <span class="o">=</span>
-</span></span><span class="line"><span class="cl">                <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;declaringClass&#34;</span><span class="p">,</span> <span class="s">&#34;Ljava/lang/Class;&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">sdk_int</span> <span class="o">==</span> <span class="n">__ANDROID_API_L__</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="n">entry_point_offset</span> <span class="o">=</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;entryPointFromQuickCompiledCode&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="n">interpreter_entry_point_offset</span> <span class="o">=</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;entryPointFromInterpreter&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="n">data_offset</span> <span class="o">=</span> <span class="n">get_offset_from_art_method</span><span class="p">(</span><span class="s">&#34;entryPointFromJni&#34;</span><span class="p">,</span> <span class="s">&#34;J&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
 </span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::declaring_class offset: %zu&#34;</span><span class="p">,</span> <span class="n">declaring_class_offset</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::entrypoint offset: %zu&#34;</span><span class="p">,</span> <span class="n">entry_point_offset</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">        <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;ArtMethod::data offset: %zu&#34;</span><span class="p">,</span> <span class="n">data_offset</span><span class="p">);</span>
@@ -955,6 +883,104 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>这里关键在于获取art_method_field、entry_point_offset、data_offset</p>
+<p>entry_point_offset怎么理解呢？从art_method.h的ArtMethod类中看</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">protected</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Field order required by test &#34;ValidateFieldOrderOfJavaCppUnionClasses&#34;.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// The class we are a part of.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">GcRoot</span><span class="o">&lt;</span><span class="n">mirror</span><span class="o">::</span><span class="n">Class</span><span class="o">&gt;</span> <span class="n">declaring_class_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Access flags; low 16 bits are defined by spec.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// Getting and setting this flag needs to be atomic when concurrency is
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// possible, e.g. after this method&#39;s class is linked. Such as when setting
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// verifier flags and single-implementation flag.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="o">&gt;</span> <span class="n">access_flags_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="cm">/* Dex file fields. The defining dex file is available via declaring_class_-&gt;dex_cache_ */</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Offset to the CodeItem.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">uint32_t</span> <span class="n">dex_code_item_offset_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Index into method_ids of the dex file associated with this method.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">uint32_t</span> <span class="n">dex_method_index_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="cm">/* End of dex file fields. */</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Entry within a dispatch table for this method. For static/direct methods the index is into
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// the declaringClass.directMethods, for virtual methods the vtable and for interface methods the
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// ifTable.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">uint16_t</span> <span class="n">method_index_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Non-abstract methods: The hotness we measure for this method. Not atomic,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// as we allow missing increments: if the method is hot, we will see it eventually.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">uint16_t</span> <span class="n">hotness_count_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Abstract methods: IMT index (bitwise negated) or zero if it was not cached.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// The negation is needed to distinguish zero index and missing cached entry.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">uint16_t</span> <span class="n">imt_index_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">};</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Fake padding field gets inserted here.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// Must be the last fields in the method.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="nc">PtrSizedFields</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Depending on the method type, the data is
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//   - native method: pointer to the JNI function registered to this method
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//                    or a function to resolve the JNI function,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//   - conflict method: ImtConflictTable,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//   - abstract/interface method: the single-implementation if any,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//   - proxy method: the original interface method or constructor,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//   - other methods: the profiling data.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">void</span><span class="o">*</span> <span class="n">data_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Method dispatch from quick compiled code invokes this pointer which may cause bridging into
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// the interpreter.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">void</span><span class="o">*</span> <span class="n">entry_point_from_quick_compiled_code_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="n">ptr_sized_fields_</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>art_method_size对应的是ArtMethod类实例的大小，也等于所有protected字段的大小总和</p>
+<ol>
+<li>entry_point_offset = art_method_size - kPointerSize;
+对应的是使用总和-void*，从类中来看，减去的部分是entry_point_from_quick_compiled_code_所对应的指针大小，那么也就得到了entry_point_from_quick_compiled_code_指针的偏移量</li>
+<li>data_offset = entry_point_offset - kPointerSize;
+同理，data_也对应了void*，也就相当于得到了data_指针的偏移量</li>
+</ol>
 <p>接着是UpdateTrampoline</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -974,7 +1000,176 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="二lsplant-art-hook原理" class="headerLink">
+</div><p>trampoline的由来</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">auto</span> <span class="p">[</span><span class="n">trampoline</span><span class="p">,</span> <span class="n">entry_point_offset</span><span class="p">,</span> <span class="n">art_method_offset</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetTrampoline</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">consteval</span> <span class="kr">inline</span> <span class="k">auto</span> <span class="nf">GetTrampoline</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">kArch</span> <span class="o">==</span> <span class="n">Arch</span><span class="o">::</span><span class="n">kArm</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\x00\x00\x9f\xe5\x00\xf0\x90\xe5\x78\x56\x34\x12</span><span class="s">&#34;</span><span class="n">_uarr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="c1">// NOLINTNEXTLINE
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                               <span class="kt">uint8_t</span><span class="p">{</span><span class="mi">32u</span><span class="p">},</span> <span class="n">uintptr_t</span><span class="p">{</span><span class="mi">8u</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">kArch</span> <span class="o">==</span> <span class="n">Arch</span><span class="o">::</span><span class="n">kArm64</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;</span><span class="se">\x60\x00\x00\x58\x10\x00\x40\xf8\x00\x02\x1f\xd6\x78\x56\x34\x12\x78\x56\x34\x12</span><span class="s">&#34;</span><span class="n">_uarr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// NOLINTNEXTLINE
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="kt">uint8_t</span><span class="p">{</span><span class="mi">44u</span><span class="p">},</span> <span class="n">uintptr_t</span><span class="p">{</span><span class="mi">12u</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">kArch</span> <span class="o">==</span> <span class="n">Arch</span><span class="o">::</span><span class="n">kX86</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\xb8\x78\x56\x34\x12\xff\x70\x00\xc3</span><span class="s">&#34;</span><span class="n">_uarr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="c1">// NOLINTNEXTLINE
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                               <span class="kt">uint8_t</span><span class="p">{</span><span class="mi">56u</span><span class="p">},</span> <span class="n">uintptr_t</span><span class="p">{</span><span class="mi">1u</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">kArch</span> <span class="o">==</span> <span class="n">Arch</span><span class="o">::</span><span class="n">kX86_64</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\x48\xbf\x78\x56\x34\x12\x78\x56\x34\x12\xff\x77\x00\xc3</span><span class="s">&#34;</span><span class="n">_uarr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="c1">// NOLINTNEXTLINE
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                               <span class="kt">uint8_t</span><span class="p">{</span><span class="mi">96u</span><span class="p">},</span> <span class="n">uintptr_t</span><span class="p">{</span><span class="mi">2u</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">kArch</span> <span class="o">==</span> <span class="n">Arch</span><span class="o">::</span><span class="n">kRiscv64</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;</span><span class="se">\x17\x05\x00\x00\x03\x35\xc5\x00\x67\x00\x05\x00\x78\x56\x34\x12\x78\x56\x34\x12</span><span class="s">&#34;</span><span class="n">_uarr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// NOLINTNEXTLINE
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="kt">uint8_t</span><span class="p">{</span><span class="mi">84u</span><span class="p">},</span> <span class="n">uintptr_t</span><span class="p">{</span><span class="mi">12u</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>entry_point_offset表示ArtMethod的entry_point_from_quick_compiled_code_偏移在指令中的位置（按位）</p>
+<ul>
+<li>x86-64
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mh">0x0000000000000000</span><span class="o">:</span>  <span class="mi">48</span> <span class="n">BF</span> <span class="mi">78</span> <span class="mi">56</span> <span class="mi">34</span> <span class="mi">12</span> <span class="mi">78</span> <span class="mi">56</span> <span class="mi">34</span> <span class="mi">12</span>    <span class="n">movabs</span> <span class="n">rdi</span><span class="p">,</span> <span class="mh">0x1234567812345678</span> <span class="err">#</span> <span class="n">ArtMethod</span> <span class="err">地址置于</span> <span class="n">rdi</span> <span class="err">中</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x000000000000000a</span><span class="o">:</span>  <span class="n">FF</span> <span class="mi">77</span> <span class="n">xx</span>                         <span class="n">push</span>   <span class="n">qword</span> <span class="n">ptr</span> <span class="p">[</span><span class="n">rdi</span> <span class="o">+</span> <span class="n">xx</span><span class="p">]</span> <span class="err">#</span> <span class="err">取</span> <span class="n">hook</span> <span class="n">ArtMethod</span> <span class="err">的</span> <span class="n">entry_point_from_quick_compiled_code_</span> <span class="err">放到栈上</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x000000000000000d</span><span class="o">:</span>  <span class="n">C3</span>                               <span class="n">ret</span>    <span class="err">#</span> <span class="err">跳转到</span> <span class="n">hook</span> <span class="err">的</span> <span class="n">entry_point_from_quick_compiled_code_</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>arm64
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mh">0x0000000000000000</span><span class="o">:</span>  <span class="mi">60</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mi">58</span>    <span class="n">ldr</span>  <span class="n">x0</span><span class="p">,</span> <span class="err">#</span><span class="mh">0xc</span> <span class="err">#</span> <span class="err">读相对第一条指令</span> <span class="mh">0xc</span> <span class="err">偏移的位置的内存，即</span> <span class="n">hook</span> <span class="err">的</span> <span class="n">ArtMethod</span> <span class="err">地址到第一个参数</span> <span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x0000000000000004</span><span class="o">:</span>  <span class="mi">10</span> <span class="mo">00</span> <span class="mi">40</span> <span class="n">F8</span>    <span class="n">ldur</span> <span class="n">x16</span><span class="p">,</span> <span class="p">[</span><span class="n">x0</span><span class="p">]</span> <span class="err">#</span> <span class="err">取</span> <span class="n">entry_point_from_quick_compiled_code_</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x0000000000000008</span><span class="o">:</span>  <span class="mo">00</span> <span class="mo">02</span> <span class="mf">1F</span> <span class="n">D6</span>    <span class="n">br</span>   <span class="n">x16</span> <span class="err">#</span> <span class="err">跳转到</span> <span class="n">hook</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x000000000000000c</span><span class="o">:</span>  <span class="mi">78</span> <span class="mi">56</span> <span class="mi">34</span> <span class="mi">12</span>    <span class="n">and</span>  <span class="n">w24</span><span class="p">,</span> <span class="n">w19</span><span class="p">,</span> <span class="err">#</span><span class="mh">0xfffff003</span> <span class="err">#</span> <span class="n">ArtMethod</span> <span class="err">地址</span>
+</span></span><span class="line"><span class="cl"><span class="mh">0x0000000000000010</span><span class="o">:</span>  <span class="mi">78</span> <span class="mi">56</span> <span class="mi">34</span> <span class="mi">12</span>    <span class="n">and</span>  <span class="n">w24</span><span class="p">,</span> <span class="n">w19</span><span class="p">,</span> <span class="err">#</span><span class="mh">0xfffff003</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>arm
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">0</span><span class="o">:</span> <span class="n">e59f0000</span>      <span class="n">ldr</span>     <span class="n">r0</span><span class="p">,</span> <span class="p">[</span><span class="n">pc</span><span class="p">]</span> <span class="err">#</span> <span class="err">加载</span> <span class="n">pc</span><span class="o">+</span><span class="mi">8</span> <span class="err">到第一个参数，即</span> <span class="n">hook</span> <span class="n">ArtMethod</span> <span class="err">地址</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span><span class="o">:</span> <span class="n">e590f0xx</span>      <span class="n">ldr</span>     <span class="n">pc</span><span class="p">,</span> <span class="p">[</span><span class="n">r0</span><span class="p">,</span> <span class="err">#</span><span class="n">xx</span><span class="p">]</span> <span class="err">#</span> <span class="n">hook</span> <span class="n">entry_point_from_quick_compiled_code_</span> <span class="err">送</span> <span class="n">pc</span> <span class="err">直接跳转</span>
+</span></span><span class="line"><span class="cl"><span class="mi">8</span><span class="o">:</span> <span class="mi">12345678</span>      <span class="err">#</span> <span class="n">hook</span> <span class="n">ArtMethod</span> <span class="err">地址</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>x86
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">0</span><span class="o">:</span> <span class="n">b8</span> <span class="mi">78</span> <span class="mi">56</span> <span class="mi">34</span> <span class="mi">12</span>                <span class="n">movl</span>    <span class="err">$</span><span class="mh">0x12345678</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>       <span class="err">#</span> <span class="n">imm</span> <span class="o">=</span> <span class="mh">0x12345678</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span><span class="o">:</span> <span class="n">ff</span> <span class="mi">70</span> <span class="n">xx</span>                      <span class="n">pushl</span>   <span class="p">(</span><span class="o">%</span><span class="n">eax</span> <span class="o">+</span> <span class="n">xx</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="mi">8</span><span class="o">:</span> <span class="n">c3</span> 
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<p>这里以arm64来看下UpdateTrampoline的作用是什么</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">0x0000000000000000:  60 00 00 58 ldr  x0, #0xc
+</span></span><span class="line"><span class="cl">0x0000000000000004:  10 00 40 F8 ldur x16, [x0]
+</span></span><span class="line"><span class="cl">0x0000000000000008:  00 02 1F D6 br x16
+</span></span><span class="line"><span class="cl">0x000000000000000c:  78 56 34 12
+</span></span><span class="line"><span class="cl">0x000000000000000c:  78 56 34 12
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>前三行可以看出是跳转使用的，后两行应该会站位使用，编译测试可以得到</p>
+<ul>
+<li>art_method_size 40</li>
+<li>entry_point_offset 44</li>
+<li>offset 32</li>
+<li>CHAR_BIT 8</li>
+<li>kPointerSize 8
+代入UpdateTrampoline，也就得到</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">trampoline</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">|=</span> <span class="n">offset</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">trampoline</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">|=</span> <span class="n">offset</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>替换掉x0 4x变成00 42， arm64指令为ldur x16, [x0, #0x20]，目前x是未知的，从指令上看是获取x0+12位置的地址，也就是第四行的地址，继续往下看第四行什么时候被赋值的</p>
+<h3 id="二lsplant-art-hook原理" class="headerLink">
     <a href="#%e4%ba%8clsplant-art-hook%e5%8e%9f%e7%90%86" class="header-mark"></a>二、LSPlant ART hook原理</h3><div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -1188,49 +1383,6 @@
 </span><span class="lnt">32
 </span><span class="lnt">33
 </span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span><span class="lnt">68
-</span><span class="lnt">69
-</span><span class="lnt">70
-</span><span class="lnt">71
-</span><span class="lnt">72
-</span><span class="lnt">73
-</span><span class="lnt">74
-</span><span class="lnt">75
-</span><span class="lnt">76
-</span><span class="lnt">77
 </span></code></pre></td>
 <td class="lntd">
 <pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">DoHook</span><span class="p">(</span><span class="n">ArtMethod</span> <span class="o">*</span><span class="n">target</span><span class="p">,</span> <span class="n">ArtMethod</span> <span class="o">*</span><span class="n">hook</span><span class="p">,</span> <span class="n">ArtMethod</span> <span class="o">*</span><span class="n">backup</span><span class="p">)</span> <span class="p">{</span>
@@ -1240,7 +1392,7 @@
 </span></span><span class="line"><span class="cl">    <span class="n">LOGV</span><span class="p">(</span><span class="s">&#34;Hooking: target = %s(%p), hook = %s(%p), backup = %s(%p)&#34;</span><span class="p">,</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">PrettyMethod</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span>
 </span></span><span class="line"><span class="cl">         <span class="n">target</span><span class="p">,</span> <span class="n">hook</span><span class="o">-&gt;</span><span class="n">PrettyMethod</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">hook</span><span class="p">,</span> <span class="n">backup</span><span class="o">-&gt;</span><span class="n">PrettyMethod</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">backup</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="c1">// 生成trampoline
+</span></span><span class="line"><span class="cl">    <span class="c1">// 为hook函数生成trampoline
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="o">*</span><span class="n">entrypoint</span> <span class="o">=</span> <span class="n">GenerateTrampolineFor</span><span class="p">(</span><span class="n">hook</span><span class="p">);</span> <span class="o">!</span><span class="n">entrypoint</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">        <span class="n">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to generate trampoline&#34;</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
@@ -1267,8 +1419,56 @@
 </span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">GenerateTrampolineFor</span><span class="p">(</span><span class="n">art</span><span class="o">::</span><span class="n">ArtMethod</span> <span class="o">*</span><span class="n">hook</span><span class="p">)</span> <span class="p">{</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="21-generatetrampolinefor" class="headerLink">
+    <a href="#21-generatetrampolinefor" class="header-mark"></a>2.1 GenerateTrampolineFor</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">GenerateTrampolineFor</span><span class="p">(</span><span class="n">art</span><span class="o">::</span><span class="n">ArtMethod</span> <span class="o">*</span><span class="n">hook</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="n">count</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="n">uintptr_t</span> <span class="n">address</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
@@ -1312,7 +1512,64 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div></div>
+</div><p>DoHook首先会当前hook函数生成trampoine，通过调用GenerateTrampolineFor函数，它的流程是</p>
+<ol>
+<li>首先通过mmap创建rwx内存来保存trampoline，这里出现了trampoline_pool的概念，先忽略</li>
+<li>address转化成指针address_ptr</li>
+<li>把之前调整好的trampoline对应的值memcpy到address_ptr指针指向地址</li>
+<li>address_ptr指针+art_method_offset地址写入hook指针地址，在arm64中art_method_offset对应12，那么回顾之前那5行trampoline模版代码，也就是把第四、五行替换成了hook的指针地址</li>
+<li>返回address_ptr指针</li>
+</ol>
+<p>实际上GenerateTrampolineFor的作用就是在trampoline中补充好hook函数地址</p>
+<h4 id="22-setnoncompilable" class="headerLink">
+    <a href="#22-setnoncompilable" class="header-mark"></a>2.2 SetNonCompilable</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">SetNonCompilable</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">access_flags</span> <span class="o">=</span> <span class="n">GetAccessFlags</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">access_flags</span> <span class="o">|=</span> <span class="n">kAccCompileDontBother</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">access_flags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">kAccPreCompiled</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">SetAccessFlags</span><span class="p">(</span><span class="n">access_flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>为函数加上kAccCompileDontBother标志位，防止ART对函数进行JIT编译替换函数</p>
+<h4 id="23-setentrypoint" class="headerLink">
+    <a href="#23-setentrypoint" class="header-mark"></a>2.3 SetEntryPoint</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">backup</span><span class="o">-&gt;</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">target</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">CopyFrom</span><span class="p">(</span><span class="k">const</span> <span class="n">ArtMethod</span> <span class="o">*</span><span class="n">other</span><span class="p">)</span> <span class="p">{</span> <span class="n">memcpy</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">art_method_size</span><span class="p">);</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">target</span><span class="o">-&gt;</span><span class="n">SetEntryPoint</span><span class="p">(</span><span class="n">entrypoint</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">SetEntryPoint</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">entry_point</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">**&gt;</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">)</span> <span class="o">+</span> <span class="n">entry_point_offset</span><span class="p">)</span> <span class="o">=</span> <span class="n">entry_point</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>接下来的过程就是把target保存在backup指针里面做备份，设置target的entry_point_offset偏移，对应的就是entry_point_from_quick_compiled_code_指针被替换成trampoline</p>
+<p>看到这里发现一点LSPlant的不同的地方，因为它有跳转到hook的trampoline，但是没有跳转到backup(target)的trampoline，而是返回了jobject的global_backup</p>
+<h3 id="参考" class="headerLink">
+    <a href="#%e5%8f%82%e8%80%83" class="header-mark"></a>参考</h3><ol>
+<li><a href="https://www.jianshu.com/p/994db0f1c8c9" target="_blank" rel="noopener noreferrer">ART hook 框架 - YAHFA 源码分析</a></li>
+<li><a href="https://blog.canyie.top/2020/04/27/dynamic-hooking-framework-on-art/" target="_blank" rel="noopener noreferrer">ART上的动态Java方法hook框架</a></li>
+</ol>
+</div>
 
         
 
@@ -1377,7 +1634,7 @@
 <div id="comments"></div></article></div>
         </main><footer class="footer">
         <div class="footer-container"><div class="footer-line">
-                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.123.7">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.123.8">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
                 </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
             <div class="footer-line"></div>
             <div class="footer-line">
