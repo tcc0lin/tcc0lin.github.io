@@ -694,7 +694,7 @@ void SetEntryPoint(void *entry_point) {
 ```
 接下来的过程就是把target保存在backup指针里面做备份，设置target的entry_point_offset偏移，对应的就是entry_point_from_quick_compiled_code_指针被替换成trampoline
 
-看到这里发现一点LSPlant的不同的地方，因为它有跳转到hook的trampoline，但是没有跳转到backup(target)的trampoline，而是返回了jobject的global_backup
+关于回调原方法的问题可以看到target的art_method完整的复制给了backup，也就是直接调用backup就相当于调用target了
 
 ### 参考
 1. [ART hook 框架 - YAHFA 源码分析](https://www.jianshu.com/p/994db0f1c8c9)
