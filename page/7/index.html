@@ -4,7 +4,7 @@
 <html lang="zh-CN">
 
 <head>
-	<meta name="generator" content="Hugo 0.123.8">
+	<meta name="generator" content="Hugo 0.124.1">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noodp" />
@@ -12,7 +12,6 @@
 <meta property="og:description" content="tcc0lin&#39;s blog" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://tcc0lin.github.io/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
-
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="tcc0lin&#39;s blog"/>
 <meta name="twitter:description" content="tcc0lin&#39;s blog"/>
@@ -128,6 +127,20 @@
         alt="/tcc0lin.png"
         title="/tcc0lin.png" height="100"   width="100" ></a></div><h1 class="home-title">di da di! di da di!</h1><h2 class="home-subtitle"><div id="id-1" class="typeit"></div></h2><div class="links"><a href="https://github.com/tcc0lin" title="GitHub" target="_blank" rel="noopener noreferrer me"><span class="fab fa-github-alt fa-fw"></span></a><a href="mailto:xxxx@xxxx.com" title="Email" rel=" me"><span class="far fa-envelope fa-fw"></span></a><a href="/index.xml" title="RSS" target="_blank" rel="noopener noreferrer me"><span class="fas fa-rss fa-fw"></span></a></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/">从RFC2040中理解RC5算法</a>
+    </h1><div class="post-meta">
+        <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+        </span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-05-09">2023-05-09</time></span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"><i class="far fa-folder fa-fw"></i>加密算法研究</a></span></div><div class="content">一、RC5算法概述作为同样是由Rivest推出的算法，RC5算法与RC4算法是完全不同的，一个明显的特征是RC5采用的是基于Feistel对</div><div class="post-footer">
+        <a href="/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/">阅读全文</a><div class="post-tags">
+                <i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/rc5%E7%AE%97%E6%B3%95/">RC5算法</a></div></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/">从RFC3174中理解SHA1算法</a>
+    </h1><div class="post-meta">
+        <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+        </span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-05-09">2023-05-09</time></span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"><i class="far fa-folder fa-fw"></i>加密算法研究</a></span></div><div class="content">一、前置知识点总体上来说，SHA1算法和MD5算法很类似（因为它们都属于是针对于信息摘要的哈希算法），大体的算法流程也是基本相同，可以回忆下</div><div class="post-footer">
+        <a href="/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/">阅读全文</a><div class="post-tags">
+                <i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/sha1%E7%AE%97%E6%B3%95/">SHA1算法</a></div></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/">从RFC4648中理解Base64算法</a>
     </h1><div class="post-meta">
         <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
@@ -169,20 +182,6 @@
         </span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-05-09">2023-05-09</time></span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"><i class="far fa-folder fa-fw"></i>加密算法研究</a></span></div><div class="content">写法 函数名 算法常量 CRC码表 多项式的二进制 算法流程 CRC码表生成方式</div><div class="post-footer">
         <a href="/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/crc32%E7%AE%97%E6%B3%95/">CRC32算法</a></div></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">探讨关于MD5算法的魔改方式</a>
-    </h1><div class="post-meta">
-        <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
-        </span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-05-09">2023-05-09</time></span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"><i class="far fa-folder fa-fw"></i>加密算法研究</a></span></div><div class="content">写法 函数名 常量初始化方式 算法常量 IV 转换变量 T常量表 算法流程 非线性函数</div><div class="post-footer">
-        <a href="/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">阅读全文</a><div class="post-tags">
-                <i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/md5%E7%AE%97%E6%B3%95/">MD5算法</a></div></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">探讨关于RC4算法的魔改方式</a>
-    </h1><div class="post-meta">
-        <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
-        </span>&nbsp;<span class="post-publish">发布于 <time datetime="2023-05-09">2023-05-09</time></span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"><i class="far fa-folder fa-fw"></i>加密算法研究</a></span></div><div class="content">写法 算法常量 S盒长度、值 算法流程 数据交换 流数据异或</div><div class="post-footer">
-        <a href="/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">阅读全文</a><div class="post-tags">
-                <i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/rc4%E7%AE%97%E6%B3%95/">RC4算法</a></div></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>
@@ -208,7 +207,7 @@
                 </li></ul></div></div>
         </main><footer class="footer">
         <div class="footer-container"><div class="footer-line">
-                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.123.8">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.124.1">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
                 </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
             <div class="footer-line"></div>
             <div class="footer-line">

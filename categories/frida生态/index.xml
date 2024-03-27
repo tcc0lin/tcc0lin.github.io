@@ -38,5 +38,12 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/strongr-frid%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</guid>
     <description><![CDATA[一、背景参考项目strongR-frida对frida14.2.18进行魔改 二、魔改点patch文件总共有八个，分别是对八个主要特征进行魔改]]></description>
+</item><item>
+    <title>Frida源码阅读</title>
+    <link>https://tcc0lin.github.io/frida%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
+    <pubDate>Sun, 12 Mar 2023 13:37:48 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/frida%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
+    <description><![CDATA[以14.2.18版本为例 一、frida-server做了什么 1.1 进程注入 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 // frida-core/src/linux/linux-host-session.vala protected override async Future&lt;IOStream&gt; perform_attach_to (uint pid, Cancellable? cancellable,]]></description>
 </item></channel>
 </rss>
