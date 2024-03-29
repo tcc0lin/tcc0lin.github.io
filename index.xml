@@ -3,7 +3,7 @@
         <title>tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 28 Mar 2024 19:25:42 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 27 Mar 2024 18:51:18 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
     <title>基于Kernel Kprobe机制的改机架构实现</title>
@@ -55,6 +55,13 @@
     </author><guid>https://tcc0lin.github.io/arm%E4%B8%8Earm64%E7%9A%84%E6%A0%88%E5%B9%B3%E8%A1%A1%E7%90%86%E8%A7%A3/</guid>
     <description><![CDATA[https://blog.csdn.net/boildoctor/article/details/123402047 https://www.cnblogs.com/sky-heaven/p/15885335.html https://blog.csdn.net/boildoctor/article/details/123402047 https://www.jianshu.com/p/b6071091abdc https://blog.csdn.net/heshuangzong/article/details/126911474]]></description>
 </item><item>
+    <title>Dobby 短指令hook方式</title>
+    <link>https://tcc0lin.github.io/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</link>
+    <pubDate>Wed, 21 Feb 2024 19:25:42 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</guid>
+    <description><![CDATA[从上一篇Dobby的文章可以了解到Dobby对于inline hook的实现是通过替换origin method的前三行指令（前12个字节）来跳]]></description>
+</item><item>
     <title>Dobby框架源码学习</title>
     <link>https://tcc0lin.github.io/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
     <pubDate>Wed, 21 Feb 2024 14:54:39 &#43;0800</pubDate><author>
@@ -67,13 +74,6 @@
     <pubDate>Mon, 19 Feb 2024 10:24:58 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/</guid>
-    <description><![CDATA[]]></description>
-</item><item>
-    <title>系统so防篡改思考</title>
-    <link>https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/</link>
-    <pubDate>Mon, 19 Feb 2024 10:16:00 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E7%B3%BB%E7%BB%9Fso%E9%98%B2%E7%AF%A1%E6%94%B9%E6%80%9D%E8%80%83/</guid>
     <description><![CDATA[]]></description>
 </item></channel>
 </rss>
