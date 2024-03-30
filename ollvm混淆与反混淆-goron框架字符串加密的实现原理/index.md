@@ -31,6 +31,7 @@ std::set<GlobalVariable *> ConstantStringUsers;
     if (!GV.isConstant() || !GV.hasInitializer()) {
       continue;
     }
+    // 获取module下面的全局变量
     Constant *Init = GV.getInitializer();
     if (Init == nullptr)
       continue;
@@ -39,6 +40,7 @@ std::set<GlobalVariable *> ConstantStringUsers;
         CSPEntry *Entry = new CSPEntry();
         StringRef Data = CDS->getRawDataValues();
         Entry->Data.reserve(Data.size());
+        // 保存字符数据到Data字段
         for (unsigned i = 0; i < Data.size(); ++i) {
           Entry->Data.push_back(static_cast<uint8_t>(Data[i]));
         }
@@ -72,7 +74,7 @@ for (CSPEntry *Entry: ConstantStringPool) {
     for (unsigned i = 0; i < Entry->Data.size(); ++i) {
       Entry->Data[i] ^= Entry->EncKey[i % Entry->EncKey.size()];
     }
-    // 解密函数生成
+    // 为每个module的解密函数生成
     Entry->DecFunc = buildDecryptFunction(&M, Entry);
   }
 
@@ -263,6 +265,7 @@ bool StringEncryption::processConstantStringUse(Function *F) {
             } else if (Iter1 != CSPEntryMap.end()) { // GV is a constant string
               CSPEntry *Entry = Iter1->second;
               if (DecryptedGV.count(GV) > 0) {
+                // 字符串替换成加密字符串
                 Inst.replaceUsesOfWith(GV, Entry->DecGV);
               } else {
                 Instruction *InsertPoint = PHI->getIncomingBlock(i)->getTerminator();

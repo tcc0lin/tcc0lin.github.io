@@ -8,14 +8,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noodp" />
     <title>Ollvm混淆与反混淆: goron框架控制流平坦化的实现原理 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Ollvm混淆与反混淆: goron框架控制流平坦化的实现原理" />
-<meta property="og:description" content="" />
+<meta property="og:description" content="goron使用的控制流平坦化是ollvm原生的 一、控制流平坦化实现逻辑 1.1 生成SCRAMBLER 1 2 3 4 // SCRAMBLER char scrambling_key[16]; llvm::cryptoutils-&gt;get_bytes(scrambling_key, 16); // END OF SCRAMBLER 1.2 调用Lower switch" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-03-30T11:49:24+08:00" />
 <meta property="article:modified_time" content="2023-03-30T11:49:24+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Ollvm混淆与反混淆: goron框架控制流平坦化的实现原理"/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:description" content="goron使用的控制流平坦化是ollvm原生的 一、控制流平坦化实现逻辑 1.1 生成SCRAMBLER 1 2 3 4 // SCRAMBLER char scrambling_key[16]; llvm::cryptoutils-&gt;get_bytes(scrambling_key, 16); // END OF SCRAMBLER 1.2 调用Lower switch"/>
 <meta name="application-name" content="DoIt">
 <meta name="apple-mobile-web-app-title" content="DoIt">
 
@@ -33,7 +33,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/"
-        },"genre": "posts","keywords": "goron框架","wordcount":  0 ,
+        },"genre": "posts","keywords": "goron框架","wordcount":  2089 ,
         "url": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/","datePublished": "2023-03-30T11:49:24+08:00","dateModified": "2023-03-30T11:49:24+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -128,18 +128,72 @@
 <main class="main">
             <div class="container"><div class="toc" id="toc-auto">
         <h2 class="toc-title">目录</h2>
-        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一控制流平坦化实现逻辑">一、控制流平坦化实现逻辑</a>
+          <ul>
+            <li><a href="#11-生成scrambler">1.1 生成SCRAMBLER</a></li>
+            <li><a href="#12-调用lower-switch">1.2 调用Lower switch</a></li>
+            <li><a href="#13-保存所有块">1.3 保存所有块</a></li>
+            <li><a href="#14-第一个基本块处理">1.4 第一个基本块处理</a></li>
+            <li><a href="#15-创建switch变量并设置初始值">1.5 创建switch变量并设置初始值</a></li>
+            <li><a href="#16-基本骨架设置">1.6 基本骨架设置</a></li>
+            <li><a href="#17-装入基本块">1.7 装入基本块</a></li>
+            <li><a href="#18-计算switchvar">1.8 计算switchVar</a>
+              <ul>
+                <li><a href="#181-无后继基本块">1.8.1 无后继基本块</a></li>
+                <li><a href="#182-无条件跳转结尾基本块">1.8.2 无条件跳转结尾基本块</a></li>
+                <li><a href="#183-条件跳转结尾基本块">1.8.3 条件跳转结尾基本块</a></li>
+              </ul>
+            </li>
+            <li><a href="#19-栈修复">1.9 栈修复</a></li>
+          </ul>
+        </li>
+        <li><a href="#二总结">二、总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
     </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Ollvm混淆与反混淆: goron框架控制流平坦化的实现原理</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/"><i class="far fa-folder fa-fw"></i>Ollvm混淆与反混淆</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 0 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 0 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2089 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
                     <span><i class="details-icon fas fa-angle-right"></i></span>
                 </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一控制流平坦化实现逻辑">一、控制流平坦化实现逻辑</a>
+          <ul>
+            <li><a href="#11-生成scrambler">1.1 生成SCRAMBLER</a></li>
+            <li><a href="#12-调用lower-switch">1.2 调用Lower switch</a></li>
+            <li><a href="#13-保存所有块">1.3 保存所有块</a></li>
+            <li><a href="#14-第一个基本块处理">1.4 第一个基本块处理</a></li>
+            <li><a href="#15-创建switch变量并设置初始值">1.5 创建switch变量并设置初始值</a></li>
+            <li><a href="#16-基本骨架设置">1.6 基本骨架设置</a></li>
+            <li><a href="#17-装入基本块">1.7 装入基本块</a></li>
+            <li><a href="#18-计算switchvar">1.8 计算switchVar</a>
+              <ul>
+                <li><a href="#181-无后继基本块">1.8.1 无后继基本块</a></li>
+                <li><a href="#182-无条件跳转结尾基本块">1.8.2 无条件跳转结尾基本块</a></li>
+                <li><a href="#183-条件跳转结尾基本块">1.8.3 条件跳转结尾基本块</a></li>
+              </ul>
+            </li>
+            <li><a href="#19-栈修复">1.9 栈修复</a></li>
+          </ul>
+        </li>
+        <li><a href="#二总结">二、总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
             </div><div class="content" id="content"><div class="details admonition warning open">
                 <div class="details-summary admonition-title">
                     <i class="icon fas fa-exclamation-triangle fa-fwwarning"></i>警告<i class="details-icon fas fa-angle-right fa-fw"></i>
@@ -148,7 +202,653 @@
                     <div class="admonition-content">
                         本文最后更新于 <span class="timeago" datetime="2023-03-30T11:49:24" title="March 30, 2023">2023-03-30</span>，文中内容可能已过时。</div>
                 </div>
-            </div></div>
+            </div><p>goron使用的控制流平坦化是ollvm原生的</p>
+<h3 id="一控制流平坦化实现逻辑" class="headerLink">
+    <a href="#%e4%b8%80%e6%8e%a7%e5%88%b6%e6%b5%81%e5%b9%b3%e5%9d%a6%e5%8c%96%e5%ae%9e%e7%8e%b0%e9%80%bb%e8%be%91" class="header-mark"></a>一、控制流平坦化实现逻辑</h3><h4 id="11-生成scrambler" class="headerLink">
+    <a href="#11-%e7%94%9f%e6%88%90scrambler" class="header-mark"></a>1.1 生成SCRAMBLER</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// SCRAMBLER
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">char</span> <span class="n">scrambling_key</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="n">llvm</span><span class="o">::</span><span class="n">cryptoutils</span><span class="o">-&gt;</span><span class="n">get_bytes</span><span class="p">(</span><span class="n">scrambling_key</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// END OF SCRAMBLER
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="12-调用lower-switch" class="headerLink">
+    <a href="#12-%e8%b0%83%e7%94%a8lower-switch" class="header-mark"></a>1.2 调用Lower switch</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Lower switch
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#if LLVM_VERSION_MAJOR * 10 + LLVM_VERSION_MINOR &gt;= 90
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="n">FunctionPass</span> <span class="o">*</span><span class="n">lower</span> <span class="o">=</span> <span class="n">createLegacyLowerSwitchPass</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#else
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="n">FunctionPass</span> <span class="o">*</span><span class="n">lower</span> <span class="o">=</span> <span class="n">createLowerSwitchPass</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="n">lower</span><span class="o">-&gt;</span><span class="n">runOnFunction</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">bool</span> <span class="n">LowerSwitch</span><span class="o">::</span><span class="n">runOnFunction</span><span class="p">(</span><span class="n">Function</span> <span class="o">&amp;</span><span class="n">F</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="n">Changed</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">SmallPtrSet</span><span class="o">&lt;</span><span class="n">BasicBlock</span><span class="o">*</span><span class="p">,</span> <span class="mi">8</span><span class="o">&gt;</span> <span class="n">DeleteList</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 遍历function获取基本块
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="n">Function</span><span class="o">::</span><span class="n">iterator</span> <span class="n">I</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">E</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">I</span> <span class="o">!=</span> <span class="n">E</span><span class="p">;</span> <span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">Cur</span> <span class="o">=</span> <span class="o">&amp;*</span><span class="n">I</span><span class="o">++</span><span class="p">;</span> <span class="c1">// Advance over block so we don&#39;t traverse new blocks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// If the block is a dead Default block that will be deleted later, don&#39;t
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// waste time processing it.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">DeleteList</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">Cur</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">      <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果块的末尾指令是switch指令，则需要处理
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">SwitchInst</span> <span class="o">*</span><span class="n">SI</span> <span class="o">=</span> <span class="n">dyn_cast</span><span class="o">&lt;</span><span class="n">SwitchInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Cur</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">Changed</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">processSwitchInst</span><span class="p">(</span><span class="n">SI</span><span class="p">,</span> <span class="n">DeleteList</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="n">BasicBlock</span><span class="o">*</span> <span class="nl">BB</span><span class="p">:</span> <span class="n">DeleteList</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DeleteDeadBlock</span><span class="p">(</span><span class="n">BB</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">Changed</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Lower switch的目的是去除原生函数的switch结构降级成if结构</p>
+<h4 id="13-保存所有块" class="headerLink">
+    <a href="#13-%e4%bf%9d%e5%ad%98%e6%89%80%e6%9c%89%e5%9d%97" class="header-mark"></a>1.3 保存所有块</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Save all original BB
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="n">Function</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span> <span class="o">=</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">();</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">tmp</span> <span class="o">=</span> <span class="o">&amp;*</span><span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">origBB</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">tmp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">bb</span> <span class="o">=</span> <span class="o">&amp;*</span><span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">isa</span><span class="o">&lt;</span><span class="n">InvokeInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">bb</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="14-第一个基本块处理" class="headerLink">
+    <a href="#14-%e7%ac%ac%e4%b8%80%e4%b8%aa%e5%9f%ba%e6%9c%ac%e5%9d%97%e5%a4%84%e7%90%86" class="header-mark"></a>1.4 第一个基本块处理</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Remove first BB 
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 删除第一个块并做一些处理
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">origBB</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">origBB</span><span class="p">.</span><span class="n">begin</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Get a pointer on the first BB
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   获取第一个块指针
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Function</span><span class="o">::</span><span class="n">iterator</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">();</span>  <span class="c1">//++tmp;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">insert</span> <span class="o">=</span> <span class="o">&amp;*</span><span class="n">tmp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// If main begin with an if
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">BranchInst</span> <span class="o">*</span><span class="n">br</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">isa</span><span class="o">&lt;</span><span class="n">BranchInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">insert</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">br</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">BranchInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">insert</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果块末尾是条件指令或者后继块有多个，都需要单独切割出来
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">((</span><span class="n">br</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">&amp;&amp;</span> <span class="n">br</span><span class="o">-&gt;</span><span class="n">isConditional</span><span class="p">())</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">      <span class="n">insert</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getNumSuccessors</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">BasicBlock</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span> <span class="o">=</span> <span class="n">insert</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="o">--</span><span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">insert</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="o">--</span><span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 将条件跳转的语句切割出来，成为一个新的基本块，并插入到vector开头
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">tmpBB</span> <span class="o">=</span> <span class="n">insert</span><span class="o">-&gt;</span><span class="n">splitBasicBlock</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s">&#34;first&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">origBB</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">origBB</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">tmpBB</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Remove jump
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   删除第一个基本块最后的末尾跳转
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">insert</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">eraseFromParent</span><span class="p">();</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>因为平坦化要求第一个基本块只能有一个后继基本块，如果第一个基本块末尾就是条件跳转（有两个或多个后继块）就无法进行后面的平坦化操作</p>
+<h4 id="15-创建switch变量并设置初始值" class="headerLink">
+    <a href="#15-%e5%88%9b%e5%bb%baswitch%e5%8f%98%e9%87%8f%e5%b9%b6%e8%ae%be%e7%bd%ae%e5%88%9d%e5%a7%8b%e5%80%bc" class="header-mark"></a>1.5 创建switch变量并设置初始值</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Create switch variable and set as it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">switchVar</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="k">new</span> <span class="n">AllocaInst</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">getContext</span><span class="p">()),</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#34;switchVar&#34;</span><span class="p">,</span> <span class="n">insert</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 首先设置初始值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">new</span> <span class="nf">StoreInst</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">getContext</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">llvm</span><span class="o">::</span><span class="n">cryptoutils</span><span class="o">-&gt;</span><span class="n">scramble32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">scrambling_key</span><span class="p">)),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">switchVar</span><span class="p">,</span> <span class="n">insert</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="16-基本骨架设置" class="headerLink">
+    <a href="#16-%e5%9f%ba%e6%9c%ac%e9%aa%a8%e6%9e%b6%e8%ae%be%e7%bd%ae" class="header-mark"></a>1.6 基本骨架设置</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Create main loop
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 创建loopEntry、loopEntry两个基本块
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">loopEntry</span> <span class="o">=</span> <span class="n">BasicBlock</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&#34;loopEntry&#34;</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">insert</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">loopEnd</span> <span class="o">=</span> <span class="n">BasicBlock</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&#34;loopEnd&#34;</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">insert</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// load switchVar 变量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">load</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LoadInst</span><span class="p">(</span><span class="n">switchVar</span><span class="p">,</span> <span class="s">&#34;switchVar&#34;</span><span class="p">,</span> <span class="n">loopEntry</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Move first BB on top
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">insert</span><span class="o">-&gt;</span><span class="n">moveBefore</span><span class="p">(</span><span class="n">loopEntry</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 构建顺序insert-&gt;loopEntry
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">BranchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">loopEntry</span><span class="p">,</span> <span class="n">insert</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// loopEnd jump to loopEntry
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 构建顺序loopEnd-&gt;loopEntry
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">BranchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">loopEntry</span><span class="p">,</span> <span class="n">loopEnd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">BasicBlock</span> <span class="o">*</span><span class="n">swDefault</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="n">BasicBlock</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&#34;switchDefault&#34;</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">loopEnd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 构建swDefault-&gt;loopEnd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">BranchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">loopEnd</span><span class="p">,</span> <span class="n">swDefault</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Create switch instruction itself and set condition
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">switchI</span> <span class="o">=</span> <span class="n">SwitchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="o">&amp;*</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">(),</span> <span class="n">swDefault</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">loopEntry</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">switchI</span><span class="o">-&gt;</span><span class="n">setCondition</span><span class="p">(</span><span class="n">load</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Remove branch jump from 1st BB and make a jump to the while
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">eraseFromParent</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 构建顺序第一个块到loopEntry
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">BranchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">loopEntry</span><span class="p">,</span> <span class="o">&amp;*</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">());</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>整体顺序就是第一个块-&gt;loopEntry，swDefault-&gt;loopEnd，loopEnd-&gt;loopEntry</p>
+<h4 id="17-装入基本块" class="headerLink">
+    <a href="#17-%e8%a3%85%e5%85%a5%e5%9f%ba%e6%9c%ac%e5%9d%97" class="header-mark"></a>1.7 装入基本块</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Put all BB in the switch
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 遍历每个块
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">BasicBlock</span> <span class="o">*&gt;::</span><span class="n">iterator</span> <span class="n">b</span> <span class="o">=</span> <span class="n">origBB</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">b</span> <span class="o">!=</span> <span class="n">origBB</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">       <span class="o">++</span><span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">i</span> <span class="o">=</span> <span class="o">*</span><span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ConstantInt</span> <span class="o">*</span><span class="n">numCase</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 块放在loopEnd前面
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Move the BB inside the switch (only visual, no code logic)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">i</span><span class="o">-&gt;</span><span class="n">moveBefore</span><span class="p">(</span><span class="n">loopEnd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 设置随机值并加入到switch结构中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Add case to switch
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">numCase</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">ConstantInt</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getCondition</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">llvm</span><span class="o">::</span><span class="n">cryptoutils</span><span class="o">-&gt;</span><span class="n">scramble32</span><span class="p">(</span><span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getNumCases</span><span class="p">(),</span> <span class="n">scrambling_key</span><span class="p">)));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">addCase</span><span class="p">(</span><span class="n">numCase</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> 
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里只是单纯的将块和随机变量绑定，并没有指定块的跳转顺序，下面要开始调整基本块之间的关系了</p>
+<h4 id="18-计算switchvar" class="headerLink">
+    <a href="#18-%e8%ae%a1%e7%ae%97switchvar" class="header-mark"></a>1.8 计算switchVar</h4><p>遍历每个块，分别对不同类型的块做处理，这里有三种情况</p>
+<h5 id="181-无后继基本块" class="headerLink">
+    <a href="#181-%e6%97%a0%e5%90%8e%e7%bb%a7%e5%9f%ba%e6%9c%ac%e5%9d%97" class="header-mark"></a>1.8.1 无后继基本块</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Ret BB
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getNumSuccessors</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果这个块的末尾指令没有后继，则表明这个块是结束块，无需再回到分发器</p>
+<h5 id="182-无条件跳转结尾基本块" class="headerLink">
+    <a href="#182-%e6%97%a0%e6%9d%a1%e4%bb%b6%e8%b7%b3%e8%bd%ac%e7%bb%93%e5%b0%be%e5%9f%ba%e6%9c%ac%e5%9d%97" class="header-mark"></a>1.8.2 无条件跳转结尾基本块</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// If it&#39;s a non-conditional jump
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 如果这个块末尾指令不是条件指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getNumSuccessors</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Get successor and delete terminator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 获取后继基本块
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">succ</span> <span class="o">=</span> <span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getSuccessor</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 删除该块到后继块的跳转
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">eraseFromParent</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Get next case
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 获取后继基本块的case值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">numCase</span> <span class="o">=</span> <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">findCaseDest</span><span class="p">(</span><span class="n">succ</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果case为空，表示是default分支
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// If next case == default case (switchDefault)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">numCase</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">numCase</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">ConstantInt</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getCondition</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">llvm</span><span class="o">::</span><span class="n">cryptoutils</span><span class="o">-&gt;</span><span class="n">scramble32</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getNumCases</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">scrambling_key</span><span class="p">)));</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// numCase = MySecret - (MySecret - numCase)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// X = MySecret - numCase
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Constant</span> <span class="o">*</span><span class="n">X</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">SecretInfo</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">SecretInfo</span><span class="o">-&gt;</span><span class="n">SecretCI</span><span class="p">,</span> <span class="n">numCase</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">Zero</span><span class="p">,</span> <span class="n">numCase</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取真实case值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Value</span> <span class="o">*</span><span class="n">newNumCase</span> <span class="o">=</span> <span class="n">BinaryOperator</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">Instruction</span><span class="o">::</span><span class="n">Sub</span><span class="p">,</span> <span class="n">MySecret</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Update switchVar and jump to the end of loop
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 末尾更新switchVar值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">new</span> <span class="nf">StoreInst</span><span class="p">(</span><span class="n">newNumCase</span><span class="p">,</span> <span class="n">load</span><span class="o">-&gt;</span><span class="n">getPointerOperand</span><span class="p">(),</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 跳转到loopEnd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BranchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">loopEnd</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="183-条件跳转结尾基本块" class="headerLink">
+    <a href="#183-%e6%9d%a1%e4%bb%b6%e8%b7%b3%e8%bd%ac%e7%bb%93%e5%b0%be%e5%9f%ba%e6%9c%ac%e5%9d%97" class="header-mark"></a>1.8.3 条件跳转结尾基本块</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// If it&#39;s a conditional jump
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 如果末尾指令是分支指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getNumSuccessors</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Get next cases
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 获取两个后继的case值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ConstantInt</span> <span class="o">*</span><span class="n">numCaseTrue</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">        <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">findCaseDest</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getSuccessor</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ConstantInt</span> <span class="o">*</span><span class="n">numCaseFalse</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">        <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">findCaseDest</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getSuccessor</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 判断defalut的情况
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// Check if next case == default case (switchDefault)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">numCaseTrue</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">numCaseTrue</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">ConstantInt</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getCondition</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">llvm</span><span class="o">::</span><span class="n">cryptoutils</span><span class="o">-&gt;</span><span class="n">scramble32</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getNumCases</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">scrambling_key</span><span class="p">)));</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">numCaseFalse</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">numCaseFalse</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">ConstantInt</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getCondition</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">llvm</span><span class="o">::</span><span class="n">cryptoutils</span><span class="o">-&gt;</span><span class="n">scramble32</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">switchI</span><span class="o">-&gt;</span><span class="n">getNumCases</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">scrambling_key</span><span class="p">)));</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取真实值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Constant</span> <span class="o">*</span><span class="n">X</span><span class="p">,</span> <span class="o">*</span><span class="n">Y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">SecretInfo</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">SecretInfo</span><span class="o">-&gt;</span><span class="n">SecretCI</span><span class="p">,</span> <span class="n">numCaseTrue</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Y</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">SecretInfo</span><span class="o">-&gt;</span><span class="n">SecretCI</span><span class="p">,</span> <span class="n">numCaseFalse</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">Zero</span><span class="p">,</span> <span class="n">numCaseTrue</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Y</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">Zero</span><span class="p">,</span> <span class="n">numCaseFalse</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Value</span> <span class="o">*</span><span class="n">newNumCaseTrue</span> <span class="o">=</span> <span class="n">BinaryOperator</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">Instruction</span><span class="o">::</span><span class="n">Sub</span><span class="p">,</span> <span class="n">MySecret</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Value</span> <span class="o">*</span><span class="n">newNumCaseFalse</span> <span class="o">=</span> <span class="n">BinaryOperator</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">Instruction</span><span class="o">::</span><span class="n">Sub</span><span class="p">,</span> <span class="n">MySecret</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Create a SelectInst
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 构造条件指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BranchInst</span> <span class="o">*</span><span class="n">br</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">BranchInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="n">SelectInst</span> <span class="o">*</span><span class="n">sel</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">        <span class="n">SelectInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">br</span><span class="o">-&gt;</span><span class="n">getCondition</span><span class="p">(),</span> <span class="n">newNumCaseTrue</span><span class="p">,</span> <span class="n">newNumCaseFalse</span><span class="p">,</span> <span class="s">&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Erase terminator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 删除结尾跳转指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">i</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">eraseFromParent</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Update switchVar and jump to the end of loop
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 末尾添加条件指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">new</span> <span class="nf">StoreInst</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">load</span><span class="o">-&gt;</span><span class="n">getPointerOperand</span><span class="p">(),</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 跳转到loopEnd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BranchInst</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">loopEnd</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="19-栈修复" class="headerLink">
+    <a href="#19-%e6%a0%88%e4%bf%ae%e5%a4%8d" class="header-mark"></a>1.9 栈修复</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">fixStack</span><span class="p">(</span><span class="n">Function</span> <span class="o">*</span><span class="n">f</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Try to remove phi node and demote reg to stack
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PHINode</span> <span class="o">*&gt;</span> <span class="n">tmpPhi</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Instruction</span> <span class="o">*&gt;</span> <span class="n">tmpReg</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">bbEntry</span> <span class="o">=</span> <span class="o">&amp;*</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tmpPhi</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tmpReg</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="n">Function</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span> <span class="o">=</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">();</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      <span class="k">for</span> <span class="p">(</span><span class="n">BasicBlock</span><span class="o">::</span><span class="n">iterator</span> <span class="n">j</span> <span class="o">=</span> <span class="n">i</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">();</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">isa</span><span class="o">&lt;</span><span class="n">PHINode</span><span class="o">&gt;</span><span class="p">(</span><span class="n">j</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">PHINode</span> <span class="o">*</span><span class="n">phi</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">PHINode</span><span class="o">&gt;</span><span class="p">(</span><span class="n">j</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="n">tmpPhi</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">phi</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">isa</span><span class="o">&lt;</span><span class="n">AllocaInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">j</span><span class="o">-&gt;</span><span class="n">getParent</span><span class="p">()</span> <span class="o">==</span> <span class="n">bbEntry</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">(</span><span class="n">valueEscapes</span><span class="p">(</span><span class="o">&amp;*</span><span class="n">j</span><span class="p">)</span> <span class="o">||</span> <span class="n">j</span><span class="o">-&gt;</span><span class="n">isUsedOutsideOfBlock</span><span class="p">(</span><span class="o">&amp;*</span><span class="n">i</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">tmpReg</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="o">&amp;*</span><span class="n">j</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">tmpReg</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">DemoteRegToStack</span><span class="p">(</span><span class="o">*</span><span class="n">tmpReg</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">tmpPhi</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">DemotePHIToStack</span><span class="p">(</span><span class="n">tmpPhi</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">f</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">tmpReg</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">tmpPhi</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="二总结" class="headerLink">
+    <a href="#%e4%ba%8c%e6%80%bb%e7%bb%93" class="header-mark"></a>二、总结</h3><ol>
+<li>调用lower switch去除当前函数的switch结构</li>
+<li>保存所有块并单独刨除第一个块</li>
+<li>创建switch变量并设置初始值</li>
+<li>设置基本骨架frist-&gt;loopEntry-&gt;switch-&gt;loopEnd-&gt;loopEntry</li>
+<li>装入基本块</li>
+<li>重新计算switchVar</li>
+<li>栈修复</li>
+</ol>
+</div>
 
         
 
