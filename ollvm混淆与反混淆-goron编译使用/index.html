@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>Ollvm混淆与反混淆: Goron编译使用 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Ollvm混淆与反混淆: Goron编译使用" />
+<meta property="og:description" content="很多App实现的定制ollvm框架中都有goron框架的影子，或多或少的借鉴了它的功能，包括 间接跳转,并加密跳转目标(-mllvm -irobf-indbr) 间接函数" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-03-29T23:21:45+08:00" />
+<meta property="article:modified_time" content="2024-03-29T23:21:45+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Ollvm混淆与反混淆: Goron编译使用"/>
+<meta name="twitter:description" content="很多App实现的定制ollvm框架中都有goron框架的影子，或多或少的借鉴了它的功能，包括 间接跳转,并加密跳转目标(-mllvm -irobf-indbr) 间接函数"/>
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" /><link rel="prev" href="https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Ollvm混淆与反混淆: Goron编译使用",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8\/"
+        },"genre": "posts","keywords": "goron框架","wordcount":  936 ,
+        "url": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8\/","datePublished": "2024-03-29T23:21:45+08:00","dateModified": "2024-03-29T23:21:45+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一环境配置">一、环境配置</a></li>
+        <li><a href="#二编译过程">二、编译过程</a>
+          <ul>
+            <li><a href="#21-工程选定">2.1 工程选定</a></li>
+            <li><a href="#22-编译">2.2 编译</a></li>
+          </ul>
+        </li>
+        <li><a href="#三集成到ndk">三、集成到NDK</a></li>
+        <li><a href="#四混淆效果对比">四、混淆效果对比</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Ollvm混淆与反混淆: Goron编译使用</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/"><i class="far fa-folder fa-fw"></i>Ollvm混淆与反混淆</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-29">2024-03-29</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-29">2024-03-29</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 936 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一环境配置">一、环境配置</a></li>
+        <li><a href="#二编译过程">二、编译过程</a>
+          <ul>
+            <li><a href="#21-工程选定">2.1 工程选定</a></li>
+            <li><a href="#22-编译">2.2 编译</a></li>
+          </ul>
+        </li>
+        <li><a href="#三集成到ndk">三、集成到NDK</a></li>
+        <li><a href="#四混淆效果对比">四、混淆效果对比</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>很多App实现的定制ollvm框架中都有goron框架的影子，或多或少的借鉴了它的功能，包括</p>
+<ul>
+<li>间接跳转,并加密跳转目标(-mllvm -irobf-indbr)</li>
+<li>间接函数调用,并加密目标函数地址(-mllvm -irobf-icall)</li>
+<li>间接全局变量引用,并加密变量地址(-mllvm -irobf-indgv)</li>
+<li>字符串(c string)加密功能(-mllvm -irobf-cse)</li>
+<li>过程相关控制流平坦混淆(-mllvm -irobf-cff)</li>
+</ul>
+<p>想要了解怎么针对这些混淆功能完成去混淆，势必要先对其混淆过程有所了解，那么第一步就是对goron框架的编译使用</p>
+<h3 id="一环境配置" class="headerLink">
+    <a href="#%e4%b8%80%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae" class="header-mark"></a>一、环境配置</h3><ul>
+<li>环境：MacBook Pro 16G</li>
+<li>cmake：cmake version 3.26.3</li>
+<li>Android Studio NDK：21.1.6352462</li>
+</ul>
+<h3 id="二编译过程" class="headerLink">
+    <a href="#%e4%ba%8c%e7%bc%96%e8%af%91%e8%bf%87%e7%a8%8b" class="header-mark"></a>二、编译过程</h3><h4 id="21-工程选定" class="headerLink">
+    <a href="#21-%e5%b7%a5%e7%a8%8b%e9%80%89%e5%ae%9a" class="header-mark"></a>2.1 工程选定</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">git clone https://github.com/amimo/goron.git
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> goron
+</span></span><span class="line"><span class="cl">git checkout llvm-9.0.0
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="22-编译" class="headerLink">
+    <a href="#22-%e7%bc%96%e8%af%91" class="header-mark"></a>2.2 编译</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir build <span class="o">&amp;&amp;</span> <span class="nb">cd</span> build
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>建好产出目录</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_PROJECTS=clang -G &#34;Unix Makefiles&#34; -DCMAKE_INSTALL_PREFIX=/Path/You/Install/Dir/llvm-project-install ../llvm
+</span></span><span class="line"><span class="cl">make -j12 install
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>LLVM_ENABLE_PROJECTS：参数只需开启clang编译器一个工程即可
+CMAKE_INSTALL_PREFIX：（可选参数）设置编译后可执行文件、动态库、静态库、头文件等等统一的放置路径</p>
+<p>编译完成之后就可以在bin目录下看到这些可执行文件了</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">FileCheck                       llvm-cat                        llvm-opt-fuzzer
+</span></span><span class="line"><span class="cl">arcmt-test                      llvm-cfi-verify                 llvm-opt-report
+</span></span><span class="line"><span class="cl">bugpoint                        llvm-config                     llvm-pdbutil
+</span></span><span class="line"><span class="cl">c-arcmt-test                    llvm-cov                        llvm-profdata
+</span></span><span class="line"><span class="cl">c-index-test                    llvm-cvtres                     llvm-ranlib
+</span></span><span class="line"><span class="cl">clang                           llvm-cxxdump                    llvm-rc
+</span></span><span class="line"><span class="cl">clang++                         llvm-cxxfilt                    llvm-readelf
+</span></span><span class="line"><span class="cl">clang-9                         llvm-cxxmap                     llvm-readobj
+</span></span><span class="line"><span class="cl">clang-check                     llvm-diff                       llvm-rtdyld
+</span></span><span class="line"><span class="cl">clang-cl                        llvm-dis                        llvm-size
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="三集成到ndk" class="headerLink">
+    <a href="#%e4%b8%89%e9%9b%86%e6%88%90%e5%88%b0ndk" class="header-mark"></a>三、集成到NDK</h3><p>替换原有的NDK目录下的clang文件即可，首先在local.properties中配置好ndk.dir，接着替换clang、clang++文件即可</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cp /Path/You/Install/Dir/llvm-project-install/bin/clang-9 /You/NDK/Path/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang
+</span></span><span class="line"><span class="cl">cp /Path/You/Install/Dir/llvm-project-install/bin/clang-9 /You/NDK/Path/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>配置完clang之后还需要在build.gradle中配置需要混淆组件，如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">defaultConfig <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    applicationId <span class="s2">&#34;com.example.myapplication&#34;</span>
+</span></span><span class="line"><span class="cl">    minSdk <span class="m">24</span>
+</span></span><span class="line"><span class="cl">    targetSdk <span class="m">33</span>
+</span></span><span class="line"><span class="cl">    versionCode <span class="m">1</span>
+</span></span><span class="line"><span class="cl">    versionName <span class="s2">&#34;1.0&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    testInstrumentationRunner <span class="s2">&#34;androidx.test.runner.AndroidJUnitRunner&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    externalNativeBuild <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        cmake <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            cppFlags <span class="s2">&#34;-mllvm -irobf-cff&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>配合so函数如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;jni.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[</span><span class="mi">256</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="n">JNIEXPORT</span> <span class="n">jstring</span> <span class="n">JNICALL</span>
+</span></span><span class="line"><span class="cl"><span class="n">Java_com_example_myapplication_MainActivity_stringFromJNI</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobject</span> <span class="cm">/* this */</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jint</span> <span class="n">val</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;Hello from C++&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 1&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 2&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 4&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">8</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 8&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">16</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 16&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">32</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 32&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">64</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 64&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 3&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="mi">65535</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is 65535&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">strcpy</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#34;value is default&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">env</span><span class="o">-&gt;</span><span class="n">NewStringUTF</span><span class="p">(</span><span class="n">text</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行查看效果</p>
+<h3 id="四混淆效果对比" class="headerLink">
+    <a href="#%e5%9b%9b%e6%b7%b7%e6%b7%86%e6%95%88%e6%9e%9c%e5%af%b9%e6%af%94" class="header-mark"></a>四、混淆效果对比</h3><ul>
+<li>fla混淆后的效果
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/fla.png?raw=true">
+    </a></figure></li>
+<li>cse混淆后的效果
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/cse.png?raw=true">
+    </a></figure>
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/cse1.png?raw=true">
+    </a></figure>
+每个字符都对应一个加密函数</li>
+<li>indgv混淆后的效果
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/indgv.png?raw=true">
+    </a></figure>
+字符串都通过全局变量来获取</li>
+<li>icall混淆后的效果
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/icall.png?raw=true">
+    </a></figure></li>
+<li>indbr混淆后的效果
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/indbr.png?raw=true">
+    </a></figure>
+截断了函数流程</li>
+</ul>
+</div>
+
+        
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-03-29</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用" data-hashtags="goron框架"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-hashtag="goron框架"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" data-title="Ollvm混淆与反混淆: Goron编译使用"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/goron%E6%A1%86%E6%9E%B6/">Goron框架</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/" class="prev" rel="prev" title="基于Kernel Kprobe机制的改机架构实现"><i class="fas fa-angle-left fa-fw"></i>基于Kernel Kprobe机制的改机架构实现</a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.124.1">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>
