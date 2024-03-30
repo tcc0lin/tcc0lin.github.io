@@ -4,39 +4,39 @@
         <link>https://tcc0lin.github.io/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/</link>
         <description>Ollvm混淆与反混淆 - 分类 - tcc0lin&#39;s blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 30 Mar 2023 11:49:24 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/" rel="self" type="application/rss+xml" /><item>
-    <title>Ollvm混淆与反混淆: 控制流平坦化的实现原理</title>
-    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+    <title>Ollvm混淆与反混淆: goron框架控制流平坦化的实现原理</title>
+    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
     <pubDate>Thu, 30 Mar 2023 11:49:24 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
     <description><![CDATA[]]></description>
 </item><item>
-    <title>Ollvm混淆与反混淆: 字符串加密的实现原理</title>
-    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+    <title>Ollvm混淆与反混淆: goron框架字符串加密的实现原理</title>
+    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
     <pubDate>Thu, 30 Mar 2023 11:48:56 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
-    <description><![CDATA[]]></description>
+    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+    <description><![CDATA[函数实现逻辑在llvm/lib/Transforms/Obfuscation/StringEncryption.cpp文件中，Indirec]]></description>
 </item><item>
-    <title>Ollvm混淆与反混淆: 间接全局变量引用的实现原理</title>
-    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+    <title>Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理</title>
+    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
     <pubDate>Thu, 30 Mar 2023 11:48:49 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
-    <description><![CDATA[]]></description>
+    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+    <description><![CDATA[与间接函数调用同理，可参考 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57]]></description>
 </item><item>
-    <title>Ollvm混淆与反混淆: 间接函数调用的实现原理</title>
-    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+    <title>Ollvm混淆与反混淆: goron框架间接函数调用的实现原理</title>
+    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
     <pubDate>Thu, 30 Mar 2023 11:48:35 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
-    <description><![CDATA[]]></description>
+    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+    <description><![CDATA[函数实现逻辑在llvm/lib/Transforms/Obfuscation/IndirectCall.cpp文件中，IndirectBra]]></description>
 </item><item>
-    <title>Ollvm混淆与反混淆: 间接跳转的实现原理</title>
-    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+    <title>Ollvm混淆与反混淆: goron框架间接跳转的实现原理</title>
+    <link>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
     <pubDate>Thu, 30 Mar 2023 11:48:20 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+    </author><guid>https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
     <description><![CDATA[Obfusaction Pass的管理统一在类ObfuscationPassManager中 1 2 3 static cl::opt&lt;bool&gt; EnableIndirectBr(&#34;irobf-indbr&#34;, cl::init(false), cl::NotHidden, cl::desc(&#34;Enable IR Indirect Branch Obfuscation.&#34;)); 根据clang的flag来判断是否开启某类混]]></description>
 </item><item>
     <title>Ollvm混淆与反混淆: Goron编译使用</title>

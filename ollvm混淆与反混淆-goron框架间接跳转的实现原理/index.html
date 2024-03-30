@@ -7,34 +7,34 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noodp" />
-    <title>Ollvm混淆与反混淆: 间接跳转的实现原理 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Ollvm混淆与反混淆: 间接跳转的实现原理" />
+    <title>Ollvm混淆与反混淆: goron框架间接跳转的实现原理 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:title" content="Ollvm混淆与反混淆: goron框架间接跳转的实现原理" />
 <meta property="og:description" content="Obfusaction Pass的管理统一在类ObfuscationPassManager中 1 2 3 static cl::opt&lt;bool&gt; EnableIndirectBr(&#34;irobf-indbr&#34;, cl::init(false), cl::NotHidden, cl::desc(&#34;Enable IR Indirect Branch Obfuscation.&#34;)); 根据clang的flag来判断是否开启某类混" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" /><meta property="og:image" content="https://tcc0lin.github.io/logo.png" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-03-30T11:48:20+08:00" />
 <meta property="article:modified_time" content="2023-03-30T11:48:20+08:00" /><meta property="og:site_name" content="tcc0lin&#39;s blog" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Ollvm混淆与反混淆: 间接跳转的实现原理"/>
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png" /><meta name="twitter:title" content="Ollvm混淆与反混淆: goron框架间接跳转的实现原理"/>
 <meta name="twitter:description" content="Obfusaction Pass的管理统一在类ObfuscationPassManager中 1 2 3 static cl::opt&lt;bool&gt; EnableIndirectBr(&#34;irobf-indbr&#34;, cl::init(false), cl::NotHidden, cl::desc(&#34;Enable IR Indirect Branch Obfuscation.&#34;)); 根据clang的flag来判断是否开启某类混"/>
 <meta name="application-name" content="DoIt">
 <meta name="apple-mobile-web-app-title" content="DoIt">
 
 <meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" /><link rel="prev" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" /><link rel="next" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" /><link rel="prev" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" /><link rel="next" href="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" />
 <link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
         <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
         <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
-        "headline": "Ollvm混淆与反混淆: 间接跳转的实现原理",
+        "headline": "Ollvm混淆与反混淆: goron框架间接跳转的实现原理",
         "inLanguage": "zh-CN",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/"
-        },"genre": "posts","keywords": "goron框架","wordcount":  1225 ,
-        "url": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/","datePublished": "2023-03-30T11:48:20+08:00","dateModified": "2023-03-30T11:48:20+08:00","publisher": {
+            "@id": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/"
+        },"genre": "posts","keywords": "goron框架","wordcount":  1279 ,
+        "url": "https:\/\/tcc0lin.github.io\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/","datePublished": "2023-03-30T11:48:20+08:00","dateModified": "2023-03-30T11:48:20+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -138,6 +138,7 @@
             <li><a href="#12-bbnumberingbbtargets块信息收集">1.2 BBNumbering、BBTargets块信息收集</a></li>
             <li><a href="#13-重构bbtargets块的全局跳转变量">1.3 重构BBTargets块的全局跳转变量</a></li>
             <li><a href="#14-指令替换">1.4 指令替换</a></li>
+            <li><a href="#15-效果分析">1.5 效果分析</a></li>
           </ul>
         </li>
         <li><a href="#二总结">二、总结</a></li>
@@ -145,11 +146,11 @@
     </li>
   </ul>
 </nav></div>
-    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Ollvm混淆与反混淆: 间接跳转的实现原理</h1><div class="post-meta">
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Ollvm混淆与反混淆: goron框架间接跳转的实现原理</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/"><i class="far fa-folder fa-fw"></i>Ollvm混淆与反混淆</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1225 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2023-03-30">2023-03-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1279 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -165,6 +166,7 @@
             <li><a href="#12-bbnumberingbbtargets块信息收集">1.2 BBNumbering、BBTargets块信息收集</a></li>
             <li><a href="#13-重构bbtargets块的全局跳转变量">1.3 重构BBTargets块的全局跳转变量</a></li>
             <li><a href="#14-指令替换">1.4 指令替换</a></li>
+            <li><a href="#15-效果分析">1.5 效果分析</a></li>
           </ul>
         </li>
         <li><a href="#二总结">二、总结</a></li>
@@ -491,7 +493,22 @@
 </span></span><span class="line"><span class="cl">    <span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="二总结" class="headerLink">
+</div><h4 id="15-效果分析" class="headerLink">
+    <a href="#15-%e6%95%88%e6%9e%9c%e5%88%86%e6%9e%90" class="header-mark"></a>1.5 效果分析</h4><p><figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/indbr1.png?raw=true">
+    </a></figure></p>
+<ul>
+<li>w12为后继块的index</li>
+<li>x8为全局变量+index-enckey后的地址</li>
+<li>br x8完成对后继块的跳转</li>
+</ul>
+<h3 id="二总结" class="headerLink">
     <a href="#%e4%ba%8c%e6%80%bb%e7%bb%93" class="header-mark"></a>二、总结</h3><p>根据对代码的分析，可以简述间接跳转的原理</p>
 <ol>
 <li>收集末尾块的指令对应的后继块，形成map，map包含块以及对应的index</li>
@@ -513,22 +530,22 @@
 <div class="related-container">
     <div class="related-item-container">
             <h2 class="related-title">
-                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: 控制流平坦化的实现原理</a>
+                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: goron框架控制流平坦化的实现原理</a>
             </h2>
         </div>
     <div class="related-item-container">
             <h2 class="related-title">
-                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: 字符串加密的实现原理</a>
+                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: goron框架字符串加密的实现原理</a>
             </h2>
         </div>
     <div class="related-item-container">
             <h2 class="related-title">
-                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: 间接全局变量引用的实现原理</a>
+                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理</a>
             </h2>
         </div>
     <div class="related-item-container">
             <h2 class="related-title">
-                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: 间接函数调用的实现原理</a>
+                <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">Ollvm混淆与反混淆: goron框架间接函数调用的实现原理</a>
             </h2>
         </div>
     <div class="related-item-container">
@@ -549,11 +566,11 @@
             <div class="post-info-license"></div>
         </div>
         <div class="post-info-line">
-            <div class="post-info-md"><span><a class="link-to-mardown" href=/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
                     </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
                     </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
                     </span></div>
-            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理" data-hashtags="goron框架"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-hashtag="goron框架"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: 间接跳转的实现原理"><span class="fab fa-evernote fa-fw"></span></button></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理" data-hashtags="goron框架"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-hashtag="goron框架"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: goron框架间接跳转的实现原理"><span class="fab fa-evernote fa-fw"></span></button></div>
         </div>
     </div>
 
@@ -565,7 +582,7 @@
     </div>
 
     <div class="post-nav"><a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" class="prev" rel="prev" title="Ollvm混淆与反混淆: Goron编译使用"><i class="fas fa-angle-left fa-fw"></i>Ollvm混淆与反混淆: Goron编译使用</a>
-            <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="next" rel="next" title="Ollvm混淆与反混淆: 间接函数调用的实现原理">Ollvm混淆与反混淆: 间接函数调用的实现原理<i class="fas fa-angle-right fa-fw"></i></a></div>
+            <a href="/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="next" rel="next" title="Ollvm混淆与反混淆: goron框架间接函数调用的实现原理">Ollvm混淆与反混淆: goron框架间接函数调用的实现原理<i class="fas fa-angle-right fa-fw"></i></a></div>
 </div>
 <div id="comments"></div></article></div>
         </main><footer class="footer">
