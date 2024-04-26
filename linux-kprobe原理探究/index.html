@@ -1,0 +1,1607 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>Linux Kprobe原理探究 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:url" content="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/">
+  <meta property="og:site_name" content="tcc0lin&#39;s blog">
+  <meta property="og:title" content="Linux Kprobe原理探究">
+  <meta property="og:description" content="之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括 App访问、操作了哪些文件 执行了哪些操作">
+  <meta property="og:locale" content="zh-CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-04-26T21:19:53+08:00">
+    <meta property="article:modified_time" content="2024-04-26T21:19:53+08:00">
+    <meta property="article:tag" content="源码分析">
+    <meta property="og:image" content="https://tcc0lin.github.io/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tcc0lin.github.io/logo.png"><meta name="twitter:title" content="Linux Kprobe原理探究">
+<meta name="twitter:description" content="之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括 App访问、操作了哪些文件 执行了哪些操作">
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" /><link rel="prev" href="https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Linux Kprobe原理探究",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6\/"
+        },"genre": "posts","keywords": "源码分析","wordcount":  5989 ,
+        "url": "https:\/\/tcc0lin.github.io\/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6\/","datePublished": "2024-04-26T21:19:53+08:00","dateModified": "2024-04-26T21:19:53+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一kprobe基本知识">一、Kprobe基本知识</a></li>
+        <li><a href="#二使用">二、使用</a>
+          <ul>
+            <li><a href="#基于内核模块加载">基于内核模块加载</a></li>
+            <li><a href="#21-案例">2.1 案例</a></li>
+            <li><a href="#22-编译">2.2 编译</a></li>
+          </ul>
+        </li>
+        <li><a href="#三实现原理">三、实现原理</a>
+          <ul>
+            <li><a href="#31-init_kprobes">3.1 init_kprobes</a>
+              <ul>
+                <li><a href="#31-register_die_notifier">3.1 register_die_notifier</a></li>
+                <li><a href="#32-register_module_notifier">3.2 register_module_notifier</a></li>
+                <li><a href="#33-小结">3.3 小结</a></li>
+              </ul>
+            </li>
+            <li><a href="#32-register_kprobe">3.2 register_kprobe</a>
+              <ul>
+                <li><a href="#321-kprobe_addr">3.2.1 kprobe_addr</a></li>
+                <li><a href="#322-prepare_kprobe">3.2.2 prepare_kprobe</a></li>
+                <li><a href="#323-hlist_add_head_rcu">3.2.3 hlist_add_head_rcu</a></li>
+                <li><a href="#324-arm_kprobe">3.2.4 arm_kprobe</a></li>
+                <li><a href="#325-小结">3.2.5 小结</a></li>
+              </ul>
+            </li>
+            <li><a href="#33-brk-exception">3.3 brk exception</a></li>
+            <li><a href="#34-hwss-exception">3.4 hwss exception</a></li>
+            <li><a href="#35-总结">3.5 总结</a></li>
+          </ul>
+        </li>
+        <li><a href="#参考">参考</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Linux Kprobe原理探究</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/linux%E5%86%85%E6%A0%B8/"><i class="far fa-folder fa-fw"></i>Linux内核</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-04-26">2024-04-26</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-04-26">2024-04-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 5989 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 12 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一kprobe基本知识">一、Kprobe基本知识</a></li>
+        <li><a href="#二使用">二、使用</a>
+          <ul>
+            <li><a href="#基于内核模块加载">基于内核模块加载</a></li>
+            <li><a href="#21-案例">2.1 案例</a></li>
+            <li><a href="#22-编译">2.2 编译</a></li>
+          </ul>
+        </li>
+        <li><a href="#三实现原理">三、实现原理</a>
+          <ul>
+            <li><a href="#31-init_kprobes">3.1 init_kprobes</a>
+              <ul>
+                <li><a href="#31-register_die_notifier">3.1 register_die_notifier</a></li>
+                <li><a href="#32-register_module_notifier">3.2 register_module_notifier</a></li>
+                <li><a href="#33-小结">3.3 小结</a></li>
+              </ul>
+            </li>
+            <li><a href="#32-register_kprobe">3.2 register_kprobe</a>
+              <ul>
+                <li><a href="#321-kprobe_addr">3.2.1 kprobe_addr</a></li>
+                <li><a href="#322-prepare_kprobe">3.2.2 prepare_kprobe</a></li>
+                <li><a href="#323-hlist_add_head_rcu">3.2.3 hlist_add_head_rcu</a></li>
+                <li><a href="#324-arm_kprobe">3.2.4 arm_kprobe</a></li>
+                <li><a href="#325-小结">3.2.5 小结</a></li>
+              </ul>
+            </li>
+            <li><a href="#33-brk-exception">3.3 brk exception</a></li>
+            <li><a href="#34-hwss-exception">3.4 hwss exception</a></li>
+            <li><a href="#35-总结">3.5 总结</a></li>
+          </ul>
+        </li>
+        <li><a href="#参考">参考</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括</p>
+<ul>
+<li>App访问、操作了哪些文件</li>
+<li>执行了哪些操作</li>
+<li>对于相关操作进行针对性的修改等等</li>
+</ul>
+<p>其中很棘手的问题在于如何应对App中越来越常见的内联系统调用，对于内联系统调用的监控我不希望通过ptrace这类进程注入的方式来实现，而是想寻求通过定制系统或者相关的方式来实现以达到无侵入App的目的。</p>
+<p>另一方面来说，通过定制系统的方式完成相关系统函数的修改确实是一种方式，但是定制系统在生产环境使用中会存在两个问题：</p>
+<ol>
+<li>调试测试：通常流程上都是相关函数修改-&gt;编译内核-&gt;重打包boot.img-&gt;刷入这些步骤（或者可以通过AnyKernel省略打包boot.img），但是整体测试流程还是很繁琐的，其中还可能遇到代码bug导致系统无法启动等棘手问题，对于实际开发来说很是崩溃</li>
+<li>线上部署：和App一样，当本地测试好的内核遇到线上环境时可能会出现各式各样的问题，包括内核更新失败、内核文件传输、下载失败等等问题，直接导致系统无法启动，需要人工修复，想象下部署在遥远郊区的大规模设备集群大批量系统无法启动的场景，要靠人工一一修复是什么体验</li>
+</ol>
+<p>综上，最最贴合真实场景的是一种无侵入App且不阻断内核启动的方案，经过一顿搜索，最终定位到了Linux Kprobe这类内核监控方案。</p>
+<p>第一次了解到kprobe技术是在evilpan的文章<a href="https://evilpan.com/2022/01/03/kernel-tracing/" target="_blank" rel="noopener noreferrer">Linux 内核监控在 Android 攻防中的应用
+</a>中，在现有的内核监控方案中分为数据、采集、前端三个层级
+<figure><a class="lightgallery" href="https://evilpan.com/img/2022-01-03-kernel-tracing/3.png" title="https://evilpan.com/img/2022-01-03-kernel-tracing/3.png" data-thumbnail="https://evilpan.com/img/2022-01-03-kernel-tracing/3.png">
+        <img
+            
+            loading="lazy"
+            src="https://evilpan.com/img/2022-01-03-kernel-tracing/3.png"
+            srcset="https://evilpan.com/img/2022-01-03-kernel-tracing/3.png, https://evilpan.com/img/2022-01-03-kernel-tracing/3.png 1.5x, https://evilpan.com/img/2022-01-03-kernel-tracing/3.png 2x"
+            sizes="auto"
+            alt="https://evilpan.com/img/2022-01-03-kernel-tracing/3.png">
+    </a></figure>
+而作为最底层的数据来源，kprobe、uprobe等是我们在做内核监控时需要重点关注的点，相比较于其他几种实现方式，kprobe无论从可扩展性、影响范围上都是最适合做二次开发的，参考作者给出的对比表</p>
+<table>
+<thead>
+<tr>
+<th>监控方案</th>
+<th>静态</th>
+<th>动态</th>
+<th>内核</th>
+<th>用户</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kprobes</td>
+<td></td>
+<td>✔</td>
+<td>✔</td>
+<td></td>
+</tr>
+<tr>
+<td>Uprobes</td>
+<td>✔</td>
+<td></td>
+<td></td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Tracepoints</td>
+<td>✔</td>
+<td></td>
+<td>✔</td>
+<td></td>
+</tr>
+<tr>
+<td>USDT</td>
+<td>✔</td>
+<td></td>
+<td></td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
+<p>因此最终确定了使用Linux Kprobe来作为内核系统函数的监控方案</p>
+<h3 id="一kprobe基本知识" class="headerLink">
+    <a href="#%e4%b8%80kprobe%e5%9f%ba%e6%9c%ac%e7%9f%a5%e8%af%86" class="header-mark"></a>一、Kprobe基本知识</h3><p>kprobe可以认为是一种kernel hook手段，它基于内核中断的方式实现，可以想象它是内核层的异常hook（参考SandHook），既然是异常hook，那么它所能hook的范围就没有限制了，可以针对函数、也可以针对单条指令</p>
+<h3 id="二使用" class="headerLink">
+    <a href="#%e4%ba%8c%e4%bd%bf%e7%94%a8" class="header-mark"></a>二、使用</h3><p>kprobe主要有两种使用方法，一是通过模块加载；二是通过debugfs接口。从可扩展性和工程化的角度来看，模块加载是更优的选择，debugfs在某些特殊场景下（快速验证某些函数）可能会适合</p>
+<h4 id="基于内核模块加载" class="headerLink">
+    <a href="#%e5%9f%ba%e4%ba%8e%e5%86%85%e6%a0%b8%e6%a8%a1%e5%9d%97%e5%8a%a0%e8%bd%bd" class="header-mark"></a>基于内核模块加载</h4><p>首先了解下动态内核模块（Loadable kernel module），LKM可以看出是内核向外提供的一个接口，通常是我们基于已编译好的内核产物+自定义的模块代码编译得到的ko文件，通过insmod的方式来实现动态新增定制功能，这种做法的好处是无需修改内核，需要新增功能时只需要变动相关LKM即可，它的作用域和静态编译的内核其他模块是完全等价的，而缺点是会带来些许性能上的损失，不过相比易用性来说这点可以忽略不计</p>
+<h4 id="21-案例" class="headerLink">
+    <a href="#21-%e6%a1%88%e4%be%8b" class="header-mark"></a>2.1 案例</h4><p>参考Linux源码下的samples/kprobes，里面包含kprobe、kretprobe等案例</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// samples/kprobes/kprobe_example.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/kernel.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/module.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/kprobes.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cm">/* For each probe you need to allocate a kprobe structure */</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="k">struct</span> <span class="nc">kprobe</span> <span class="n">kp</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">symbol_name</span>	<span class="o">=</span> <span class="s">&#34;_do_fork&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* kprobe pre_handler: called just before the probed instruction is executed */</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">handler_pre</span><span class="p">(</span><span class="k">struct</span> <span class="nc">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_X86
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;pre_handler: p-&gt;addr = 0x%p, ip = %lx,&#34;</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34; flags = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">ip</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_PPC
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;pre_handler: p-&gt;addr = 0x%p, nip = 0x%lx,&#34;</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34; msr = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">nip</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">msr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_MIPS
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;pre_handler: p-&gt;addr = 0x%p, epc = 0x%lx,&#34;</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34; status = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">cp0_epc</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">cp0_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_TILEGX
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;pre_handler: p-&gt;addr = 0x%p, pc = 0x%lx,&#34;</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34; ex1 = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">pc</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">ex1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* A dump_stack() here will give a stack backtrace */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* kprobe post_handler: called after the probed instruction is executed */</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">handler_post</span><span class="p">(</span><span class="k">struct</span> <span class="nc">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_X86
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;post_handler: p-&gt;addr = 0x%p, flags = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_PPC
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;post_handler: p-&gt;addr = 0x%p, msr = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">msr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_MIPS
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;post_handler: p-&gt;addr = 0x%p, status = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">cp0_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_TILEGX
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;post_handler: p-&gt;addr = 0x%p, ex1 = 0x%lx</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">regs</span><span class="o">-&gt;</span><span class="n">ex1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * fault_handler: this is called if an exception is generated for any
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * instruction within the pre- or post-handler, or when Kprobes
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * single-steps the probed instruction.
+</span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">handler_fault</span><span class="p">(</span><span class="k">struct</span> <span class="nc">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">,</span> <span class="kt">int</span> <span class="n">trapnr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;fault_handler: p-&gt;addr = 0x%p, trap #%dn&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">trapnr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Return 0 because we don&#39;t handle the fault. */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">kprobe_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kp</span><span class="p">.</span><span class="n">pre_handler</span> <span class="o">=</span> <span class="n">handler_pre</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kp</span><span class="p">.</span><span class="n">post_handler</span> <span class="o">=</span> <span class="n">handler_post</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kp</span><span class="p">.</span><span class="n">fault_handler</span> <span class="o">=</span> <span class="n">handler_fault</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="n">register_kprobe</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;register_kprobe failed, returned %d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;Planted kprobe at %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">kp</span><span class="p">.</span><span class="n">addr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="n">__exit</span> <span class="nf">kprobe_exit</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">unregister_kprobe</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;kprobe at %p unregistered</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">kp</span><span class="p">.</span><span class="n">addr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">module_init</span><span class="p">(</span><span class="n">kprobe_init</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">module_exit</span><span class="p">(</span><span class="n">kprobe_exit</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">MODULE_LICENSE</span><span class="p">(</span><span class="s">&#34;GPL&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// include/linux/kprobes.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">kprobe</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 所有注册过的kprobe都会加入到kprobe_table哈希表中，hlist指向哈希表的位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">struct</span> <span class="nc">hlist_node</span> <span class="n">hlist</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* list of kprobes for multi-handler support */</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="nc">list_head</span> <span class="n">list</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/*count the number of times this probe was temporarily disarmed */</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">nmissed</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* location of the probe point */</span>
+</span></span><span class="line"><span class="cl">    <span class="n">kprobe_opcode_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Allow user to indicate symbol name of the probe point */</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 地址和name不能同时出现，之前提过kprobe可以hook函数和地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">symbol_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Offset into the symbol */</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">offset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Called before addr is executed. */</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 在单步执行原始指令前被调用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">kprobe_pre_handler_t</span> <span class="n">pre_handler</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Called after addr is executed, unless... */</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 在单步执行原始指令后被调用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">kprobe_post_handler_t</span> <span class="n">post_handler</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Saved opcode (which has been replaced with breakpoint) */</span>
+</span></span><span class="line"><span class="cl">    <span class="n">kprobe_opcode_t</span> <span class="n">opcode</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* copy of the original instruction */</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="nc">arch_specific_insn</span> <span class="n">ainsn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">    * Indicates various status flags.
+</span></span></span><span class="line"><span class="cl"><span class="cm">    * Protected by kprobe_mutex after this kprobe is registered.
+</span></span></span><span class="line"><span class="cl"><span class="cm">    */</span>
+</span></span><span class="line"><span class="cl">    <span class="n">u32</span> <span class="n">flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>整个案例可以拆分成几个部分来看</p>
+<ol>
+<li>LKM的格式
+包含module_init、module_exit、MODULE_LICENSE。module_init初始化kprobe、注册相关hook；module_exit删除已有的注册函数、释放指针</li>
+<li>kprobe结构体定义
+首先初始化了kprobe结构体，参考上文，这里赋值了symbol_name字段为do_fork，也就需要hook do_fork函数</li>
+<li>hook函数的处理
+指定pre_handler、post_handler以及异常处理handler_fault</li>
+<li>kprobe注册
+注册初始化完成的kp指针（感观上和xhook很像）</li>
+</ol>
+<p>这样就完成了对于do_for函数的hook，整体使用流程很清晰简单</p>
+<h4 id="22-编译" class="headerLink">
+    <a href="#22-%e7%bc%96%e8%af%91" class="header-mark"></a>2.2 编译</h4><ul>
+<li>在Android端LKM单独编译是无法生效的，需要借助于内核编译产物来完成编译</li>
+<li>现在市面上的设备大部分都是没有开启kprobe选项的，需要在内核源码中额外添加，这里可参考<a href="https://codefuturesql.top/post/android_kernel_recompile/" target="_blank" rel="noopener noreferrer">Pixel 3 Kernel打开KPROBES编译选项
+</a>，就是需要在对应版本的config文件中arch/arm64/configs/xxxxx_defconfig增加CONFIG_KPROBE=Y这样的编译选项</li>
+</ul>
+<p>到目前为止，对于kprobe的使用是比较清晰了，下面从其原理角度来探究它是如何实现这套hook机制的</p>
+<h3 id="三实现原理" class="headerLink">
+    <a href="#%e4%b8%89%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86" class="header-mark"></a>三、实现原理</h3><p>首先我们从kprobe的起始点init_kprobe函数切入，以arm64为例</p>
+<h4 id="31-init_kprobes" class="headerLink">
+    <a href="#31-init_kprobes" class="header-mark"></a>3.1 init_kprobes</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">init_kprobes</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* FIXME allocate the probe table, currently defined statically */</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* initialize all list heads */</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//1. 初始化哈希表节点， 保存已注册的kprobe实例
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">KPROBE_TABLE_SIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">INIT_HLIST_HEAD</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kprobe_table</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">......</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">......</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//2. 初始化kprobe黑名单(非__krpobe属性又不能被kprobe的函数)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">kretprobe_blacklist_size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="cm">/* lookup the function address from its name */</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">kretprobe_blacklist</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">name</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">kretprobe_blacklist</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">addr</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">kprobe_lookup_name</span><span class="p">(</span><span class="n">kretprobe_blacklist</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="p">.....</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 3. 架构相关的初始化，调用两个函数arm_kprobe_decode_init与register_undef_hook
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">err</span> <span class="o">=</span> <span class="nf">arch_init_kprobes</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 4. 注册die通知链
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">err</span> <span class="o">=</span> <span class="nf">register_die_notifier</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kprobe_exceptions_nb</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 5. 注册模块通知链
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">err</span> <span class="o">=</span> <span class="nf">register_module_notifier</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kprobe_module_nb</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">kprobes_initialized</span> <span class="o">=</span> <span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">init_test_probes</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">err</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// arch/arm/probes/kprobes/core.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">__init</span> <span class="nf">arch_init_kprobes</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="31-register_die_notifier" class="headerLink">
+    <a href="#31-register_die_notifier" class="header-mark"></a>3.1 register_die_notifier</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="k">struct</span> <span class="n">notifier_block</span> <span class="n">kprobe_exceptions_nb</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">notifier_call</span> <span class="o">=</span> <span class="n">kprobe_exceptions_notify</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">priority</span> <span class="o">=</span> <span class="mh">0x7fffffff</span> <span class="cm">/* we need to be notified first */</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">__kprobes</span> <span class="nf">kprobe_exceptions_notify</span><span class="p">(</span><span class="k">struct</span> <span class="n">notifier_block</span> <span class="o">*</span><span class="n">self</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				       <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">val</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">die_args</span> <span class="o">*</span><span class="n">args</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span> <span class="o">=</span> <span class="n">args</span><span class="o">-&gt;</span><span class="n">err</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">NOTIFY_DONE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">switch</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nl">DIE_IERR</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">arc_kprobe_handler</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">args</span><span class="o">-&gt;</span><span class="n">regs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="n">NOTIFY_STOP</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nl">DIE_TRAP</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">arc_post_kprobe_handler</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">args</span><span class="o">-&gt;</span><span class="n">regs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="n">NOTIFY_STOP</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注册了kprobe_exceptions_notify函数作为回调函数，暂时不知道什么时候会出发die链的回调函数，先接着往下看</p>
+<h5 id="32-register_module_notifier" class="headerLink">
+    <a href="#32-register_module_notifier" class="header-mark"></a>3.2 register_module_notifier</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="k">struct</span> <span class="n">notifier_block</span> <span class="n">kprobe_module_nb</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">notifier_call</span> <span class="o">=</span> <span class="n">kprobes_module_callback</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">priority</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* Module notifier call back, checking kprobes on the module */</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">kprobes_module_callback</span><span class="p">(</span><span class="k">struct</span> <span class="n">notifier_block</span> <span class="o">*</span><span class="n">nb</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				   <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">val</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">module</span> <span class="o">*</span><span class="n">mod</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">hlist_head</span> <span class="o">*</span><span class="n">head</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">checkcore</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="n">MODULE_STATE_GOING</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">val</span> <span class="o">!=</span> <span class="n">MODULE_STATE_GOING</span> <span class="o">&amp;&amp;</span> <span class="n">val</span> <span class="o">!=</span> <span class="n">MODULE_STATE_LIVE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">NOTIFY_DONE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * When MODULE_STATE_GOING was notified, both of module .text and
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * .init.text sections would be freed. When MODULE_STATE_LIVE was
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * notified, only .init.text section would be freed. We need to
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * disable kprobes which have been inserted in the sections.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kprobe_mutex</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">KPROBE_TABLE_SIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">head</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">kprobe_table</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">hlist_for_each_entry_rcu</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">hlist</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="p">(</span><span class="nf">within_module_init</span><span class="p">((</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">mod</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">			    <span class="p">(</span><span class="n">checkcore</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">			     <span class="nf">within_module_core</span><span class="p">((</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">mod</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * The vaddr this probe is installed will soon
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * be vfreed buy not synced to disk. Hence,
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * disarming the breakpoint isn&#39;t needed.
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 *
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * Note, this will also move any optimized probes
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * that are pending to be removed from their
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * corresponding lists to the freeing_list and
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * will not be touched by the delayed
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 * kprobe_optimizer work handler.
+</span></span></span><span class="line"><span class="cl"><span class="cm">				 */</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">kill_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kprobe_mutex</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">NOTIFY_DONE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>道理一样</p>
+<h5 id="33-小结" class="headerLink">
+    <a href="#33-%e5%b0%8f%e7%bb%93" class="header-mark"></a>3.3 小结</h5><p>init_kprobes主要做了5件事</p>
+<ol>
+<li>初始化哈希表节点， 保存已注册的kprobe实例</li>
+<li>初始化kprobe黑名单(非__krpobe属性又不能被kprobe的函数)</li>
+<li>架构相关的初始化，在arm64上无操作</li>
+<li>注册die通知链
+回调函数kprobe_exceptions_notify，监听DIE_ERROR、DIE_TRAP</li>
+<li>注册模块通知链
+回调函数kprobes_module_callback</li>
+</ol>
+<h4 id="32-register_kprobe" class="headerLink">
+    <a href="#32-register_kprobe" class="header-mark"></a>3.2 register_kprobe</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">register_kprobe</span><span class="p">(</span><span class="k">struct</span> <span class="n">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 1. 获取地址，根据symbol_name、offset、address，如果是symbol最终会调用kallsyms_lookup_name
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">addr</span> <span class="o">=</span> <span class="nf">kprobe_addr</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span> <span class="o">=</span> <span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 2. 判断是否重复注册
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">ret</span> <span class="o">=</span> <span class="nf">check_kprobe_rereg</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 3. 判断是否合法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">ret</span> <span class="o">=</span> <span class="nf">check_kprobe_address_safe</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">probed_mod</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 4. 该地址是否已注册过其他函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">old_p</span> <span class="o">=</span> <span class="nf">get_kprobe</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">old_p</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="cm">/* Since this may unoptimize old_p, locking text_mutex. */</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 5 将所有handler挂载到链表上
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">ret</span> <span class="o">=</span> <span class="nf">register_aggr_kprobe</span><span class="p">(</span><span class="n">old_p</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 5. 分配特定地址保存原有指令
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">ret</span> <span class="o">=</span> <span class="nf">prepare_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">......</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 5.1 添加到hash表中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">INIT_HLIST_NODE</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">hlist</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">hlist_add_head_rcu</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">hlist</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		       <span class="o">&amp;</span><span class="n">kprobe_table</span><span class="p">[</span><span class="nf">hash_ptr</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">KPROBE_HASH_BITS</span><span class="p">)]);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 5.2 该地址代码修改
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">kprobes_all_disarmed</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nf">kprobe_disabled</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">arm_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Try to optimize kprobe */</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">try_to_optimize_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nl">out</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kprobe_mutex</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">probed_mod</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">module_put</span><span class="p">(</span><span class="n">probed_mod</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="321-kprobe_addr" class="headerLink">
+    <a href="#321-kprobe_addr" class="header-mark"></a>3.2.1 kprobe_addr</h5><p>计算待hook点地址，这里分为了两种情况</p>
+<ol>
+<li>指定symbol：这种方式比较简单，底层最终调用了kallsyms_lookup_name来获取符号地址，kallsyms_lookup_name也是内核提供的获取导出符号地址的函数</li>
+<li>指定address、offset：这种方式适用于针对单条指令的hook，也就是基址+偏移量的方式</li>
+</ol>
+<h5 id="322-prepare_kprobe" class="headerLink">
+    <a href="#322-prepare_kprobe" class="header-mark"></a>3.2.2 prepare_kprobe</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">__kprobes</span> <span class="nf">arch_prepare_kprobe</span><span class="p">(</span><span class="k">struct</span> <span class="n">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">...</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 1) 申请内存空间，用于存放原指令的数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">p</span><span class="o">-&gt;</span><span class="n">ainsn</span><span class="p">.</span><span class="n">insn</span> <span class="o">=</span> <span class="nf">get_insn_slot</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">...</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 2) 保存原来指令的值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="nf">arch_copy_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>申请新空间来保存当前地址原有指令</p>
+<h5 id="323-hlist_add_head_rcu" class="headerLink">
+    <a href="#323-hlist_add_head_rcu" class="header-mark"></a>3.2.3 hlist_add_head_rcu</h5><p>构造如图，哈希表上的槽对应链表</p>
+<h5 id="324-arm_kprobe" class="headerLink">
+    <a href="#324-arm_kprobe" class="header-mark"></a>3.2.4 arm_kprobe</h5><p>调用链如下arm_kprobe-&gt;__arm_kprobe-&gt;arch_arm_kprobe，最终arch_arm_kprobe由各个架构决定，如arm64</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// arch/arm64/kernel/probes/kprobes.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define BRK64_OPCODE_KPROBES	(AARCH64_BREAK_MON | (BRK64_ESR_KPROBES &lt;&lt; 5))
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">__kprobes</span> <span class="nf">arch_arm_kprobe</span><span class="p">(</span><span class="k">struct</span> <span class="n">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">patch_text</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">,</span> <span class="n">BRK64_OPCODE_KPROBES</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// arch/arm64/kernel/insn.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="n">__kprobes</span> <span class="nf">__aarch64_insn_write</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span> <span class="n">__le32</span> <span class="n">insn</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">void</span> <span class="o">*</span><span class="n">waddr</span> <span class="o">=</span> <span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">raw_spin_lock_irqsave</span><span class="p">(</span><span class="o">&amp;</span><span class="n">patch_lock</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">waddr</span> <span class="o">=</span> <span class="nf">patch_map</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">FIX_TEXT_POKE0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">probe_kernel_write</span><span class="p">(</span><span class="n">waddr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">insn</span><span class="p">,</span> <span class="n">AARCH64_INSN_SIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">patch_unmap</span><span class="p">(</span><span class="n">FIX_TEXT_POKE0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">raw_spin_unlock_irqrestore</span><span class="p">(</span><span class="o">&amp;</span><span class="n">patch_lock</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>将该地址的值替换成brk指令</p>
+<h5 id="325-小结" class="headerLink">
+    <a href="#325-%e5%b0%8f%e7%bb%93" class="header-mark"></a>3.2.5 小结</h5><p>register_kprobe主要做了件事</p>
+<ol>
+<li>根据kprobe实例获取地址</li>
+<li>一系列判断，包括该地址是否重复注册、是否合法等等</li>
+<li>分配特定地址保存原有指令</li>
+<li>添加到hash表中</li>
+<li>指令修改</li>
+</ol>
+<h4 id="33-brk-exception" class="headerLink">
+    <a href="#33-brk-exception" class="header-mark"></a>3.3 brk exception</h4><p>kprobe的触发和处理是通过brk exception和single step单步exception执行的，每次的处理函数中会修改被异常中断的上下文（struct pt_regs）的指令寄存器，实现执行流的跳转。ARM64对于异常处理的注册在arch/arm64/kernel/debug-monitors.c， 是arm64的通用debug模块</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// arch/arm64/kernel/debug-monitors.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">debug_traps_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 针对单步异常
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">hook_debug_fault_code</span><span class="p">(</span><span class="n">DBG_ESR_EVT_HWSS</span><span class="p">,</span> <span class="n">single_step_handler</span><span class="p">,</span> <span class="n">SIGTRAP</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			      <span class="n">TRAP_TRACE</span><span class="p">,</span> <span class="s">&#34;single-step handler&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 针对断点异常
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">hook_debug_fault_code</span><span class="p">(</span><span class="n">DBG_ESR_EVT_BRK</span><span class="p">,</span> <span class="n">brk_handler</span><span class="p">,</span> <span class="n">SIGTRAP</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			      <span class="n">TRAP_BRKPT</span><span class="p">,</span> <span class="s">&#34;ptrace BRK handler&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// arch/arm64/mm/fault.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">__init</span> <span class="nf">hook_debug_fault_code</span><span class="p">(</span><span class="kt">int</span> <span class="n">nr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				  <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">fn</span><span class="p">)(</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span><span class="p">,</span> <span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">				  <span class="kt">int</span> <span class="n">sig</span><span class="p">,</span> <span class="kt">int</span> <span class="n">code</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">WARN_ON</span><span class="p">(</span><span class="n">nr</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">nr</span> <span class="o">&gt;=</span> <span class="nf">ARRAY_SIZE</span><span class="p">(</span><span class="n">debug_fault_info</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">debug_fault_info</span><span class="p">[</span><span class="n">nr</span><span class="p">].</span><span class="n">fn</span>		<span class="o">=</span> <span class="n">fn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">debug_fault_info</span><span class="p">[</span><span class="n">nr</span><span class="p">].</span><span class="n">sig</span>	<span class="o">=</span> <span class="n">sig</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">debug_fault_info</span><span class="p">[</span><span class="n">nr</span><span class="p">].</span><span class="n">code</span>	<span class="o">=</span> <span class="n">code</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">debug_fault_info</span><span class="p">[</span><span class="n">nr</span><span class="p">].</span><span class="n">name</span>	<span class="o">=</span> <span class="n">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="k">struct</span> <span class="n">fault_info</span> <span class="n">__refdata</span> <span class="n">debug_fault_info</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGTRAP</span><span class="p">,</span>	<span class="n">TRAP_HWBKPT</span><span class="p">,</span>	<span class="s">&#34;hardware breakpoint&#34;</span>	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGTRAP</span><span class="p">,</span>	<span class="n">TRAP_HWBKPT</span><span class="p">,</span>	<span class="s">&#34;hardware single-step&#34;</span>	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGTRAP</span><span class="p">,</span>	<span class="n">TRAP_HWBKPT</span><span class="p">,</span>	<span class="s">&#34;hardware watchpoint&#34;</span>	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGBUS</span><span class="p">,</span>		<span class="mi">0</span><span class="p">,</span>		<span class="s">&#34;unknown 3&#34;</span>		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGTRAP</span><span class="p">,</span>	<span class="n">TRAP_BRKPT</span><span class="p">,</span>	<span class="s">&#34;aarch32 BKPT&#34;</span>		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGTRAP</span><span class="p">,</span>	<span class="mi">0</span><span class="p">,</span>		<span class="s">&#34;aarch32 vector catch&#34;</span>	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">early_brk64</span><span class="p">,</span>	<span class="n">SIGTRAP</span><span class="p">,</span>	<span class="n">TRAP_BRKPT</span><span class="p">,</span>	<span class="s">&#34;aarch64 BRK&#34;</span>		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">{</span> <span class="n">do_bad</span><span class="p">,</span>	<span class="n">SIGBUS</span><span class="p">,</span>		<span class="mi">0</span><span class="p">,</span>		<span class="s">&#34;unknown 7&#34;</span>		<span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>通过hook_debug_fault_code动态定义了异常处理的钩子函数brk_handler，它将在断点异常处理函数中被调用。hook_debug_fault_code替换了debug_fault_info的值，将原有的异常处理函数变成自定义的异常处理函数</p>
+<p>对于brk断点来说，最终会调用brk_handler</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// arch/arm64/kernel/debug-monitors.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">brk_handler</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">esr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		       <span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">bool</span> <span class="n">handler_found</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef	CONFIG_KPROBES
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">if</span> <span class="p">((</span><span class="n">esr</span> <span class="o">&amp;</span> <span class="n">BRK64_ESR_MASK</span><span class="p">)</span> <span class="o">==</span> <span class="n">BRK64_ESR_KPROBES</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">kprobe_breakpoint_handler</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span> <span class="n">esr</span><span class="p">)</span> <span class="o">==</span> <span class="n">DBG_HOOK_HANDLED</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="n">handler_found</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="c1">// 调用断点hook
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler_found</span> <span class="o">&amp;&amp;</span> <span class="nf">call_break_hook</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span> <span class="n">esr</span><span class="p">)</span> <span class="o">==</span> <span class="n">DBG_HOOK_HANDLED</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">handler_found</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler_found</span> <span class="o">&amp;&amp;</span> <span class="nf">user_mode</span><span class="p">(</span><span class="n">regs</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">send_user_sigtrap</span><span class="p">(</span><span class="n">TRAP_BRKPT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler_found</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">pr_warn</span><span class="p">(</span><span class="s">&#34;Unexpected kernel BRK exception at EL1</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="n">EFAULT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">__kprobes</span>
+</span></span><span class="line"><span class="cl"><span class="nf">kprobe_breakpoint_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">esr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="nf">user_mode</span><span class="p">(</span><span class="n">regs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">DBG_HOOK_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">kprobe_handler</span><span class="p">(</span><span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">DBG_HOOK_HANDLED</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// arch/arm64/kernel/probes/kprobes.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="n">__kprobes</span> <span class="nf">kprobe_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">kprobe</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="o">*</span><span class="n">cur_kprobe</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">kprobe_ctlblk</span> <span class="o">*</span><span class="n">kcb</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span> <span class="o">=</span> <span class="nf">instruction_pointer</span><span class="p">(</span><span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">kcb</span> <span class="o">=</span> <span class="nf">get_kprobe_ctlblk</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cur_kprobe</span> <span class="o">=</span> <span class="nf">kprobe_running</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">p</span> <span class="o">=</span> <span class="nf">get_kprobe</span><span class="p">((</span><span class="kt">kprobe_opcode_t</span> <span class="o">*</span><span class="p">)</span> <span class="n">addr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">cur_kprobe</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="p">(</span><span class="nf">reenter_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">regs</span><span class="p">,</span> <span class="n">kcb</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="cm">/* Probe hit */</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">set_current_kprobe</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="n">kcb</span><span class="o">-&gt;</span><span class="n">kprobe_status</span> <span class="o">=</span> <span class="n">KPROBE_HIT_ACTIVE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// 调用pre_handler
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">pre_handler</span> <span class="o">||</span> <span class="o">!</span><span class="n">p</span><span class="o">-&gt;</span><span class="nf">pre_handler</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">regs</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// 进入单步调试异常
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nf">setup_singlestep</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">regs</span><span class="p">,</span> <span class="n">kcb</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">((</span><span class="nf">le32_to_cpu</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="kt">kprobe_opcode_t</span> <span class="o">*</span><span class="p">)</span> <span class="n">addr</span><span class="p">)</span> <span class="o">==</span>
+</span></span><span class="line"><span class="cl">	    <span class="n">BRK64_OPCODE_KPROBES</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">cur_kprobe</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="cm">/* We probably hit a jprobe.  Call its break handler. */</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">cur_kprobe</span><span class="o">-&gt;</span><span class="n">break_handler</span>  <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">		     <span class="n">cur_kprobe</span><span class="o">-&gt;</span><span class="nf">break_handler</span><span class="p">(</span><span class="n">cur_kprobe</span><span class="p">,</span> <span class="n">regs</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">setup_singlestep</span><span class="p">(</span><span class="n">cur_kprobe</span><span class="p">,</span> <span class="n">regs</span><span class="p">,</span> <span class="n">kcb</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="34-hwss-exception" class="headerLink">
+    <a href="#34-hwss-exception" class="header-mark"></a>3.4 hwss exception</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// arch/arm64/kernel/debug-monitors.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">single_step_handler</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">esr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			       <span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">bool</span> <span class="n">handler_found</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * If we are stepping a pending breakpoint, call the hw_breakpoint
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * handler first.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">reinstall_suspended_bps</span><span class="p">(</span><span class="n">regs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef	CONFIG_KPROBES
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">if</span> <span class="p">(</span><span class="nf">kprobe_single_step_handler</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span> <span class="n">esr</span><span class="p">)</span> <span class="o">==</span> <span class="n">DBG_HOOK_HANDLED</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">handler_found</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler_found</span> <span class="o">&amp;&amp;</span> <span class="nf">call_step_hook</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span> <span class="n">esr</span><span class="p">)</span> <span class="o">==</span> <span class="n">DBG_HOOK_HANDLED</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">handler_found</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler_found</span> <span class="o">&amp;&amp;</span> <span class="nf">user_mode</span><span class="p">(</span><span class="n">regs</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">send_user_sigtrap</span><span class="p">(</span><span class="n">TRAP_TRACE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * ptrace will disable single step unless explicitly
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * asked to re-enable it. For other clients, it makes
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * sense to leave it enabled (i.e. rewind the controls
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * to the active-not-pending state).
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 */</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">user_rewind_single_step</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handler_found</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">pr_warn</span><span class="p">(</span><span class="s">&#34;Unexpected kernel single-step exception at EL1</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * Re-enable stepping since we know that we will be
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * returning to regs.
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 */</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">set_regs_spsr_ss</span><span class="p">(</span><span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">__kprobes</span>
+</span></span><span class="line"><span class="cl"><span class="nf">kprobe_single_step_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">esr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">kprobe_ctlblk</span> <span class="o">*</span><span class="n">kcb</span> <span class="o">=</span> <span class="nf">get_kprobe_ctlblk</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="nf">user_mode</span><span class="p">(</span><span class="n">regs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">DBG_HOOK_ERROR</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* return error if this is not our step */</span>
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">kprobe_ss_hit</span><span class="p">(</span><span class="n">kcb</span><span class="p">,</span> <span class="nf">instruction_pointer</span><span class="p">(</span><span class="n">regs</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">==</span> <span class="n">DBG_HOOK_HANDLED</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">kprobes_restore_local_irqflag</span><span class="p">(</span><span class="n">kcb</span><span class="p">,</span> <span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">kernel_disable_single_step</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nf">post_kprobe_handler</span><span class="p">(</span><span class="n">kcb</span><span class="p">,</span> <span class="n">regs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="n">__kprobes</span>
+</span></span><span class="line"><span class="cl"><span class="nf">post_kprobe_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">kprobe_ctlblk</span> <span class="o">*</span><span class="n">kcb</span><span class="p">,</span> <span class="k">struct</span> <span class="n">pt_regs</span> <span class="o">*</span><span class="n">regs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">kprobe</span> <span class="o">*</span><span class="n">cur</span> <span class="o">=</span> <span class="nf">kprobe_running</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">cur</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* return addr restore if non-branching insn */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">ainsn</span><span class="p">.</span><span class="n">api</span><span class="p">.</span><span class="n">restore</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">instruction_pointer_set</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span> <span class="n">cur</span><span class="o">-&gt;</span><span class="n">ainsn</span><span class="p">.</span><span class="n">api</span><span class="p">.</span><span class="n">restore</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* restore back original saved kprobe variables and continue */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">kcb</span><span class="o">-&gt;</span><span class="n">kprobe_status</span> <span class="o">==</span> <span class="n">KPROBE_REENTER</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">restore_previous_kprobe</span><span class="p">(</span><span class="n">kcb</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* call post handler */</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kcb</span><span class="o">-&gt;</span><span class="n">kprobe_status</span> <span class="o">=</span> <span class="n">KPROBE_HIT_SSDONE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">post_handler</span><span class="p">)</span>	<span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="cm">/* post_handler can hit breakpoint and single step
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 * again, so we enable D-flag for recursive exception.
+</span></span></span><span class="line"><span class="cl"><span class="cm">		 */</span>
+</span></span><span class="line"><span class="cl">		<span class="n">cur</span><span class="o">-&gt;</span><span class="nf">post_handler</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">regs</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">reset_current_kprobe</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="35-总结" class="headerLink">
+    <a href="#35-%e6%80%bb%e7%bb%93" class="header-mark"></a>3.5 总结</h4><p>以上就是从源码角度来分析kprobe的实现流程，总结下来就是</p>
+<ol>
+<li>kprobe注册阶段：注册阶段会先找到要探测的指令(opcode)，将opcode保存到一个由kprobe管理的可执行页上(slot page)，然后将下一指令的地址(addr + sizeof(opcode))也保存到kprobe中，最后将.text段里的opcode替换成BRK #4指令，这样当代码执行到探测点上时，cpu将进入debug模式</li>
+<li>kprobe触发阶段：可分为三部分，第一部分在BRK异常(BRK exception)的handler函数里面，这里会执行用户注册的pre_handler函数，开启单步调试，并将pc指向slot page里面的opcode；第二部分是执行opcode代码；第三部分在单步调试异常(HWSS exception)里，这里会关闭单步调试，将pc指向addr(探测点地址) + sizeof(opcode)，执行用户注册的post_handler函数，这样当HWSS exception结束，cpu又回到了原来的执行流程</li>
+</ol>
+<h3 id="参考" class="headerLink">
+    <a href="#%e5%8f%82%e8%80%83" class="header-mark"></a>参考</h3><ol>
+<li><a href="https://evilpan.com/2022/01/03/kernel-tracing" target="_blank" rel="noopener noreferrer">Linux 内核监控在 Android 攻防中的应用
+</a></li>
+<li><a href="https://blog.csdn.net/u012489236/article/details/127942216" target="_blank" rel="noopener noreferrer">深入ftrace kprobe原理解析
+</a></li>
+<li><a href="https://blog.csdn.net/2201_75718536/article/details/134373656" target="_blank" rel="noopener noreferrer">arm64-kprobes
+</a></li>
+</ol>
+</div>
+
+        
+
+
+<h2>相关内容</h2>
+<div class="related-container">
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/android-kernel-kprobe%E6%9C%BA%E5%88%B6/">Android Kernel Kprobe机制</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">LSPlant源码学习</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/">Zygisk-v27.0源码阅读</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/">Art方法调用流程分析</a>
+            </h2>
+        </div>
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/">Dobby 短指令hook方式</a>
+            </h2>
+        </div>
+    
+
+</div>
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-04-26</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究" data-hashtags="源码分析"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-hashtag="源码分析"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" data-title="Linux Kprobe原理探究"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/" class="prev" rel="prev" title="基于Kernel Kprobe机制的改机架构实现"><i class="fas fa-angle-left fa-fw"></i>基于Kernel Kprobe机制的改机架构实现</a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.125.4">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>
