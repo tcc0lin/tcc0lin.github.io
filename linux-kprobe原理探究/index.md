@@ -6,13 +6,13 @@
 - 执行了哪些操作
 - 对于相关操作进行针对性的修改等等
 
-其中很棘手的问题在于如何应对App中越来越常见的内联系统调用，对于内联系统调用的监控我不希望通过ptrace这类进程注入的方式来实现，而是想寻求通过定制系统或者相关的方式来实现以达到无侵入App的目的。
+其中很棘手的问题在于如何应对App中越来越常见的内联系统调用，对于内联系统调用的监控我不希望通过ptrace这类进程注入的方式来实现，而是想寻求通过定制系统或者相关的方式来实现以达到无侵入App的目的
 
 另一方面来说，通过定制系统的方式完成相关系统函数的修改确实是一种方式，但是定制系统在生产环境使用中会存在两个问题：
-1. 调试测试：通常流程上都是相关函数修改->编译内核->重打包boot.img->刷入这些步骤（或者可以通过AnyKernel省略打包boot.img），但是整体测试流程还是很繁琐的，其中还可能遇到代码bug导致系统无法启动等棘手问题，对于实际开发来说很是崩溃
+1. 调试测试：通常流程上都是相关函数修改->编译内核->借助AnyKernel3或者Android_boot_image_editor等工具完成boot.img重打包->刷入这些步骤，整体测试流程还是很繁琐的，其中还可能遇到代码bug导致系统无法启动等棘手问题，这些都对于实际开发来说很是崩溃
 2. 线上部署：和App一样，当本地测试好的内核遇到线上环境时可能会出现各式各样的问题，包括内核更新失败、内核文件传输、下载失败等等问题，直接导致系统无法启动，需要人工修复，想象下部署在遥远郊区的大规模设备集群大批量系统无法启动的场景，要靠人工一一修复是什么体验
 
-综上，最最贴合真实场景的是一种无侵入App且不阻断内核启动的方案，经过一顿搜索，最终定位到了Linux Kprobe这类内核监控方案。
+综上，最最贴合真实场景的是一种无侵入App且不阻断内核启动的方案，经过一顿搜索，最终定位到了Linux Kprobe这类内核监控方案
 
 第一次了解到kprobe技术是在evilpan的文章[Linux 内核监控在 Android 攻防中的应用
 ](https://evilpan.com/2022/01/03/kernel-tracing/)中，在现有的内核监控方案中分为数据、采集、前端三个层级
@@ -28,6 +28,14 @@
 因此最终确定了使用Linux Kprobe来作为内核系统函数的监控方案
 ### 一、Kprobe基本知识
 kprobe可以认为是一种kernel hook手段，它基于内核中断的方式实现，可以想象它是内核层的异常hook（参考SandHook），既然是异常hook，那么它所能hook的范围就没有限制了，可以针对函数、也可以针对单条指令
+
+简单理解就是把指定地址的指令替换成一个可以让cpu进入debug模式的指令（不同架构上指令不同），跳转到probe处理函数上进行数据收集、修改，再跳转回来继续执行
+
+X86中使用的是int3指令，ARM64中使用的是BRK指令进入debug monitor模式
+
+参考HPYU的Kprobe执行流程示意图
+![](https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center)
+
 ### 二、使用
 kprobe主要有两种使用方法，一是通过模块加载；二是通过debugfs接口。从可扩展性和工程化的角度来看，模块加载是更优的选择，debugfs在某些特殊场景下（快速验证某些函数）可能会适合
 #### 基于内核模块加载
@@ -36,7 +44,6 @@ kprobe主要有两种使用方法，一是通过模块加载；二是通过debug
 参考Linux源码下的samples/kprobes，里面包含kprobe、kretprobe等案例
 ```c++
 // samples/kprobes/kprobe_example.c
-
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/kprobes.h>
@@ -136,7 +143,6 @@ module_exit(kprobe_exit)
 MODULE_LICENSE("GPL");
 
 // include/linux/kprobes.h
-
 struct kprobe {
     // 所有注册过的kprobe都会加入到kprobe_table哈希表中，hlist指向哈希表的位置
     struct hlist_node hlist;
@@ -168,6 +174,7 @@ struct kprobe {
     /* Saved opcode (which has been replaced with breakpoint) */
     kprobe_opcode_t opcode;
 
+	// 保存平台相关的被探测指令和下一条指令
     /* copy of the original instruction */
     struct arch_specific_insn ainsn;
 
@@ -179,8 +186,10 @@ struct kprobe {
 };
 ```
 整个案例可以拆分成几个部分来看
-1. LKM的格式
-   包含module_init、module_exit、MODULE_LICENSE。module_init初始化kprobe、注册相关hook；module_exit删除已有的注册函数、释放指针
+1. LKM的定义
+   一个完整的LKM包含module_init、module_exit、MODULE_LICENSE三个部分
+   - module_init初始化kprobe、注册相关hook
+   - module_exit删除已有的注册函数、释放指针
 2. kprobe结构体定义
    首先初始化了kprobe结构体，参考上文，这里赋值了symbol_name字段为do_fork，也就需要hook do_fork函数
 3. hook函数的处理
@@ -188,7 +197,7 @@ struct kprobe {
 4. kprobe注册
    注册初始化完成的kp指针（感观上和xhook很像）
 
-这样就完成了对于do_for函数的hook，整体使用流程很清晰简单
+这样就完成了对于do_for函数的hook，整体使用流程很清晰简单，初始化kprobes结构体（设置symbol_name、handlder）->注册kprobes->LKM封装
 
 #### 2.2 编译
 - 在Android端LKM单独编译是无法生效的，需要借助于内核编译产物来完成编译
@@ -197,7 +206,7 @@ struct kprobe {
 
 到目前为止，对于kprobe的使用是比较清晰了，下面从其原理角度来探究它是如何实现这套hook机制的
 ### 三、实现原理
-首先我们从kprobe的起始点init_kprobe函数切入，以arm64为例
+首先我们从kprobe的起始点init_kprobe函数切入，由于各个架构的实现不同，下面以arm64为例
 #### 3.1 init_kprobes
 ```c
 static int __init init_kprobes(void)
@@ -246,6 +255,36 @@ int __init arch_init_kprobes()
 	return 0;
 }
 ```
+##### 3.1 kprobe manager
+init_kprobes的第一步是初始化哈希表，这里的哈希表指代的就是管理kprobe实例
+```c
+// kernel/kprobes.c
+static struct hlist_head kprobe_table[KPROBE_TABLE_SIZE];
+
+for (i = 0; i < KPROBE_TABLE_SIZE; i++) {
+	INIT_HLIST_HEAD(&kprobe_table[i]);
+	......
+}
+
+struct kprobe *get_kprobe(void *addr)
+{
+	struct hlist_head *head;
+	struct kprobe *p;
+	// 定位槽所对应的头结点
+	head = &kprobe_table[hash_ptr(addr, KPROBE_HASH_BITS)];
+	// 遍历链表，hlist指的是kprobe的hlist_node
+	hlist_for_each_entry_rcu(p, head, hlist) {
+		if (p->addr == addr)
+			return p;
+	}
+
+	return NULL;
+}
+```
+KPROBE_TABLE_SIZE是64，对于每个槽初始化一个头结点
+kprobe table的形式参考下图
+![](https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+以hook的address为key，将kprobe保存到哈希表中，后续在查找时可以通过address来快速定位到kprobe_table槽，再通过对比hlist_node来确定kprobe
 ##### 3.1 register_die_notifier
 ```c
 static struct notifier_block kprobe_exceptions_nb = {
@@ -330,7 +369,6 @@ static int kprobes_module_callback(struct notifier_block *nb,
 	return NOTIFY_DONE;
 }
 ```
-道理一样
 ##### 3.3 小结
 init_kprobes主要做了5件事
 1. 初始化哈希表节点， 保存已注册的kprobe实例
@@ -339,7 +377,7 @@ init_kprobes主要做了5件事
 4. 注册die通知链
    回调函数kprobe_exceptions_notify，监听DIE_ERROR、DIE_TRAP
 5. 注册模块通知链
-    回调函数kprobes_module_callback
+   回调函数kprobes_module_callback
 
 #### 3.2 register_kprobe
 ```c
@@ -389,24 +427,96 @@ out:
 ```
 ##### 3.2.1 kprobe_addr
 计算待hook点地址，这里分为了两种情况
-1. 指定symbol：这种方式比较简单，底层最终调用了kallsyms_lookup_name来获取符号地址，kallsyms_lookup_name也是内核提供的获取导出符号地址的函数
+1. 指定symbol：这种方式比较简单，底层最终调用了kallsyms_lookup_name来获取符号地址
+   >kallsyms_lookup_name是内核的导出函数，可以通过kallsyms_lookup_name定位符号的真实地址
 2. 指定address、offset：这种方式适用于针对单条指令的hook，也就是基址+偏移量的方式
-##### 3.2.2 prepare_kprobe
+##### 3.2.2 check_kprobe_rereg
 ```c
-int __kprobes arch_prepare_kprobe(struct kprobe *p)
+/* Check passed kprobe is valid and return kprobe in kprobe_table. */
+static struct kprobe *__get_valid_kprobe(struct kprobe *p)
 {
-    ...
-    // 1) 申请内存空间，用于存放原指令的数据
-    p->ainsn.insn = get_insn_slot();
-    ...
-    // 2) 保存原来指令的值
-    return arch_copy_kprobe(p);
+	struct kprobe *ap, *list_p;
+
+	ap = get_kprobe(p->addr);
+	if (unlikely(!ap))
+		return NULL;
+
+	if (p != ap) {
+		list_for_each_entry_rcu(list_p, &ap->list, list)
+			if (list_p == p)
+			/* kprobe p is a valid probe */
+				goto valid;
+		return NULL;
+	}
+valid:
+	return ap;
 }
 ```
-申请新空间来保存当前地址原有指令
-##### 3.2.3 hlist_add_head_rcu
-构造如图，哈希表上的槽对应链表
-##### 3.2.4 arm_kprobe
+判断kprobe是否已注册过，注册过会在kprobe_table中查找到
+##### 3.2.3 check_kprobe_address_safe
+这个过程主要对跟踪指令的内存地址进行合法检测，主要检查几个点：
+- 跟踪点是否已经被ftrace跟踪，如果是就返回错误（kprobe与ftrace不能同时跟踪同一个地址）
+- 跟踪点是否在内核代码段，因为 kprobe 只能跟踪内核函数，所以跟踪点必须在内核代码段中
+- 跟踪点是否在kprobe的黑名单中，如果是就返回错误
+- 跟踪点是否在内核模块代码段中，kprobe也可以跟踪内核模块的函数
+##### 3.2.4 register_aggr_kprobe
+##### 3.2.5 prepare_kprobe
+```c
+// arch/arm64/kernel/probes/kprobes.c
+int __kprobes arch_prepare_kprobe(struct kprobe *p)
+{
+	unsigned long probe_addr = (unsigned long)p->addr;
+	extern char __start_rodata[];
+	extern char __end_rodata[];
+	......
+	p->opcode = le32_to_cpu(*p->addr);
+	/* decode instruction */
+	switch (arm_kprobe_decode_insn(p->addr, &p->ainsn)) {
+	case INSN_REJECTED:	/* insn not supported */
+		return -EINVAL;
+
+	case INSN_GOOD_NO_SLOT:	/* insn need simulation */
+		p->ainsn.api.insn = NULL;
+		break;
+
+	case INSN_GOOD:	/* instruction uses slot */
+	// 申请内存空间，用于存放原指令的数据
+		p->ainsn.api.insn = get_insn_slot();
+		if (!p->ainsn.api.insn)
+			return -ENOMEM;
+		break;
+	};
+
+	/* prepare the instruction */
+	if (p->ainsn.api.insn)
+		// 保存当前地址opcode，也就是保存原始指令
+		arch_prepare_ss_slot(p);
+	else
+		arch_prepare_simulate(p);
+
+	return 0;
+}
+
+static void __kprobes arch_prepare_ss_slot(struct kprobe *p)
+{
+	/* prepare insn slot */
+	patch_text(p->ainsn.api.insn, p->opcode);
+
+	flush_icache_range((uintptr_t) (p->ainsn.api.insn),
+			   (uintptr_t) (p->ainsn.api.insn) +
+			   MAX_INSN_SIZE * sizeof(kprobe_opcode_t));
+
+	/*
+	 * Needs restoring of return address after stepping xol.
+	 */
+	p->ainsn.api.restore = (unsigned long) p->addr +
+	  sizeof(kprobe_opcode_t);
+}
+```
+申请新空间来保存当前地址原有指令，以便后续跳转回来时使用
+##### 3.2.6 hlist_add_head_rcu
+根据地址计算key，插入kprobe的hlist字段，也就是hlist_node
+##### 3.2.7 arm_kprobe
 调用链如下arm_kprobe->__arm_kprobe->arch_arm_kprobe，最终arch_arm_kprobe由各个架构决定，如arm64
 ```c
 // arch/arm64/kernel/probes/kprobes.c
@@ -436,14 +546,15 @@ static int __kprobes __aarch64_insn_write(void *addr, __le32 insn)
 }
 ```
 将该地址的值替换成brk指令
-##### 3.2.5 小结
+##### 3.2.8 小结
 register_kprobe主要做了件事
 1. 根据kprobe实例获取地址
 2. 一系列判断，包括该地址是否重复注册、是否合法等等
 3. 分配特定地址保存原有指令
-4. 添加到hash表中
-5. 指令修改
+4. 将当前注册的kprobe结构添加到kprobe_table中
+5. 指令修改，将当前指令修改成brk指令
 
+到这里为止，已经完成了对应地址的指令替换和原始指令的保存，下面看看是怎么触发自定义handler的处理
 #### 3.3 brk exception
 kprobe的触发和处理是通过brk exception和single step单步exception执行的，每次的处理函数中会修改被异常中断的上下文（struct pt_regs）的指令寄存器，实现执行流的跳转。ARM64对于异常处理的注册在arch/arm64/kernel/debug-monitors.c， 是arm64的通用debug模块
 ```c
@@ -479,11 +590,75 @@ static struct fault_info __refdata debug_fault_info[] = {
 	{ do_bad,	SIGBUS,		0,		"unknown 3"		},
 	{ do_bad,	SIGTRAP,	TRAP_BRKPT,	"aarch32 BKPT"		},
 	{ do_bad,	SIGTRAP,	0,		"aarch32 vector catch"	},
+	// arm64下brk的原始处理逻辑
 	{ early_brk64,	SIGTRAP,	TRAP_BRKPT,	"aarch64 BRK"		},
 	{ do_bad,	SIGBUS,		0,		"unknown 7"		},
 };
 ```
 通过hook_debug_fault_code动态定义了异常处理的钩子函数brk_handler，它将在断点异常处理函数中被调用。hook_debug_fault_code替换了debug_fault_info的值，将原有的异常处理函数变成自定义的异常处理函数
+
+arm64的异常处理都在arch/arm64/kernel/entry.S中
+```c
+el1_dbg:
+	/*
+	 * Debug exception handling
+	 */
+	cmp	x24, #ESR_ELx_EC_BRK64		// if BRK64
+	cinc	x24, x24, eq			// set bit '0'
+	tbz	x24, #0, el1_inv		// EL1 only
+	mrs	x0, far_el1
+	mov	x2, sp				// struct pt_regs
+	bl	do_debug_exception
+	get_thread_info x20	// top of stack
+	ldr	w4, [x20, #TI_CPU_EXCP]
+	sub	w4, w4, #0x1
+	str	w4, [x20, #TI_CPU_EXCP]
+
+	kernel_exit 1
+```
+会调用到do_debug_exception函数，之所以是在el1这里处理，是因为BRK异常的产生是因为在内核态执行了BRR指令，内核态是执行在EL1的，所以异常等级是EL1
+```c
+asmlinkage int __exception do_debug_exception(unsigned long addr,
+					      unsigned int esr,
+					      struct pt_regs *regs)
+{
+	// 解析得到debug_fault_info的处理函数
+	const struct fault_info *inf = debug_fault_info + DBG_ESR_EVT(esr);
+	unsigned long pc = instruction_pointer(regs);
+	struct siginfo info;
+	int rv;
+
+	/*
+	 * Tell lockdep we disabled irqs in entry.S. Do nothing if they were
+	 * already disabled to preserve the last enabled/disabled addresses.
+	 */
+	if (interrupts_enabled(regs))
+		trace_hardirqs_off();
+
+	if (user_mode(regs) && !is_ttbr0_addr(pc))
+		arm64_apply_bp_hardening();
+	// 函数调用
+	if (!inf->fn(addr, esr, regs)) {
+		rv = 1;
+	} else {
+		pr_alert("Unhandled debug exception: %s (0x%08x) at 0x%016lx\n",
+			 inf->name, esr, addr);
+
+		info.si_signo = inf->sig;
+		info.si_errno = 0;
+		info.si_code  = inf->code;
+		info.si_addr  = (void __user *)addr;
+		arm64_notify_die("", regs, &info, 0);
+		rv = 0;
+	}
+
+	if (interrupts_enabled(regs))
+		trace_hardirqs_on();
+
+	return rv;
+}
+```
+这里根据传入的esr解析得到数组索引，对于BRK，解析出来的索引为6，从而调用到debug_traps_init里注册的BRK exception处理函数brk_handler；对于HWSS exception，解析出来的索引是1，则调用debug_traps_init里注册的BRK exception处理函数single_step_handler
 
 对于brk断点来说，最终会调用brk_handler
 ```c
@@ -533,6 +708,7 @@ static void __kprobes kprobe_handler(struct pt_regs *regs)
 	kcb = get_kprobe_ctlblk();
 	cur_kprobe = kprobe_running();
 
+	// 获取kprobe实例
 	p = get_kprobe((kprobe_opcode_t *) addr);
 
 	if (p) {
@@ -560,7 +736,43 @@ static void __kprobes kprobe_handler(struct pt_regs *regs)
 		}
 	}
 }
+
+static void __kprobes setup_singlestep(struct kprobe *p,
+				       struct pt_regs *regs,
+				       struct kprobe_ctlblk *kcb, int reenter)
+{
+	unsigned long slot;
+
+	if (reenter) {
+		save_previous_kprobe(kcb);
+		set_current_kprobe(p);
+		kcb->kprobe_status = KPROBE_REENTER;
+	} else {
+		kcb->kprobe_status = KPROBE_HIT_SS;
+	}
+
+
+	if (p->ainsn.api.insn) {
+		/* prepare for single stepping */
+		slot = (unsigned long)p->ainsn.api.insn;
+
+		set_ss_context(kcb, slot);	/* mark pending ss */
+
+		spsr_set_debug_flag(regs, 0);
+
+		/* IRQs and single stepping do not mix well. */
+		kprobes_save_local_irqflag(kcb, regs);
+		// 设置单步调试状态
+		kernel_enable_single_step(regs);
+		// 设置regs->pc 为opcode，这样从BRK exception退出后就会执行opcode
+		instruction_pointer_set(regs, slot);
+	} else {
+		/* insn simulation */
+		arch_simulate_insn(p, regs);
+	}
+}
 ```
+在brk异常处理中，首先是调用了自定义的pre_handler完成函数指令调用前的操作，接着调用了setup_singlestep函数，setup_singlestep主要是设置寄存器状态变成单步调试状态并设置pc指令为之前缓存的opcode（缓存的指令就是原始指令），由于之前设置了单步调试，在执行opcode之后会触发HWSS exception从而进入kprobe_single_step_handler
 #### 3.4 hwss exception
 ```c
 // arch/arm64/kernel/debug-monitors.c
@@ -637,6 +849,7 @@ post_kprobe_handler(struct kprobe_ctlblk *kcb, struct pt_regs *regs)
 
 	/* return addr restore if non-branching insn */
 	if (cur->ainsn.api.restore != 0)
+		// 设置pc指令为opcode的下条指令
 		instruction_pointer_set(regs, cur->ainsn.api.restore);
 
 	/* restore back original saved kprobe variables and continue */
@@ -650,6 +863,7 @@ post_kprobe_handler(struct kprobe_ctlblk *kcb, struct pt_regs *regs)
 		/* post_handler can hit breakpoint and single step
 		 * again, so we enable D-flag for recursive exception.
 		 */
+		// 执行post_handler
 		cur->post_handler(cur, regs, 0);
 	}
 
@@ -662,6 +876,7 @@ post_kprobe_handler(struct kprobe_ctlblk *kcb, struct pt_regs *regs)
 1. kprobe注册阶段：注册阶段会先找到要探测的指令(opcode)，将opcode保存到一个由kprobe管理的可执行页上(slot page)，然后将下一指令的地址(addr + sizeof(opcode))也保存到kprobe中，最后将.text段里的opcode替换成BRK #4指令，这样当代码执行到探测点上时，cpu将进入debug模式
 2. kprobe触发阶段：可分为三部分，第一部分在BRK异常(BRK exception)的handler函数里面，这里会执行用户注册的pre_handler函数，开启单步调试，并将pc指向slot page里面的opcode；第二部分是执行opcode代码；第三部分在单步调试异常(HWSS exception)里，这里会关闭单步调试，将pc指向addr(探测点地址) + sizeof(opcode)，执行用户注册的post_handler函数，这样当HWSS exception结束，cpu又回到了原来的执行流程
 
+可以结合和上文Kprobe执行流程示意图来梳理思路
 ### 参考
 1. [Linux 内核监控在 Android 攻防中的应用
 ](https://evilpan.com/2022/01/03/kernel-tracing)
@@ -669,3 +884,4 @@ post_kprobe_handler(struct kprobe_ctlblk *kcb, struct pt_regs *regs)
 ](https://blog.csdn.net/u012489236/article/details/127942216)
 3. [arm64-kprobes
 ](https://blog.csdn.net/2201_75718536/article/details/134373656)
+4. [Kernel调试追踪技术之 Kprobe on ARM64](https://www.cnblogs.com/hpyu/p/14257305.html)

@@ -11,13 +11,6 @@
     </author><guid>https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</guid>
     <description><![CDATA[之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括 App访问、操作了哪些文件 执行了哪些操作]]></description>
 </item><item>
-    <title>Android Kernel Kprobe机制</title>
-    <link>https://tcc0lin.github.io/android-kernel-kprobe%E6%9C%BA%E5%88%B6/</link>
-    <pubDate>Wed, 27 Mar 2024 18:50:33 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/android-kernel-kprobe%E6%9C%BA%E5%88%B6/</guid>
-    <description><![CDATA[参考 https://www.cnblogs.com/hpyu/p/14257305.html https://cloud.tencent.com/developer/article/2314696 https://linux.laoqinren.net/kernel/linux-kprobe/ https://www.cnblogs.com/xingmuxin/p/8984043.html https://zhuanlan.zhihu.com/p/655288190 https://docs.kernel.org/trace/kprobes.html]]></description>
-</item><item>
     <title>LSPlant源码学习</title>
     <link>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
     <pubDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</pubDate><author>
@@ -73,5 +66,12 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</guid>
     <description><![CDATA[前言Magisk内部实现细节的第四篇，在前两篇着重讲了Magisk的三个重要功能的两个&mdash;su以及hide，这篇就来分析下最后一个]]></description>
+</item><item>
+    <title>重读Magisk内部实现细节3</title>
+    <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</link>
+    <pubDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</guid>
+    <description><![CDATA[前言Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide]]></description>
 </item></channel>
 </rss>
