@@ -303,14 +303,14 @@
 <p>简单理解就是把指定地址的指令替换成一个可以让cpu进入debug模式的指令（不同架构上指令不同），跳转到probe处理函数上进行数据收集、修改，再跳转回来继续执行</p>
 <p>X86中使用的是int3指令，ARM64中使用的是BRK指令进入debug monitor模式</p>
 <p>参考HPYU的Kprobe执行流程示意图
-<figure><a class="lightgallery" href="https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center" title="https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center" data-thumbnail="https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center">
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png" title="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png">
         <img
             
             loading="lazy"
-            src="https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center"
-            srcset="https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center, https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center 1.5x, https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center 2x"
+            src="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png, https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png 1.5x, https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png 2x"
             sizes="auto"
-            alt="https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center">
+            alt="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png">
     </a></figure></p>
 <h3 id="二使用" class="headerLink">
     <a href="#%e4%ba%8c%e4%bd%bf%e7%94%a8" class="header-mark"></a>二、使用</h3><p>kprobe主要有两种使用方法，一是通过模块加载；二是通过debugfs接口。从可扩展性和工程化的角度来看，模块加载是更优的选择，debugfs在某些特殊场景下（快速验证某些函数）可能会适合</p>

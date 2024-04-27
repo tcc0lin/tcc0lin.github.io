@@ -34,7 +34,7 @@ kprobe可以认为是一种kernel hook手段，它基于内核中断的方式实
 X86中使用的是int3指令，ARM64中使用的是BRK指令进入debug monitor模式
 
 参考HPYU的Kprobe执行流程示意图
-![](https://img2020.cnblogs.com/blog/2276022/202101/2276022-20210110075907892-825572189.png#center)
+![](https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png)
 
 ### 二、使用
 kprobe主要有两种使用方法，一是通过模块加载；二是通过debugfs接口。从可扩展性和工程化的角度来看，模块加载是更优的选择，debugfs在某些特殊场景下（快速验证某些函数）可能会适合
