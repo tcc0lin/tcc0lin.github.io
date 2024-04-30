@@ -10,7 +10,7 @@
     <title>基于Kernel Kprobe机制的改机架构实现 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:url" content="https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/">
   <meta property="og:site_name" content="tcc0lin&#39;s blog">
   <meta property="og:title" content="基于Kernel Kprobe机制的改机架构实现">
-  <meta property="og:description" content="改机的目的是为了让App获取到我们所想要其获取的数据，通常App在Native层获取数据时一般都会调用封装好的libc库或者通过内联汇编的方">
+  <meta property="og:description" content="一、背景如上文Linux Kprobe原理探究 所提及的，Kprobe有多种玩法，在设备改机场景中可以通过对内核系统函数的篡改以完成改机的目的，">
   <meta property="og:locale" content="zh-CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -20,7 +20,7 @@
     <meta property="og:image" content="https://tcc0lin.github.io/logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://tcc0lin.github.io/logo.png"><meta name="twitter:title" content="基于Kernel Kprobe机制的改机架构实现">
-<meta name="twitter:description" content="改机的目的是为了让App获取到我们所想要其获取的数据，通常App在Native层获取数据时一般都会调用封装好的libc库或者通过内联汇编的方">
+<meta name="twitter:description" content="一、背景如上文Linux Kprobe原理探究 所提及的，Kprobe有多种玩法，在设备改机场景中可以通过对内核系统函数的篡改以完成改机的目的，">
 <meta name="application-name" content="DoIt">
 <meta name="apple-mobile-web-app-title" content="DoIt">
 
@@ -38,7 +38,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0\/"
-        },"genre": "posts","keywords": "内核改机","wordcount":  565 ,
+        },"genre": "posts","keywords": "内核改机","wordcount":  176 ,
         "url": "https:\/\/tcc0lin.github.io\/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0\/","datePublished": "2024-03-27T18:51:18+08:00","dateModified": "2024-03-27T18:51:18+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -133,78 +133,69 @@
 <main class="main">
             <div class="container"><div class="toc" id="toc-auto">
         <h2 class="toc-title">目录</h2>
-        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一背景">一、背景</a></li>
+        <li><a href="#二思路">二、思路</a></li>
+        <li><a href="#三具体执行">三、具体执行</a>
+          <ul>
+            <li><a href="#31-lkm编译">3.1 LKM编译</a></li>
+            <li><a href="#32-patch-initrc">3.2 patch init.rc</a></li>
+            <li><a href="#33-insmod-ko">3.3 insmod ko</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
     </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">基于Kernel Kprobe机制的改机架构实现</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
                 </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%86%85%E6%A0%B8%E5%AE%9A%E5%88%B6/"><i class="far fa-folder fa-fw"></i>内核定制</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-27">2024-03-27</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-27">2024-03-27</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 565 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-03-27">2024-03-27</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-03-27">2024-03-27</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 176 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
                     <span><i class="details-icon fas fa-angle-right"></i></span>
                 </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
-            </div><div class="content" id="content"><p>改机的目的是为了让App获取到我们所想要其获取的数据，通常App在Native层获取数据时一般都会调用封装好的libc库或者通过内联汇编的方式最终调用内核函数，所以我们的应对通常是针对内核函数，下面就是针对内核函数调用结果修改的几种方案</p>
-<table>
-<thead>
-<tr>
-<th>层级</th>
-<th>原理</th>
-<th>方案</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>用户层</td>
-<td>inline hook</td>
-<td>定位svc指令，通过inline hook修改返回结果</td>
-</tr>
-<tr>
-<td></td>
-<td>seccomp异常拦截</td>
-<td>ptrace注入进程，配合seccomp拦截函数调用</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-<td>frida的方案和ptrace同理</td>
-</tr>
-<tr>
-<td></td>
-<td>依赖tracepoint监控</td>
-<td>epbf通过bpf_probe_write_user函数修改用户态数据</td>
-</tr>
-<tr>
-<td>内核层</td>
-<td>定制源码</td>
-<td>直接修改原生函数，例如重写open函数所对应的do_sys_open</td>
-</tr>
-<tr>
-<td></td>
-<td>Kprobe Hook机制</td>
-<td>利用Kernel hook方案的Kprobe机制来hook具体函数</td>
-</tr>
-</tbody>
-</table>
-<p>对比内核层的两种实现方案，都是需要完整的内核源码才能实现，这点是最大的掣肘</p>
-<ol>
-<li>定制源码
-<ul>
-<li>整体流程
-修改对应的内核函数/syscall_table替换函数-&gt;内核编译-&gt;重打包boot.img-&gt;dd命令替换boot分区文件-&gt;重启完成内核更新</li>
-<li>风险点
-各种异常情况下dd命令执行过程中异常导致系统无法启动</li>
-</ul>
-</li>
-<li>Kprobe内核模块
-<ul>
-<li>整体流程
-增加对应的函数hook-&gt;内核模块编译-&gt;init.rc增加模块自动加载功能-&gt;重装内核模块</li>
-</ul>
-</li>
-</ol>
-</div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一背景">一、背景</a></li>
+        <li><a href="#二思路">二、思路</a></li>
+        <li><a href="#三具体执行">三、具体执行</a>
+          <ul>
+            <li><a href="#31-lkm编译">3.1 LKM编译</a></li>
+            <li><a href="#32-patch-initrc">3.2 patch init.rc</a></li>
+            <li><a href="#33-insmod-ko">3.3 insmod ko</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="一背景" class="headerLink">
+    <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="header-mark"></a>一、背景</h3><p>如上文<a href="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" target="_blank" rel="noopener noreferrer">Linux Kprobe原理探究
+</a>所提及的，Kprobe有多种玩法，在设备改机场景中可以通过对内核系统函数的篡改以完成改机的目的，本文就是基于Kernel Kprobe机制来搭建一套完整的改机架构</p>
+<h3 id="二思路" class="headerLink">
+    <a href="#%e4%ba%8c%e6%80%9d%e8%b7%af" class="header-mark"></a>二、思路</h3><p>从整体流程上看，Kprobe的实现是基于LKM的，那么编译方式、生效时机、更新方式都需要参考LKM的做法
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/self_pic/blob/main/kprobe.png?raw=true">
+    </a></figure></p>
+<h3 id="三具体执行" class="headerLink">
+    <a href="#%e4%b8%89%e5%85%b7%e4%bd%93%e6%89%a7%e8%a1%8c" class="header-mark"></a>三、具体执行</h3><h4 id="31-lkm编译" class="headerLink">
+    <a href="#31-lkm%e7%bc%96%e8%af%91" class="header-mark"></a>3.1 LKM编译</h4><h4 id="32-patch-initrc" class="headerLink">
+    <a href="#32-patch-initrc" class="header-mark"></a>3.2 patch init.rc</h4><h4 id="33-insmod-ko" class="headerLink">
+    <a href="#33-insmod-ko" class="header-mark"></a>3.3 insmod ko</h4></div>
 
         
 
