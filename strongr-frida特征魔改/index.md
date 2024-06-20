@@ -1,4 +1,4 @@
-# StrongR Frid特征魔改
+# StrongR Frida特征魔改
 
 ### 一、背景
 参考项目[strongR-frida](https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core)对frida14.2.18进行魔改
