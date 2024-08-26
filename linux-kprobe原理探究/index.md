@@ -34,7 +34,7 @@ kprobe可以认为是一种kernel hook手段，它基于内核中断的方式实
 X86中使用的是int3指令，ARM64中使用的是BRK指令进入debug monitor模式
 
 参考HPYU的Kprobe执行流程示意图
-![](https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png)
+![](https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true)
 
 ### 二、使用
 kprobe主要有两种使用方法，一是通过模块加载；二是通过debugfs接口。从可扩展性和工程化的角度来看，模块加载是更优的选择，debugfs在某些特殊场景下（快速验证某些函数）可能会适合
@@ -283,7 +283,7 @@ struct kprobe *get_kprobe(void *addr)
 ```
 KPROBE_TABLE_SIZE是64，对于每个槽初始化一个头结点
 kprobe table的形式参考下图
-![](https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![](https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp)
 以hook的address为key，将kprobe保存到哈希表中，后续在查找时可以通过address来快速定位到kprobe_table槽，再通过对比hlist_node来确定kprobe
 ##### 3.1 register_die_notifier
 ```c

@@ -233,7 +233,15 @@
     </li>
   </ul>
 </nav></div>
-            </div><div class="content" id="content"><p>之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括</p>
+            </div><div class="content" id="content"><div class="details admonition note open">
+                <div class="details-summary admonition-title">
+                    <i class="icon fas fa-pencil-alt fa-fwnote"></i>注意<i class="details-icon fas fa-angle-right fa-fw"></i>
+                </div>
+                <div class="details-content">
+                    <div class="admonition-content">
+                        本文最后更新于 <span class="timeago" datetime="2024-04-26T21:19:53" title="April 26, 2024">2024-04-26</span>，文中内容可能已过时。</div>
+                </div>
+            </div><p>之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括</p>
 <ul>
 <li>App访问、操作了哪些文件</li>
 <li>执行了哪些操作</li>
@@ -305,14 +313,14 @@
 <p>简单理解就是把指定地址的指令替换成一个可以让cpu进入debug模式的指令（不同架构上指令不同），跳转到probe处理函数上进行数据收集、修改，再跳转回来继续执行</p>
 <p>X86中使用的是int3指令，ARM64中使用的是BRK指令进入debug monitor模式</p>
 <p>参考HPYU的Kprobe执行流程示意图
-<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png" title="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png">
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true" title="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true" data-thumbnail="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true">
         <img
             
             loading="lazy"
-            src="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png"
-            srcset="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png, https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png 1.5x, https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png 2x"
+            src="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true"
+            srcset="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true, https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true 1.5x, https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true 2x"
             sizes="auto"
-            alt="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png">
+            alt="https://github.com/tcc0lin/self_pic/blob/main/2276022-20210110075907892-825572189.png?raw=true">
     </a></figure></p>
 <h3 id="二使用" class="headerLink">
     <a href="#%e4%ba%8c%e4%bd%bf%e7%94%a8" class="header-mark"></a>二、使用</h3><p>kprobe主要有两种使用方法，一是通过模块加载；二是通过debugfs接口。从可扩展性和工程化的角度来看，模块加载是更优的选择，debugfs在某些特殊场景下（快速验证某些函数）可能会适合</p>
@@ -785,14 +793,14 @@
 </div>
 </div><p>KPROBE_TABLE_SIZE是64，对于每个槽初始化一个头结点
 kprobe table的形式参考下图
-<figure><a class="lightgallery" href="https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" title="https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" data-thumbnail="https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1">
+<figure><a class="lightgallery" href="https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp" title="https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp" data-thumbnail="https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp">
         <img
             
             loading="lazy"
-            src="https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"
-            srcset="https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1, https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1 1.5x, https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1 2x"
+            src="https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp"
+            srcset="https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp, https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp 1.5x, https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp 2x"
             sizes="auto"
-            alt="https://mmbiz.qpic.cn/mmbiz_jpg/ciab8jTiab9J5K8fXH5f0ZMPsGlenxy16ficvZf8FUqXjgnibYYBPh0xiaSBgraibwic2JfjRVwh24AiaxsIsuJVS7plXA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1">
+            alt="https://raw.githubusercontent.com/tcc0lin/self_pic/main/640.webp">
     </a></figure>
 以hook的address为key，将kprobe保存到哈希表中，后续在查找时可以通过address来快速定位到kprobe_table槽，再通过对比hlist_node来确定kprobe</p>
 <h5 id="31-register_die_notifier" class="headerLink">
@@ -2021,7 +2029,7 @@ kprobe table的形式参考下图
 <div id="comments"></div></article></div>
         </main><footer class="footer">
         <div class="footer-container"><div class="footer-line">
-                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.127.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.133.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
                 </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
             <div class="footer-line"></div>
             <div class="footer-line">
