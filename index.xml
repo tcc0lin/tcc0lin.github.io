@@ -3,9 +3,16 @@
         <title>tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/</link>
         <description>tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 30 Aug 2024 23:01:31 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>KeyAttestation原理理解</title>
+    <link>https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
+    <pubDate>Fri, 30 Aug 2024 23:01:31 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
+    <description><![CDATA[结合github项目KeyAttestation来学习KeyAttestation原理 一、项目结构 1.1 App展示 页面展示来自于attestat]]></description>
+</item><item>
     <title>Linux Kprobe原理探究</title>
     <link>https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</link>
     <pubDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</pubDate><author>
@@ -68,12 +75,5 @@
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
     <description><![CDATA[Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了]]></description>
-</item><item>
-    <title>Android端Root方案思考</title>
-    <link>https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/</link>
-    <pubDate>Mon, 19 Feb 2024 10:24:58 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/android%E7%AB%AFroot%E6%96%B9%E6%A1%88%E6%80%9D%E8%80%83/</guid>
-    <description><![CDATA[]]></description>
 </item></channel>
 </rss>

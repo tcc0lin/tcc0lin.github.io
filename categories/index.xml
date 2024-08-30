@@ -3,7 +3,14 @@
         <title>Categories - 分类 - tcc0lin&#39;s blog</title>
         <link>https://tcc0lin.github.io/categories/</link>
         <description>Categories - 分类 - tcc0lin&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 30 Aug 2024 23:01:31 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+    <title>KeyAttestation</title>
+    <link>https://tcc0lin.github.io/categories/keyattestation/</link>
+    <pubDate>Fri, 30 Aug 2024 23:01:31 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/categories/keyattestation/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
     <title>Linux内核</title>
     <link>https://tcc0lin.github.io/categories/linux%E5%86%85%E6%A0%B8/</link>
     <pubDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</pubDate><author>
@@ -58,13 +65,6 @@
     <pubDate>Sun, 17 Dec 2023 14:07:07 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/categories/android-root/</guid>
-    <description><![CDATA[]]></description>
-</item><item>
-    <title>KeyAttestation</title>
-    <link>https://tcc0lin.github.io/categories/keyattestation/</link>
-    <pubDate>Sat, 09 Dec 2023 22:22:14 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/categories/keyattestation/</guid>
     <description><![CDATA[]]></description>
 </item><item>
     <title>协议研究</title>

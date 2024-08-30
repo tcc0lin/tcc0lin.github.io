@@ -1,0 +1,1248 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>KeyAttestation原理理解 - tcc0lin&#39;s blog</title><meta name="Description" content="tcc0lin&#39;s blog"><meta property="og:url" content="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/">
+  <meta property="og:site_name" content="tcc0lin&#39;s blog">
+  <meta property="og:title" content="KeyAttestation原理理解">
+  <meta property="og:description" content="结合github项目KeyAttestation来学习KeyAttestation原理 一、项目结构 1.1 App展示 页面展示来自于attestat">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-08-30T23:01:31+08:00">
+    <meta property="article:modified_time" content="2024-08-30T23:01:31+08:00">
+    <meta property="article:tag" content="设备异常性检测">
+    <meta property="og:image" content="https://tcc0lin.github.io/logo.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tcc0lin.github.io/logo.png">
+  <meta name="twitter:title" content="KeyAttestation原理理解">
+  <meta name="twitter:description" content="结合github项目KeyAttestation来学习KeyAttestation原理 一、项目结构 1.1 App展示 页面展示来自于attestat">
+<meta name="application-name" content="DoIt">
+<meta name="apple-mobile-web-app-title" content="DoIt">
+
+<meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" /><link rel="prev" href="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" />
+<link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "KeyAttestation原理理解",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/tcc0lin.github.io\/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3\/"
+        },"genre": "posts","keywords": "设备异常性检测","wordcount":  4196 ,
+        "url": "https:\/\/tcc0lin.github.io\/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3\/","datePublished": "2024-08-30T23:01:31+08:00","dateModified": "2024-08-30T23:01:31+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "tcc0lin"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="tcc0lin&#39;s blog"><span id="desktop-header-typeit" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="/todo/"> 待更清单 </a><a class="menu-item" href="/talk/"> 碎讲 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="tcc0lin&#39;s blog"><span id="mobile-header-typeit" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="/todo/" title="">待更清单</a><a class="menu-item" href="/talk/" title="">碎讲</a><a href="javascript:void(0);" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一项目结构">一、项目结构</a>
+          <ul>
+            <li><a href="#11-app展示">1.1 App展示</a></li>
+            <li><a href="#12-初步梳理流程">1.2 初步梳理流程</a></li>
+          </ul>
+        </li>
+        <li><a href="#二源码分析">二、源码分析</a>
+          <ul>
+            <li><a href="#21-入参">2.1 入参</a></li>
+            <li><a href="#22-generatekey">2.2 generateKey</a></li>
+            <li><a href="#23-certs-collect">2.3 certs collect</a></li>
+            <li><a href="#24-parsecertificatechain">2.4 parseCertificateChain</a>
+              <ul>
+                <li><a href="#241-checkstatus">2.4.1 checkStatus</a></li>
+                <li><a href="#242-checkissuer">2.4.2 checkIssuer</a></li>
+                <li><a href="#243-checkattestation">2.4.3 checkAttestation</a>
+                  <ul>
+                    <li><a href="#2431-eatattestation">2.4.3.1 EatAttestation</a></li>
+                    <li><a href="#2432-knoxattestation">2.4.3.2 KnoxAttestation</a></li>
+                    <li><a href="#2433-asn1attestation">2.4.3.3 Asn1Attestation</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#三-总结">三. 总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">KeyAttestation原理理解</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/keyattestation/"><i class="far fa-folder fa-fw"></i>KeyAttestation</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-08-30">2024-08-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-08-30">2024-08-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4196 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一项目结构">一、项目结构</a>
+          <ul>
+            <li><a href="#11-app展示">1.1 App展示</a></li>
+            <li><a href="#12-初步梳理流程">1.2 初步梳理流程</a></li>
+          </ul>
+        </li>
+        <li><a href="#二源码分析">二、源码分析</a>
+          <ul>
+            <li><a href="#21-入参">2.1 入参</a></li>
+            <li><a href="#22-generatekey">2.2 generateKey</a></li>
+            <li><a href="#23-certs-collect">2.3 certs collect</a></li>
+            <li><a href="#24-parsecertificatechain">2.4 parseCertificateChain</a>
+              <ul>
+                <li><a href="#241-checkstatus">2.4.1 checkStatus</a></li>
+                <li><a href="#242-checkissuer">2.4.2 checkIssuer</a></li>
+                <li><a href="#243-checkattestation">2.4.3 checkAttestation</a>
+                  <ul>
+                    <li><a href="#2431-eatattestation">2.4.3.1 EatAttestation</a></li>
+                    <li><a href="#2432-knoxattestation">2.4.3.2 KnoxAttestation</a></li>
+                    <li><a href="#2433-asn1attestation">2.4.3.3 Asn1Attestation</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#三-总结">三. 总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>结合github项目<a href="https://github.com/vvb2060/KeyAttestation" target="_blank" rel="noopener noreferrer">KeyAttestation</a>来学习KeyAttestation原理</p>
+<h3 id="一项目结构" class="headerLink">
+    <a href="#%e4%b8%80%e9%a1%b9%e7%9b%ae%e7%bb%93%e6%9e%84" class="header-mark"></a>一、项目结构</h3><h4 id="11-app展示" class="headerLink">
+    <a href="#11-app%e5%b1%95%e7%a4%ba" class="header-mark"></a>1.1 App展示</h4><p><figure><a class="lightgallery" href="https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp" title="https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp" data-thumbnail="https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp">
+        <img
+            
+            loading="lazy"
+            src="https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp"
+            srcset="https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp, https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp 1.5x, https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp 2x"
+            sizes="auto"
+            alt="https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp">
+    </a></figure>
+<figure><a class="lightgallery" href="https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp" title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp" data-thumbnail="https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp">
+        <img
+            
+            loading="lazy"
+            src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp"
+            srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp, https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp 2x"
+            sizes="auto"
+            alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp">
+    </a></figure>
+页面展示来自于attestationResult这个回调结果</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/home/HomeViewModel.kt</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">val</span><span class="w"> </span><span class="n">useStrongBox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hasStrongBox</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">preferStrongBox</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">val</span><span class="w"> </span><span class="n">includeProps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hasDeviceIds</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">preferIncludeProps</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">val</span><span class="w"> </span><span class="n">useAttestKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hasAttestKey</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">preferAttestKey</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">val</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">attestationResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doAttestation</span><span class="p">(</span><span class="n">useStrongBox</span><span class="p">,</span><span class="w"> </span><span class="n">includeProps</span><span class="p">,</span><span class="w"> </span><span class="n">useAttestKey</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">Resource</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="n">attestationResult</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">:</span><span class="w"> </span><span class="n">Throwable</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">cause</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">AttestationException</span><span class="p">)</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="na">cause</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">e</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">Log</span><span class="p">.</span><span class="na">w</span><span class="p">(</span><span class="n">AppApplication</span><span class="p">.</span><span class="na">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Do attestation error.&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">cause</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">when</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">is</span><span class="w"> </span><span class="n">AttestationException</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Resource</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Resource</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="n">AttestationException</span><span class="p">(</span><span class="n">CODE_UNKNOWN</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">),</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="12-初步梳理流程" class="headerLink">
+    <a href="#12-%e5%88%9d%e6%ad%a5%e6%a2%b3%e7%90%86%e6%b5%81%e7%a8%8b" class="header-mark"></a>1.2 初步梳理流程</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/home/HomeViewModel.kt</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nd">@Throws</span><span class="p">(</span><span class="n">AttestationException</span><span class="p">::</span><span class="kd">class</span><span class="err">)</span>
+</span></span><span class="line"><span class="cl"><span class="nc">private</span><span class="w"> </span><span class="n">fun</span><span class="w"> </span><span class="nf">doAttestation</span><span class="p">(</span><span class="n">useStrongBox</span><span class="p">:</span><span class="w"> </span><span class="n">Boolean</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                            </span><span class="n">includeProps</span><span class="p">:</span><span class="w"> </span><span class="n">Boolean</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                            </span><span class="n">useAttestKey</span><span class="p">:</span><span class="w"> </span><span class="n">Boolean</span><span class="p">):</span><span class="w"> </span><span class="n">AttestationResult</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">certs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Certificate</span><span class="o">&gt;</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">useStrongBox</span><span class="p">)</span><span class="w"> </span><span class="s">&#34;${AppApplication.TAG}_strongbox&#34;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">AppApplication</span><span class="p">.</span><span class="na">TAG</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">attestKeyAlias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">useAttestKey</span><span class="p">)</span><span class="w"> </span><span class="s">&#34;${alias}_persistent&#34;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 1. generateKey</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">useAttestKey</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">keyStore</span><span class="p">.</span><span class="na">containsAlias</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">generateKey</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="o">!!</span><span class="p">,</span><span class="w"> </span><span class="n">useStrongBox</span><span class="p">,</span><span class="w"> </span><span class="n">includeProps</span><span class="p">,</span><span class="w"> </span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">generateKey</span><span class="p">(</span><span class="n">alias</span><span class="p">,</span><span class="w"> </span><span class="n">useStrongBox</span><span class="p">,</span><span class="w"> </span><span class="n">includeProps</span><span class="p">,</span><span class="w"> </span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 2. certs collect</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">certChain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keyStore</span><span class="p">.</span><span class="na">getCertificateChain</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="o">?</span><span class="p">:</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">CertificateException</span><span class="p">(</span><span class="s">&#34;Unable to get certificate chain&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">cert</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">certChain</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">buf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ByteArrayInputStream</span><span class="p">(</span><span class="n">cert</span><span class="p">.</span><span class="na">encoded</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">certs</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">certificateFactory</span><span class="p">.</span><span class="na">generateCertificate</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">useAttestKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">persistChain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keyStore</span><span class="p">.</span><span class="na">getCertificateChain</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="o">?</span><span class="p">:</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">CertificateException</span><span class="p">(</span><span class="s">&#34;Unable to get certificate chain&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">cert</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">persistChain</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">val</span><span class="w"> </span><span class="n">buf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ByteArrayInputStream</span><span class="p">(</span><span class="n">cert</span><span class="p">.</span><span class="na">encoded</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">certs</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">certificateFactory</span><span class="p">.</span><span class="na">generateCertificate</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">:</span><span class="w"> </span><span class="n">ProviderException</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 异常流程，可忽略</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">......</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">:</span><span class="w"> </span><span class="n">Exception</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">AttestationException</span><span class="p">(</span><span class="n">CODE_UNKNOWN</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Suppress</span><span class="p">(</span><span class="s">&#34;UNCHECKED_CAST&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 3. parseCertificateChain</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">currentCerts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">certs</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">X509Certificate</span><span class="o">&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nf">parseCertificateChain</span><span class="p">(</span><span class="n">certs</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>从代码流程中可以分为三步</p>
+<ol>
+<li>generateKey</li>
+<li>certs collect</li>
+<li>parseCertificateChain</li>
+</ol>
+<h3 id="二源码分析" class="headerLink">
+    <a href="#%e4%ba%8c%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90" class="header-mark"></a>二、源码分析</h3><h4 id="21-入参" class="headerLink">
+    <a href="#21-%e5%85%a5%e5%8f%82" class="header-mark"></a>2.1 入参</h4><p>doAttestation的入参有三个</p>
+<ul>
+<li>useStrongBox</li>
+<li>includeProps</li>
+<li>useAttestKey</li>
+</ul>
+<p>获取方式是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// android.hardware.strongbox_keystore</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">useStrongBox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="p">.</span><span class="na">hasSystemFeature</span><span class="p">(</span><span class="n">PackageManager</span><span class="p">.</span><span class="na">FEATURE_STRONGBOX_KEYSTORE</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// android.hardware.keystore.app_attest_key</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">hasAttestKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="p">.</span><span class="na">hasSystemFeature</span><span class="p">(</span><span class="n">PackageManager</span><span class="p">.</span><span class="na">FEATURE_KEYSTORE_APP_ATTEST_KEY</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">hasDeviceIds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="p">.</span><span class="na">hasSystemFeature</span><span class="p">(</span><span class="s">&#34;android.software.device_id_attestation&#34;</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>是从PackageManager中获取系统属性，这三个属性指的是什么意思呢？这里需要引入<a href="https://source.android.com/docs/security/features/keystore?hl=zh-cn" target="_blank" rel="noopener noreferrer">Android KeyStore</a>的演变历史</p>
+<p>KeyStore是借助系统芯片 (SoC) 中提供的可信执行环境，由硬件支持的密钥库</p>
+<ol>
+<li>KeyMaster 0.2 0.3</li>
+</ol>
+<blockquote>
+<p>在 Android 6.0 之前的版本中，Android 已有一个非常简单的由硬件支持的加密服务 API（由 0.2 和 0.3 版的 Keymaster 硬件抽象层 (HAL) 提供）。该密钥库能够提供数字签名和验证操作，以及不对称签名密钥对的生成和导入操作。该 API 在许多设备上都已实现，但有许多安全目标无法只通过一个签名 API 来轻松达成。Android 6.0 中的密钥库在该密钥库 API 的基础上进行了扩展，能够提供更广泛的功能</p>
+</blockquote>
+<ol start="2">
+<li>KeyMaster 1</li>
+</ol>
+<blockquote>
+<p>在 Android 6.0 中，密钥库不仅增加了对称加密基元（AES 和 HMAC），还增加了针对由硬件支持的密钥的访问权限控制系统。访问权限控制在密钥生成期间指定，并会在密钥的整个生命周期内被强制执行。可以将密钥限定为仅在用户通过身份验证后才可使用，并且只能用于指定的目的或只有在具有指定的加密参数时才可使用。如需了解详情，请参阅授权标记和函数页面。</p>
+</blockquote>
+<ol start="3">
+<li>KeyMaster 2</li>
+</ol>
+<blockquote>
+<p>在 Android 7.0 中，Keymaster 2 增加了对密钥认证和版本绑定的支持。密钥认证提供公钥证书，这些证书中包含密钥及其访问权限控制的详细描述，以使密钥存在于安全硬件中并使其配置可以远程验证。</p>
+</blockquote>
+<ol start="4">
+<li>KeyMaster 3</li>
+</ol>
+<blockquote>
+<p>在 Android 8.0 中，Keymaster 3 从旧式 C 结构硬件抽象层 (HAL) 转换到根据新硬件接口定义语言 (HIDL) 中的定义生成的 C++ HAL 接口。在此变更过程中，很多参数类型发生了变化，但这些类型和方法与旧的类型和 HAL 结构体方法一一对应。如需了解详情，请参阅函数页面</p>
+<p>除了此接口修订之外，Android 8.0 还扩展了 Keymaster 2 的认证功能，以支持 ID 认证。 ID 认证提供了一种受限且可选的机制来严格认证硬件标识符，例如设备序列号、产品名称和手机 ID (IMEI/MEID)。为了实现此新增功能，Android 8.0 更改了 ASN.1 认证架构，添加了 ID 认证。Keymaster 实现需要通过某种安全方式来检索相关的数据项，还需要定义一种安全永久地停用该功能的机制。</p>
+</blockquote>
+<ol start="5">
+<li>KeyMaster 4</li>
+</ol>
+<blockquote>
+<p>Android 9 纳入了以下更新：
+更新到 Keymaster 4
+对嵌入式安全元件的支持
+对安全密钥导入的支持
+对 3DES 加密的支持
+更改了版本绑定，以便 boot.img 和 system.img 分别设置版本以允许独立更新</p>
+</blockquote>
+<p>从KeyStore的版本演变上看，在迭代过程中逐步加入了新的认证方式，而FEATURE_STRONGBOX_KEYSTORE、FEATURE_KEYSTORE_APP_ATTEST_KEY就是判断设备是否支持某种认证方式（原因是因为OEM厂商不一定会紧跟着Google的架构演变方案）</p>
+<h4 id="22-generatekey" class="headerLink">
+    <a href="#22-generatekey" class="header-mark"></a>2.2 generateKey</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">useAttestKey</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">keyStore</span><span class="p">.</span><span class="na">containsAlias</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">generateKey</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="o">!!</span><span class="p">,</span><span class="w"> </span><span class="n">useStrongBox</span><span class="p">,</span><span class="w"> </span><span class="n">includeProps</span><span class="p">,</span><span class="w"> </span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">generateKey</span><span class="p">(</span><span class="n">alias</span><span class="p">,</span><span class="w"> </span><span class="n">useStrongBox</span><span class="p">,</span><span class="w"> </span><span class="n">includeProps</span><span class="p">,</span><span class="w"> </span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里区分了生成key的类型，如果设备开启了App Attest Key特性的话生成的密钥可以用来做密钥认证（Key Attestation），否则就是正常的数字签名密钥
+这里优先根据是否开启了App Attest Key特性及KeyStore中是否包含attestKeyAlias的密钥来进行密钥生成</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">fun</span><span class="w"> </span><span class="nf">generateKey</span><span class="p">(</span><span class="n">alias</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="n">useStrongBox</span><span class="p">:</span><span class="w"> </span><span class="n">Boolean</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="n">includeProps</span><span class="p">:</span><span class="w"> </span><span class="n">Boolean</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="n">attestKeyAlias</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="o">?</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Date</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">attestKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">attestKeyAlias</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 密钥用途判定</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">purposes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION</span><span class="p">.</span><span class="na">SDK_INT</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION_CODES</span><span class="p">.</span><span class="na">S</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">attestKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">KeyProperties</span><span class="p">.</span><span class="na">PURPOSE_ATTEST_KEY</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">KeyProperties</span><span class="p">.</span><span class="na">PURPOSE_SIGN</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 设置 KeyGenParameterSpec</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KeyGenParameterSpec</span><span class="p">.</span><span class="na">Builder</span><span class="p">(</span><span class="n">alias</span><span class="p">,</span><span class="w"> </span><span class="n">purposes</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">setAlgorithmParameterSpec</span><span class="p">(</span><span class="n">ECGenParameterSpec</span><span class="p">(</span><span class="s">&#34;secp256r1&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">setDigests</span><span class="p">(</span><span class="n">KeyProperties</span><span class="p">.</span><span class="na">DIGEST_SHA256</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">setCertificateNotBefore</span><span class="p">(</span><span class="n">now</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">setAttestationChallenge</span><span class="p">(</span><span class="n">now</span><span class="p">.</span><span class="na">toString</span><span class="p">().</span><span class="na">toByteArray</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION</span><span class="p">.</span><span class="na">SDK_INT</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION_CODES</span><span class="p">.</span><span class="na">P</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">useStrongBox</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">builder</span><span class="p">.</span><span class="na">setIsStrongBoxBacked</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION</span><span class="p">.</span><span class="na">SDK_INT</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION_CODES</span><span class="p">.</span><span class="na">S</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">includeProps</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="na">setDevicePropertiesAttestationIncluded</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">attestKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="na">setCertificateSubject</span><span class="p">(</span><span class="n">X500Principal</span><span class="p">(</span><span class="s">&#34;CN=App Attest Key&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="na">setAttestKeyAlias</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 获取 KeyPairGenerator 实例</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">keyPairGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KeyPairGenerator</span><span class="p">.</span><span class="na">getInstance</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">KeyProperties</span><span class="p">.</span><span class="na">KEY_ALGORITHM_EC</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;AndroidKeyStore&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 用 KeyGenParameterSpec 初始化 KeyPairGenerator</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">keyPairGenerator</span><span class="p">.</span><span class="na">initialize</span><span class="p">(</span><span class="n">builder</span><span class="p">.</span><span class="na">build</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 生成密钥对</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">keyPairGenerator</span><span class="p">.</span><span class="na">generateKeyPair</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>此时，KeyStore中包含了名称为alias的密钥对</p>
+<h4 id="23-certs-collect" class="headerLink">
+    <a href="#23-certs-collect" class="header-mark"></a>2.3 certs collect</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">val</span><span class="w"> </span><span class="n">certChain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keyStore</span><span class="p">.</span><span class="na">getCertificateChain</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="o">?</span><span class="p">:</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">CertificateException</span><span class="p">(</span><span class="s">&#34;Unable to get certificate chain&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">cert</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">certChain</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">buf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ByteArrayInputStream</span><span class="p">(</span><span class="n">cert</span><span class="p">.</span><span class="na">encoded</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">certs</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">certificateFactory</span><span class="p">.</span><span class="na">generateCertificate</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">useAttestKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">persistChain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keyStore</span><span class="p">.</span><span class="na">getCertificateChain</span><span class="p">(</span><span class="n">attestKeyAlias</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="o">?</span><span class="p">:</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">CertificateException</span><span class="p">(</span><span class="s">&#34;Unable to get certificate chain&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">cert</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">persistChain</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">buf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ByteArrayInputStream</span><span class="p">(</span><span class="n">cert</span><span class="p">.</span><span class="na">encoded</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">certs</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">certificateFactory</span><span class="p">.</span><span class="na">generateCertificate</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在上一步生成key之后根据alias获取到对应的证书链，证书链是一个认证过程，最终指向可信的根证书，因此获取到的证书链实际的形式是</p>
+<blockquote>
+<p>终端证书-&gt;中间证书-&gt;根证书</p>
+</blockquote>
+<h4 id="24-parsecertificatechain" class="headerLink">
+    <a href="#24-parsecertificatechain" class="header-mark"></a>2.4 parseCertificateChain</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/CertificateInfo.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">AttestationResult</span><span class="w"> </span><span class="nf">parseCertificateChain</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">X509Certificate</span><span class="o">&gt;</span><span class="w"> </span><span class="n">certs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">infoList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">CertificateInfo</span><span class="o">&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 在certs中最后一个指向的是终端证书，逐步向上遍历</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">certs</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">certs</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">1</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">certs</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">parentKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parent</span><span class="p">.</span><span class="na">getPublicKey</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateInfo</span><span class="p">(</span><span class="n">certs</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">i</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">infoList</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">info</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">info</span><span class="p">.</span><span class="na">checkStatus</span><span class="p">(</span><span class="n">parentKey</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">parent</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">info</span><span class="p">.</span><span class="na">cert</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">info</span><span class="p">.</span><span class="na">checkIssuer</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">info</span><span class="p">.</span><span class="na">cert</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="na">checkAttestation</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">return</span><span class="w"> </span><span class="n">AttestationResult</span><span class="p">.</span><span class="na">form</span><span class="p">(</span><span class="n">infoList</span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>遍历证书列表，进行三次校验</p>
+<ul>
+<li>checkStatus</li>
+<li>checkIssuer</li>
+<li>checkAttestation</li>
+</ul>
+<h5 id="241-checkstatus" class="headerLink">
+    <a href="#241-checkstatus" class="header-mark"></a>2.4.1 checkStatus</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/CertificateInfo.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">checkStatus</span><span class="p">(</span><span class="n">PublicKey</span><span class="w"> </span><span class="n">parentKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CERT_SIGN</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">cert</span><span class="p">.</span><span class="na">verify</span><span class="p">(</span><span class="n">parentKey</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CERT_REVOKED</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">certStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RevocationList</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">cert</span><span class="p">.</span><span class="na">getSerialNumber</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">certStatus</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateException</span><span class="p">(</span><span class="s">&#34;Certificate revocation &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">certStatus</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CERT_EXPIRED</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">cert</span><span class="p">.</span><span class="na">checkValidity</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CERT_NORMAL</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">GeneralSecurityException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">securityException</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在checkStatus函数中存在状态流转的过程，涉及到两个函数verify、checkValidity，主要目的是为了确保一个证书的签名是有效的、且被信任的上级证书所签发</p>
+<h5 id="242-checkissuer" class="headerLink">
+    <a href="#242-checkissuer" class="header-mark"></a>2.4.2 checkIssuer</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/CertificateInfo.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">checkIssuer</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">publicKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cert</span><span class="p">.</span><span class="na">getPublicKey</span><span class="p">().</span><span class="na">getEncoded</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">publicKey</span><span class="p">,</span><span class="w"> </span><span class="n">googleKey</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">issuer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KEY_GOOGLE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">publicKey</span><span class="p">,</span><span class="w"> </span><span class="n">aospEcKey</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">issuer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KEY_AOSP</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">publicKey</span><span class="p">,</span><span class="w"> </span><span class="n">aospRsaKey</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">issuer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KEY_AOSP</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">publicKey</span><span class="p">,</span><span class="w"> </span><span class="n">knoxSakv2Key</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">issuer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KEY_KNOX</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">oemKeys</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">oemKeys</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">publicKey</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">.</span><span class="na">getEncoded</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">issuer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KEY_OEM</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这一步是为了确定根证书的颁发机构，其中获取OEM Key的方式如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Set</span><span class="o">&lt;</span><span class="n">PublicKey</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">getOemPublicKey</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">resName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;android:array/vendor_required_attestation_certificates&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AppApplication</span><span class="p">.</span><span class="na">app</span><span class="p">.</span><span class="na">getResources</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// noinspection DiscouragedApi</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="na">getIdentifier</span><span class="p">(</span><span class="n">resName</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">HashSet</span><span class="o">&lt;</span><span class="n">PublicKey</span><span class="o">&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">cf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CertificateFactory</span><span class="p">.</span><span class="na">getInstance</span><span class="p">(</span><span class="s">&#34;X.509&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="na">getStringArray</span><span class="p">(</span><span class="n">id</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="n">cert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="na">replaceAll</span><span class="p">(</span><span class="s">&#34;\\s+&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;\n&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="p">.</span><span class="na">replaceAll</span><span class="p">(</span><span class="s">&#34;-BEGIN\\nCERTIFICATE-&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;-BEGIN CERTIFICATE-&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="p">.</span><span class="na">replaceAll</span><span class="p">(</span><span class="s">&#34;-END\\nCERTIFICATE-&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;-END CERTIFICATE-&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ByteArrayInputStream</span><span class="p">(</span><span class="n">cert</span><span class="p">.</span><span class="na">getBytes</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="n">publicKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cf</span><span class="p">.</span><span class="na">generateCertificate</span><span class="p">(</span><span class="n">input</span><span class="p">).</span><span class="na">getPublicKey</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">set</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">publicKey</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CertificateException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">Log</span><span class="p">.</span><span class="na">e</span><span class="p">(</span><span class="n">AppApplication</span><span class="p">.</span><span class="na">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;getOemKeys: &#34;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">set</span><span class="p">.</span><span class="na">removeIf</span><span class="p">(</span><span class="n">key</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Arrays</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">key</span><span class="p">.</span><span class="na">getEncoded</span><span class="p">(),</span><span class="w"> </span><span class="n">googleKey</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">set</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">set</span><span class="p">.</span><span class="na">forEach</span><span class="p">(</span><span class="n">key</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Log</span><span class="p">.</span><span class="na">i</span><span class="p">(</span><span class="n">AppApplication</span><span class="p">.</span><span class="na">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;getOemKeys: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">key</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">set</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="243-checkattestation" class="headerLink">
+    <a href="#243-checkattestation" class="header-mark"></a>2.4.3 checkAttestation</h5><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/CertificateInfo.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">private</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">checkAttestation</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="n">terminate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">attestation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Attestation</span><span class="p">.</span><span class="na">loadFromCertificate</span><span class="p">(</span><span class="n">cert</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// If key purpose included KeyPurpose::SIGN,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// then it could be used to sign arbitrary data, including any tbsCertificate,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// and so an attestation produced by the key would have no security properties.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// If the parent certificate can attest that the key purpose is only KeyPurpose::ATTEST_KEY,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// then the child certificate can be trusted.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">purposes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">attestation</span><span class="p">.</span><span class="na">getTeeEnforced</span><span class="p">().</span><span class="na">getPurposes</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">terminate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">purposes</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">purposes</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="n">AuthorizationList</span><span class="p">.</span><span class="na">KM_PURPOSE_ATTEST_KEY</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CertificateParsingException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">certException</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">terminate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">checkProvisioningInfo</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">terminate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/Attestation.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Attestation</span><span class="w"> </span><span class="nf">loadFromCertificate</span><span class="p">(</span><span class="n">X509Certificate</span><span class="w"> </span><span class="n">x509Cert</span><span class="p">)</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x509Cert</span><span class="p">.</span><span class="na">getExtensionValue</span><span class="p">(</span><span class="n">EAT_OID</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x509Cert</span><span class="p">.</span><span class="na">getExtensionValue</span><span class="p">(</span><span class="n">ASN1_OID</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="p">(</span><span class="s">&#34;No attestation extensions found&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x509Cert</span><span class="p">.</span><span class="na">getExtensionValue</span><span class="p">(</span><span class="n">EAT_OID</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x509Cert</span><span class="p">.</span><span class="na">getExtensionValue</span><span class="p">(</span><span class="n">ASN1_OID</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="p">(</span><span class="s">&#34;Multiple attestation extensions found&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">EatAttestation</span><span class="p">(</span><span class="n">x509Cert</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CborException</span><span class="w"> </span><span class="n">cbe</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="p">(</span><span class="s">&#34;Unable to parse EAT extension&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">cbe</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x509Cert</span><span class="p">.</span><span class="na">getExtensionValue</span><span class="p">(</span><span class="n">CRL_DP_OID</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">Log</span><span class="p">.</span><span class="na">w</span><span class="p">(</span><span class="n">AppApplication</span><span class="p">.</span><span class="na">TAG</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="s">&#34;CRL Distribution Points extension found in leaf certificate.&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x509Cert</span><span class="p">.</span><span class="na">getExtensionValue</span><span class="p">(</span><span class="n">KNOX_OID</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">KnoxAttestation</span><span class="p">(</span><span class="n">x509Cert</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Asn1Attestation</span><span class="p">(</span><span class="n">x509Cert</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据代码逻辑的理解，是根据证书颁发机构来选择各自的认证方式</p>
+<h6 id="2431-eatattestation" class="headerLink">
+    <a href="#2431-eatattestation" class="header-mark"></a>2.4.3.1 EatAttestation</h6><p>EatAttestation使用实体认证令牌 (Entity Attestation Token, EAT) 进行设备认证。EAT是一种基于IETF标准的轻量级认证格式，场景更多的是存在嵌入到IoT设备中</p>
+<h6 id="2432-knoxattestation" class="headerLink">
+    <a href="#2432-knoxattestation" class="header-mark"></a>2.4.3.2 KnoxAttestation</h6><p>三星电子提供的一种设备认证和安全机制，核心逻辑还是走的Asn1</p>
+<h6 id="2433-asn1attestation" class="headerLink">
+    <a href="#2433-asn1attestation" class="header-mark"></a>2.4.3.3 Asn1Attestation</h6><p>重点关注下Asn1的认证方式，也是官方选择的认证方式，参考文档<a href="https://developer.android.com/privacy-and-security/security-key-attestation?hl=zh-cn#verifying" target="_blank" rel="noopener noreferrer">security-key-attestation</a></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/Asn1Attestation.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="nf">Asn1Attestation</span><span class="p">(</span><span class="n">X509Certificate</span><span class="w"> </span><span class="n">x509Cert</span><span class="p">)</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">super</span><span class="p">(</span><span class="n">x509Cert</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ASN1Sequence</span><span class="w"> </span><span class="n">seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAttestationSequence</span><span class="p">(</span><span class="n">x509Cert</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">attestationVersion</span><span class="w"> </span><span class="o">=</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getIntegerFromAsn1</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">ATTESTATION_VERSION_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">attestationSecurityLevel</span><span class="w"> </span><span class="o">=</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getIntegerFromAsn1</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">ATTESTATION_SECURITY_LEVEL_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">keymasterVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getIntegerFromAsn1</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">KEYMASTER_VERSION_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">keymasterSecurityLevel</span><span class="w"> </span><span class="o">=</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getIntegerFromAsn1</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">KEYMASTER_SECURITY_LEVEL_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">attestationChallenge</span><span class="w"> </span><span class="o">=</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getByteArrayFromAsn1</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">ATTESTATION_CHALLENGE_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">uniqueId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getByteArrayFromAsn1</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">UNIQUE_ID_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">softwareEnforced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AuthorizationList</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">SW_ENFORCED_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">teeEnforced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AuthorizationList</span><span class="p">(</span><span class="n">seq</span><span class="p">.</span><span class="na">getObjectAt</span><span class="p">(</span><span class="n">TEE_ENFORCED_INDEX</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据传入的x509Cert解析成各个字段，这里可以参考<a href="https://source.android.com/docs/security/features/keystore/attestation?hl=zh-cn#attestation-extension" target="_blank" rel="noopener noreferrer">ASN.1架构</a></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">KeyDescription ::= SEQUENCE {
+</span></span><span class="line"><span class="cl">  attestationVersion         INTEGER, # KM2 value is 1. KM3 value is 2. KM4 value is 3.
+</span></span><span class="line"><span class="cl">  attestationSecurityLevel   SecurityLevel,
+</span></span><span class="line"><span class="cl">  keymasterVersion           INTEGER,
+</span></span><span class="line"><span class="cl">  keymasterSecurityLevel     SecurityLevel,
+</span></span><span class="line"><span class="cl">  attestationChallenge       OCTET_STRING,
+</span></span><span class="line"><span class="cl">  uniqueId                   OCTET_STRING,
+</span></span><span class="line"><span class="cl">  softwareEnforced           AuthorizationList,
+</span></span><span class="line"><span class="cl">  teeEnforced                AuthorizationList,
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">SecurityLevel ::= ENUMERATED {
+</span></span><span class="line"><span class="cl">  Software                   (0),
+</span></span><span class="line"><span class="cl">  TrustedEnvironment         (1),
+</span></span><span class="line"><span class="cl">  StrongBox                  (2),
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">AuthorizationList ::= SEQUENCE {
+</span></span><span class="line"><span class="cl">  purpose                     [1] EXPLICIT SET OF INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  algorithm                   [2] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  keySize                     [3] EXPLICIT INTEGER OPTIONAL.
+</span></span><span class="line"><span class="cl">  digest                      [5] EXPLICIT SET OF INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  padding                     [6] EXPLICIT SET OF INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  ecCurve                     [10] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  rsaPublicExponent           [200] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  rollbackResistance          [303] EXPLICIT NULL OPTIONAL, # KM4
+</span></span><span class="line"><span class="cl">  activeDateTime              [400] EXPLICIT INTEGER OPTIONAL
+</span></span><span class="line"><span class="cl">  originationExpireDateTime   [401] EXPLICIT INTEGER OPTIONAL
+</span></span><span class="line"><span class="cl">  usageExpireDateTime         [402] EXPLICIT INTEGER OPTIONAL
+</span></span><span class="line"><span class="cl">  noAuthRequired              [503] EXPLICIT NULL OPTIONAL,
+</span></span><span class="line"><span class="cl">  userAuthType                [504] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  authTimeout                 [505] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  allowWhileOnBody            [506] EXPLICIT NULL OPTIONAL,
+</span></span><span class="line"><span class="cl">  trustedUserPresenceRequired [507] EXPLICIT NULL OPTIONAL, # KM4
+</span></span><span class="line"><span class="cl">  trustedConfirmationRequired [508] EXPLICIT NULL OPTIONAL, # KM4
+</span></span><span class="line"><span class="cl">  unlockedDeviceRequired      [509] EXPLICIT NULL OPTIONAL, # KM4
+</span></span><span class="line"><span class="cl">  allApplications             [600] EXPLICIT NULL OPTIONAL,
+</span></span><span class="line"><span class="cl">  applicationId               [601] EXPLICIT OCTET_STRING OPTIONAL,
+</span></span><span class="line"><span class="cl">  creationDateTime            [701] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  origin                      [702] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  rollbackResistant           [703] EXPLICIT NULL OPTIONAL, # KM2 and KM3 only.
+</span></span><span class="line"><span class="cl">  rootOfTrust                 [704] EXPLICIT RootOfTrust OPTIONAL,
+</span></span><span class="line"><span class="cl">  osVersion                   [705] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  osPatchLevel                [706] EXPLICIT INTEGER OPTIONAL,
+</span></span><span class="line"><span class="cl">  attestationApplicationId    [709] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdBrand          [710] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdDevice         [711] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdProduct        [712] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdSerial         [713] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdImei           [714] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdMeid           [715] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdManufacturer   [716] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  attestationIdModel          [717] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+</span></span><span class="line"><span class="cl">  vendorPatchLevel            [718] EXPLICIT INTEGER OPTIONAL, # KM4
+</span></span><span class="line"><span class="cl">  bootPatchLevel              [719] EXPLICIT INTEGER OPTIONAL, # KM4
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">RootOfTrust ::= SEQUENCE {
+</span></span><span class="line"><span class="cl">  verifiedBootKey            OCTET_STRING,
+</span></span><span class="line"><span class="cl">  deviceLocked               BOOLEAN,
+</span></span><span class="line"><span class="cl">  verifiedBootState          VerifiedBootState,
+</span></span><span class="line"><span class="cl">  verifiedBootHash           OCTET_STRING, # KM4
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">VerifiedBootState ::= ENUMERATED {
+</span></span><span class="line"><span class="cl">  Verified                   (0),
+</span></span><span class="line"><span class="cl">  SelfSigned                 (1),
+</span></span><span class="line"><span class="cl">  Unverified                 (2),
+</span></span><span class="line"><span class="cl">  Failed                     (3),
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>checkAttestation的核心是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/CertificateInfo.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// If key purpose included KeyPurpose::SIGN,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// then it could be used to sign arbitrary data, including any tbsCertificate,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// and so an attestation produced by the key would have no security properties.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// If the parent certificate can attest that the key purpose is only KeyPurpose::ATTEST_KEY,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// then the child certificate can be trusted.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">var</span><span class="w"> </span><span class="n">purposes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">attestation</span><span class="p">.</span><span class="na">getTeeEnforced</span><span class="p">().</span><span class="na">getPurposes</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">terminate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">purposes</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">purposes</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="n">AuthorizationList</span><span class="p">.</span><span class="na">KM_PURPOSE_ATTEST_KEY</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// app/src/main/java/io/github/vvb2060/keyattestation/attestation/AuthorizationList.java</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="nf">AuthorizationList</span><span class="p">(</span><span class="n">ASN1Encodable</span><span class="w"> </span><span class="n">asn1Encodable</span><span class="p">)</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">asn1Encodable</span><span class="w"> </span><span class="k">instanceof</span><span class="w"> </span><span class="n">ASN1Sequence</span><span class="w"> </span><span class="n">sequence</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="p">(</span><span class="s">&#34;Expected sequence for authorization list, found &#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="o">+</span><span class="w"> </span><span class="n">asn1Encodable</span><span class="p">.</span><span class="na">getClass</span><span class="p">().</span><span class="na">getName</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="n">entry</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">sequence</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">entry</span><span class="w"> </span><span class="k">instanceof</span><span class="w"> </span><span class="n">ASN1TaggedObject</span><span class="w"> </span><span class="n">taggedObject</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="s">&#34;Expected tagged object, found &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">entry</span><span class="p">.</span><span class="na">getClass</span><span class="p">().</span><span class="na">getName</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">taggedObject</span><span class="p">.</span><span class="na">getTagNo</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">taggedObject</span><span class="p">.</span><span class="na">getBaseObject</span><span class="p">().</span><span class="na">toASN1Primitive</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">tag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">default</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CertificateParsingException</span><span class="p">(</span><span class="s">&#34;Unknown tag &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; found&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">case</span><span class="w"> </span><span class="n">KM_TAG_PURPOSE</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">KEYMASTER_TAG_TYPE_MASK</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">purposes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Asn1Utils</span><span class="p">.</span><span class="na">getIntegersFromAsn1Set</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>核心是要证明teeEnforced的purpose字段，根据上面那段注释我理解是将密钥用途分为了签名和认证</p>
+<ol>
+<li>签名用途 (KeyPurpose::SIGN)：
+如果密钥的用途包含签名，那么它可以对任意数据进行签名。这种情况下，持有该密钥的实体可以签名任何数据，包括认证证书自身 (tbsCertificate)。若如此，这个密钥生成的认证就没有任何实际的安全保证，因为任何人都可以在任意数据上应用该签名，伪装成合法的认证。签名的真实性无法被保障</li>
+<li>认证用途 (KeyPurpose::ATTEST_KEY)：
+如果密钥用途被正确设定为仅用于认证 (KeyPurpose::ATTEST_KEY)，那么该密钥只能用于生成认证证书，而不能用于签名任意数据。在这种情况下，父证书可以证明子证书的密钥用途仅限于认证，从而确保子证书的可信度。这种可信度依赖于父证书的有效性，也就是根证书的可信度</li>
+</ol>
+<h3 id="三-总结" class="headerLink">
+    <a href="#%e4%b8%89-%e6%80%bb%e7%bb%93" class="header-mark"></a>三. 总结</h3><p>可以利用KeyAttestation来做什么呢？</p>
+<ol>
+<li>验证密钥可信性
+密钥认证用于验证设备上的密钥是否由可信的安全硬件生成。通过密钥认证，App可以确保密钥没有被复制或篡改，并且确实是在受信任的环境中创建的</li>
+<li>设备身份和完整性验证
+密钥认证可以用于验证设备的身份和完整性。通过认证过程中提供的证明数据（比如设备标识符、硬件特性等），可以保证设备没有被篡改或替换</li>
+</ol>
+</div>
+
+        
+
+<div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-08-30</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span><a class="link-to-mardown" href=/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/index.md target="_blank" rel="noopener noreferrer">阅读原始文档</a>
+                    </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
+                    </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
+                    </span></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-hashtags="设备异常性检测"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-hashtag="设备异常性检测"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span class="fab fa-evernote fa-fw"></span></button></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/%E8%AE%BE%E5%A4%87%E5%BC%82%E5%B8%B8%E6%80%A7%E6%A3%80%E6%B5%8B/">设备异常性检测</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" class="prev" rel="prev" title="Linux Kprobe原理探究"><i class="fas fa-angle-left fa-fw"></i>Linux Kprobe原理探究</a></div>
+</div>
+<div id="comments"></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.133.1">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">tcc0lin</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div id="cookieconsent-container"></div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.1aface5ee84c013804b12c02b38b26ba5ef889718e8b19ed20b7545bd5e6502ebe1d7d2c2cd00adeaef51e8b49aa5027.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6&#43;HX0sLNAK3q71HotJqlAn"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK">
+        <noscript><link rel="stylesheet" href="/lib/katex/copy-tex.min.1f5388069d157848068f2228e33a72016ef3233cfb0afc2940343e446a708357e5b391b470f94c0e1c80745c331651ca.css" integrity="sha384-H1OIBp0VeEgGjyIo4zpyAW7zIzz7CvwpQDQ&#43;RGpwg1fls5G0cPlMDhyAdFwzFlHK"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.9c0eeeb33e1c30aa3b47296c0999e97b457dab1e57eec6b4d75a343ab0f3aca504ec4ae8d60078f058dac3a485c5565e.css" integrity="sha384-nA7usz4cMKo7RylsCZnpe0V9qx5X7sa011o0OrDzrKUE7Ero1gB48Fjaw6SFxVZe"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":100000},"comment":{},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"desktop-header-typeit":"tcc0lin's blog","mobile-header-typeit":"tcc0lin's blog"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/index.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":50,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"sharerjs":true,"table":{"sort":true},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"desktop-header-typeit":["desktop-header-typeit"],"mobile-header-typeit":["mobile-header-typeit"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/lib/tablesort/tablesort.min.d120034e53740430f5243f8e25b646e7bdcca97780e02962c37e3adefb264c1b457f8fc397698851f42e32d7168bdd1e.js" integrity="sha384-0SADTlN0BDD1JD&#43;OJbZG573MqXeA4Cliw3463vsmTBtFf4/Dl2mIUfQuMtcWi90e"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.094758c1816ef1698123c876e7b739ac27751905f428bfb349857a93244d636b615bb42a43298a19f4c2235587c33bf2.js" integrity="sha384-CUdYwYFu8WmBI8h257c5rCd1GQX0KL&#43;zSYV6kyRNY2thW7QqQymKGfTCI1WHwzvy"></script><script type="text/javascript" src="/lib/sharer/sharer.min.0097b33812ac4873e9a2e0813de400c9ea9b07e223998d3cbc38a89bdfa3f45cc344689061a836fcd6f4c120eed429b4.js" integrity="sha384-AJezOBKsSHPpouCBPeQAyeqbB&#43;IjmY08vDiom9&#43;j9FzDRGiQYag2/Nb0wSDu1Cm0"></script><script type="text/javascript" src="/lib/typeit/typeit.min.14cdb050c8a3046875884e15b60fa92f6d70fc894f4cd51f453bc7bc96bee1a2f336e328b7ed68b5b61091aee9996b2d.js" integrity="sha384-FM2wUMijBGh1iE4Vtg&#43;pL21w/IlPTNUfRTvHvJa&#43;4aLzNuMot&#43;1otbYQka7pmWst"></script><script type="text/javascript" src="/lib/katex/katex.min.7295b6d61e9166ffe985abeeb45f80b9562bafe740f310fdcece85c0ba5a09cb7a3bd72dcd815f16be1d82681c70e4f1.js" integrity="sha384-cpW21h6RZv/phavutF&#43;AuVYrr&#43;dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.f95071777afa5e0511c9caad675d7b9d8c38e0e39c21ac79e99e1d09159bc723edd0aa1a875b87a0ad28e3efd1444d39.js" integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05" defer></script><script type="text/javascript" src="/lib/katex/copy-tex.min.c30ff9f376878715a4cf90c4567e8e2ad36221a2e2da20513595df251898d408bbb6727d517a44b32bce2135694e5e00.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" defer></script><script type="text/javascript" src="/lib/katex/mhchem.min.89fa46f8d96032ad24bce486a864315b59892a98e3303999769286ab7b5bbc3dd63e1cac84210460296b88aff0455534.js" integrity="sha384-ifpG&#43;NlgMq0kvOSGqGQxW1mJKpjjMDmZdpKGq3tbvD3WPhyshCEEYClriK/wRVU0" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.c4b3e31fa9ea1b8a7fda6bb5289d6dfb82aa72f9325d5c01b9c42dc862bae650cd7cacc40b1198fd0118591f96a26a6b.js" integrity="sha384-xLPjH6nqG4p/2mu1KJ1t&#43;4KqcvkyXVwBucQtyGK65lDNfKzECxGY/QEYWR&#43;Wompr" defer></script><script type="text/javascript" src="/js/cookieconsent.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-YRZ9T80DVT', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-YRZ9T80DVT" async></script></div>
+</body>
+
+</html>
