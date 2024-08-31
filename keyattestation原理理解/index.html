@@ -16,7 +16,7 @@
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2024-08-30T23:01:31+08:00">
     <meta property="article:modified_time" content="2024-08-30T23:01:31+08:00">
-    <meta property="article:tag" content="设备异常性检测">
+    <meta property="article:tag" content="KeyAttestation">
     <meta property="og:image" content="https://tcc0lin.github.io/logo.png">
 
   <meta name="twitter:card" content="summary_large_image">
@@ -28,7 +28,7 @@
 
 <meta name="theme-color" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" /><link rel="prev" href="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" href="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" /><link rel="prev" href="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" /><link rel="next" href="https://tcc0lin.github.io/keyattestation%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/" />
 <link rel="stylesheet" href="/css/main.977c565b2c9cc86a19f17dd75d81c5cfff8b0532288daa0c6ef4a028dea1c7aced73bffb1ef3d8792c1e3f6c5e827813.css" integrity="sha384-l3xWWyycyGoZ8X3XXYHFz/&#43;LBTIojaoMbvSgKN6hx6ztc7/7HvPYeSweP2xegngT"><link rel="stylesheet" href="/lib/normalize/normalize.min.1d6e6517c44074bf1c692657d249d106a5e98bb9db25f7773715b24eda7aa575354611c095c23092aa17916f1b5be527.css" integrity="sha384-HW5lF8RAdL8caSZX0knRBqXpi7nbJfd3NxWyTtp6pXU1RhHAlcIwkqoXkW8bW&#43;Un"><link rel="stylesheet" href="/css/color.34e5eb0ed3195c558eb6994b94f6ce01b4d7121bda08365c4f94b70d178301efdb761cb63c963c02c67c45152c3c9498.css" integrity="sha384-NOXrDtMZXFWOtplLlPbOAbTXEhvaCDZcT5S3DReDAe/bdhy2PJY8AsZ8RRUsPJSY"><link rel="stylesheet" href="/css/style.min.5f33641ed0c819e748ab072bcc7841da71f5079de9543c65ca55ab5d0138e3e408d459bb76198b018f66bdeaec93e8eb.css" integrity="sha384-XzNkHtDIGedIqwcrzHhB2nH1B53pVDxlylWrXQE44&#43;QI1Fm7dhmLAY9mversk&#43;jr"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t">
         <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.2cba216129d7b04299cad0e4a8bb0eb317de61d6e2489778de53950bfcb59fa58d01a258c9e2675ffa3c07c058996f2d.css" integrity="sha384-LLohYSnXsEKZytDkqLsOsxfeYdbiSJd43lOVC/y1n6WNAaJYyeJnX/o8B8BYmW8t"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC">
         <noscript><link rel="stylesheet" href="/lib/animate/animate.min.1aedca555d87f5dfb2038403a5507b55c3b284994056b717774b61123af82b39df6853cb7b4c50272a2757138d6b8642.css" integrity="sha384-Gu3KVV2H9d&#43;yA4QDpVB7VcOyhJlAVrcXd0thEjr4KznfaFPLe0xQJyonVxONa4ZC"></noscript><script type="application/ld+json">
@@ -40,7 +40,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/tcc0lin.github.io\/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3\/"
-        },"genre": "posts","keywords": "设备异常性检测","wordcount":  4196 ,
+        },"genre": "posts","keywords": "KeyAttestation","wordcount":  4333 ,
         "url": "https:\/\/tcc0lin.github.io\/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3\/","datePublished": "2024-08-30T23:01:31+08:00","dateModified": "2024-08-30T23:01:31+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -173,8 +173,8 @@
     </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">KeyAttestation原理理解</h1><div class="post-meta">
             <div class="post-meta-line">
                 <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">tcc0lin</a>
-                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/keyattestation/"><i class="far fa-folder fa-fw"></i>KeyAttestation</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-08-30">2024-08-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-08-30">2024-08-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4196 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E8%AE%BE%E5%A4%87%E5%BC%82%E5%B8%B8%E6%80%A7%E6%A3%80%E6%B5%8B/"><i class="far fa-folder fa-fw"></i>设备异常性检测</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-08-30">2024-08-30</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-08-30">2024-08-30</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4333 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -1185,6 +1185,8 @@
 <li>认证用途 (KeyPurpose::ATTEST_KEY)：
 如果密钥用途被正确设定为仅用于认证 (KeyPurpose::ATTEST_KEY)，那么该密钥只能用于生成认证证书，而不能用于签名任意数据。在这种情况下，父证书可以证明子证书的密钥用途仅限于认证，从而确保子证书的可信度。这种可信度依赖于父证书的有效性，也就是根证书的可信度</li>
 </ol>
+<p>这里引入了认证的源头：根证书的可信度问题
+Andorid通过<a href="https://source.android.com/docs/security/features/trusty?hl=zh-cn" target="_blank" rel="noopener noreferrer">Trusty TEE</a>完成证书的存储，TEE在硬件层面解决了安全性问题，其中类似RootOfTrust这类数据都是由厂商在设备出产时烧录到硬件存储当中的，从根本上解决了根密钥不可信的问题，并以此根密钥为信任链根，派生密钥</p>
 <h3 id="三-总结" class="headerLink">
     <a href="#%e4%b8%89-%e6%80%bb%e7%bb%93" class="header-mark"></a>三. 总结</h3><p>可以利用KeyAttestation来做什么呢？</p>
 <ol>
@@ -1196,6 +1198,18 @@
 </div>
 
         
+
+
+<h2>相关内容</h2>
+<div class="related-container">
+    <div class="related-item-container">
+            <h2 class="related-title">
+                <a href="/keyattestation%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/">KeyAttestation检测思路</a>
+            </h2>
+        </div>
+    
+
+</div>
 
 <div class="post-footer" id="post-footer">
     <div class="post-info">
@@ -1210,18 +1224,19 @@
                     </span><span>|&nbsp;<a class="link-to-source" href=true target="_blank" rel="noopener noreferrer">查看源代码</a>
                     </span><span>|&nbsp;<a class="link-to-report" href=true target="_blank" rel="noopener noreferrer">报告问题</a>
                     </span></div>
-            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-hashtags="设备异常性检测"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-hashtag="设备异常性检测"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span class="fab fa-evernote fa-fw"></span></button></div>
+            <div class="post-info-share"><button title="分享到 Twitter" data-sharer="twitter" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-hashtags="KeyAttestation"><span class="fab fa-twitter fa-fw"></span></button><button title="分享到 Facebook" data-sharer="facebook" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-hashtag="KeyAttestation"><span class="fab fa-facebook-square fa-fw"></span></button><button title="分享到 WhatsApp" data-sharer="whatsapp" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-web><span class="fab fa-whatsapp fa-fw"></span></button><button title="分享到 Line" data-sharer="line" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span data-svg-src="/lib/simple-icons/icons/line.min.svg"></span></button><button title="分享到 微博" data-sharer="weibo" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span class="fab fa-weibo fa-fw"></span></button><button title="分享到 Myspace" data-sharer="myspace" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-description=""><span data-svg-src="/lib/simple-icons/icons/myspace.min.svg"></span></button><button title="分享到 Blogger" data-sharer="blogger" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解" data-description=""><span class="fab fa-blogger fa-fw"></span></button><button title="分享到 Evernote" data-sharer="evernote" data-url="https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" data-title="KeyAttestation原理理解"><span class="fab fa-evernote fa-fw"></span></button></div>
         </div>
     </div>
 
     <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/%E8%AE%BE%E5%A4%87%E5%BC%82%E5%B8%B8%E6%80%A7%E6%A3%80%E6%B5%8B/">设备异常性检测</a></section>
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/keyattestation/">KeyAttestation</a></section>
         <section>
             <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
         </section>
     </div>
 
-    <div class="post-nav"><a href="/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" class="prev" rel="prev" title="Linux Kprobe原理探究"><i class="fas fa-angle-left fa-fw"></i>Linux Kprobe原理探究</a></div>
+    <div class="post-nav"><a href="/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" class="prev" rel="prev" title="Linux Kprobe原理探究"><i class="fas fa-angle-left fa-fw"></i>Linux Kprobe原理探究</a>
+            <a href="/keyattestation%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/" class="next" rel="next" title="KeyAttestation检测思路">KeyAttestation检测思路<i class="fas fa-angle-right fa-fw"></i></a></div>
 </div>
 <div id="comments"></div></article></div>
         </main><footer class="footer">
