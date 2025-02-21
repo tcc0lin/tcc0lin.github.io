@@ -176,5 +176,19 @@
 
     <div class="code-block-title-bar tw-w-full">
       <p class="tw-select-none !tw-my-1">js</p>]]></description>
+</item><item>
+    <title>Frida调试环境搭建</title>
+    <link>https://tcc0lin.github.io/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</link>
+    <pubDate>Tue, 21 Feb 2023 22:51:53 &#43;0800</pubDate><author>
+        <name>tcc0lin</name>
+    </author><guid>https://tcc0lin.github.io/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</guid>
+    <description><![CDATA[<h2 id="一背景" class="headerLink">
+    <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="header-mark"></a>一、背景</h2><p>从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts+npm，优势在于</p>
+<ul>
+<li>静态类型系统：提供静态类型检查，编译时即可发现类型错误，提升代码健壮性和可维护性</li>
+<li>模块化管理：通过类型系统实现模块间的契约式开发，适用于大型项目管理</li>
+</ul>
+<h2 id="二frida-ts项目配置" class="headerLink">
+    <a href="#%e4%ba%8cfrida-ts%e9%a1%b9%e7%9b%ae%e9%85%8d%e7%bd%ae" class="header-mark"></a>二、frida ts项目配置</h2><p>frida接入ts开发可以参考<a href="https://github.com/oleavr/frida-agent-example" target="_blank" rel="noopener noreferrer">frida-agent-example</a>，使用方式也很简单，参考</p>]]></description>
 </item></channel>
 </rss>
