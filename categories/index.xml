@@ -1,8 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Categories - 分类 - tcc0lin&#39;s blog</title>
+        <title>Categories - 分类 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/categories/</link>
-        <description>Categories - 分类 - tcc0lin&#39;s blog</description>
+        <description>Categories - 分类 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 31 Aug 2024 23:14:32 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/" rel="self" type="application/rss+xml" /><item>
     <title>设备异常性检测</title>
     <link>https://tcc0lin.github.io/categories/%E8%AE%BE%E5%A4%87%E5%BC%82%E5%B8%B8%E6%80%A7%E6%A3%80%E6%B5%8B/</link>

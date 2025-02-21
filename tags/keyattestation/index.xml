@@ -1,21 +1,34 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>KeyAttestation - 标签 - tcc0lin&#39;s blog</title>
+        <title>KeyAttestation - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/keyattestation/</link>
-        <description>KeyAttestation - 标签 - tcc0lin&#39;s blog</description>
+        <description>KeyAttestation - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 31 Aug 2024 23:14:32 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/keyattestation/" rel="self" type="application/rss+xml" /><item>
     <title>KeyAttestation检测思路</title>
     <link>https://tcc0lin.github.io/keyattestation%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</link>
     <pubDate>Sat, 31 Aug 2024 23:14:32 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/keyattestation%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</guid>
-    <description><![CDATA[思路怎么可以利用Android提供的KeyAttestation认证方式来做设备异常性的检测呢？首先想想KeyAttestation是什么？]]></description>
+    <description><![CDATA[<h3 id="思路" class="headerLink">
+    <a href="#%e6%80%9d%e8%b7%af" class="header-mark"></a>思路</h3><p>怎么可以利用Android提供的KeyAttestation认证方式来做设备异常性的检测呢？首先想想KeyAttestation是什么？能够提供什么？</p>
+<ol>
+<li>提供可信环境可以支持存储密钥
+设备端可以将密钥保存在KeyStore当中并认为该密钥具有绝对安全性</li>
+<li>设备身份和完整性校验
+验证密钥可信度的方式就是对整条证书链做校验并最终提取根证书进行校验</li>
+</ol>
+<p>因此可以看出，核心是对证书链的校验及对根证书的数据进行校验，证书的内容可以从<a href="https://source.android.com/docs/security/features/keystore/attestation?hl=zh-cn#construction" target="_blank" rel="noopener noreferrer">官方文档</a>中了解</p>]]></description>
 </item><item>
     <title>KeyAttestation原理理解</title>
     <link>https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
     <pubDate>Fri, 30 Aug 2024 23:01:31 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
-    <description><![CDATA[结合github项目KeyAttestation来学习KeyAttestation原理 一、项目结构 1.1 App展示 页面展示来自于attestat]]></description>
+    <description><![CDATA[<p>结合github项目<a href="https://github.com/vvb2060/KeyAttestation" target="_blank" rel="noopener noreferrer">KeyAttestation</a>来学习KeyAttestation原理</p>
+<h3 id="一项目结构" class="headerLink">
+    <a href="#%e4%b8%80%e9%a1%b9%e7%9b%ae%e7%bb%93%e6%9e%84" class="header-mark"></a>一、项目结构</h3><h4 id="11-app展示" class="headerLink">
+    <a href="#11-app%e5%b1%95%e7%a4%ba" class="header-mark"></a>1.1 App展示</h4><p><img class="tw-inline" loading="lazy" src=https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp     >
+<img class="tw-inline" loading="lazy" src=https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp     >
+页面展示来自于attestationResult这个回调结果</p>]]></description>
 </item></channel>
 </rss>

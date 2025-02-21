@@ -1,14 +1,42 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>特征检测对抗 - 分类 - tcc0lin&#39;s blog</title>
+        <title>特征检测对抗 - 分类 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/categories/%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/</link>
-        <description>特征检测对抗 - 分类 - tcc0lin&#39;s blog</description>
+        <description>特征检测对抗 - 分类 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 06 Aug 2023 14:39:32 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" rel="self" type="application/rss+xml" /><item>
     <title>Maps特征检测对抗</title>
     <link>https://tcc0lin.github.io/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/</link>
     <pubDate>Sun, 06 Aug 2023 14:39:32 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/</guid>
-    <description><![CDATA[一、前言maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。]]></description>
+    <description><![CDATA[<h3 id="一前言" class="headerLink">
+    <a href="#%e4%b8%80%e5%89%8d%e8%a8%80" class="header-mark"></a>一、前言</h3><p>maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。在之前的特征分析中，发现像dobby hook框架、frida等工具都会造成maps中的数据改变，因此想深入分析下这种特征的形成原因以及可以采用什么方式进行对抗</p>
+<h3 id="二maps文件形成" class="headerLink">
+    <a href="#%e4%ba%8cmaps%e6%96%87%e4%bb%b6%e5%bd%a2%e6%88%90" class="header-mark"></a>二、maps文件形成</h3><p>以微信进程为例，看看它的maps文件</p>
+<div class="code-block highlight is-open show-line-numbers  tw-group tw-my-2">
+  <div class="
+    code-block-title 
+    
+    tw-flex 
+    tw-flex-row 
+    tw-justify-between 
+    tw-w-full tw-bg-bgColor-secondary
+    ">      
+    <button 
+      class="
+        tw-select-none 
+        tw-mx-2 
+        tw-block
+        group-[.is-open]:tw-rotate-90
+        tw-transition-[transform] 
+        tw-duration-500 
+        tw-ease-in-out
+        print:!tw-hidden"
+      disabled
+      aria-hidden="true"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button>
+
+    <div class="code-block-title-bar tw-w-full">
+      <p class="tw-select-none !tw-my-1">shell</p>]]></description>
 </item></channel>
 </rss>

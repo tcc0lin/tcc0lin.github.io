@@ -1,21 +1,56 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Base64算法 - 标签 - tcc0lin&#39;s blog</title>
+        <title>Base64算法 - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/base64%E7%AE%97%E6%B3%95/</link>
-        <description>Base64算法 - 标签 - tcc0lin&#39;s blog</description>
+        <description>Base64算法 - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/base64%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
     <title>从RFC4648中理解Base64算法</title>
     <link>https://tcc0lin.github.io/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/</link>
     <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[一、前置知识点Base64算法是一种编码算法，它是采用常见的64个字符来表示做数据映射的表，分别是A-Z、a-z、+、/。 64对应的二进制是]]></description>
+    <description><![CDATA[<h3 id="一前置知识点" class="headerLink">
+    <a href="#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9" class="header-mark"></a>一、前置知识点</h3><p>Base64算法是一种编码算法，它是采用常见的64个字符来表示做数据映射的表，分别是A-Z、a-z、+、/。</p>
+<p>64对应的二进制是0b111111，也就是</p>
+<div class="code-block highlight is-open show-line-numbers  tw-group tw-my-2">
+  <div class="
+    code-block-title 
+    
+    tw-flex 
+    tw-flex-row 
+    tw-justify-between 
+    tw-w-full tw-bg-bgColor-secondary
+    ">      
+    <button 
+      class="
+        tw-select-none 
+        tw-mx-2 
+        tw-block
+        group-[.is-open]:tw-rotate-90
+        tw-transition-[transform] 
+        tw-duration-500 
+        tw-ease-in-out
+        print:!tw-hidden"
+      disabled
+      aria-hidden="true"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button>
+
+    <div class="code-block-title-bar tw-w-full">
+      <p class="tw-select-none !tw-my-1">text</p>]]></description>
 </item><item>
     <title>探讨关于Base64算法的魔改方式</title>
     <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
     <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[写法 算法常量 编码表 算法流程]]></description>
+    <description><![CDATA[<ul>
+<li>写法</li>
+<li>算法常量
+<ul>
+<li>编码表</li>
+</ul>
+</li>
+<li>算法流程</li>
+</ul>]]></description>
 </item></channel>
 </rss>

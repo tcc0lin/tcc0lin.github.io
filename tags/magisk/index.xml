@@ -1,42 +1,205 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Magisk - 标签 - tcc0lin&#39;s blog</title>
+        <title>Magisk - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/magisk/</link>
-        <description>Magisk - 标签 - tcc0lin&#39;s blog</description>
+        <description>Magisk - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/magisk/" rel="self" type="application/rss+xml" /><item>
     <title>重读Magisk内部实现细节4</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</link>
     <pubDate>Tue, 27 Jun 2023 09:56:08 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</guid>
-    <description><![CDATA[前言Magisk内部实现细节的第四篇，在前两篇着重讲了Magisk的三个重要功能的两个&mdash;su以及hide，这篇就来分析下最后一个]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>Magisk内部实现细节的第四篇，在前两篇着重讲了Magisk的三个重要功能的两个&mdash;su以及hide，这篇就来分析下最后一个重要功能&mdash;resetprop，这三个功能Magisk也分别导出了三个可执行文件</p>
+<div class="code-block highlight is-open show-line-numbers  tw-group tw-my-2">
+  <div class="
+    code-block-title 
+    
+    tw-flex 
+    tw-flex-row 
+    tw-justify-between 
+    tw-w-full tw-bg-bgColor-secondary
+    ">      
+    <button 
+      class="
+        tw-select-none 
+        tw-mx-2 
+        tw-block
+        group-[.is-open]:tw-rotate-90
+        tw-transition-[transform] 
+        tw-duration-500 
+        tw-ease-in-out
+        print:!tw-hidden"
+      disabled
+      aria-hidden="true"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button>
+
+    <div class="code-block-title-bar tw-w-full">
+      <p class="tw-select-none !tw-my-1">c</p>
+    </div>
+    <div class="tw-flex">
+      <button 
+        class="
+          line-number-button
+          tw-select-none 
+          tw-mx-2 
+          tw-hidden 
+          group-[.is-open]:tw-block 
+          group-[.show-line-numbers]:tw-text-fgColor-link 
+          print:!tw-hidden" 
+        title="Toggle line numbers"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M61.77 401l17.5-20.15a19.92 19.92 0 0 0 5.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h22.83a157.41 157.41 0 0 0-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33 0 15.94 2.44 15.94 9.09 0 4.72-4.2 8.22-14.36 8.22a41.54 41.54 0 0 1-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16 0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM16 160h64a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H64V40a8 8 0 0 0-8-8H32a8 8 0 0 0-7.14 4.42l-8 16A8 8 0 0 0 24 64h8v64H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8zm-3.91 160H80a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44 0-29.06-25-39.56-44.47-39.56-21.36 0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44 0 0 1 9.46-3.84c3.33 0 9.28 1.56 9.28 8.75C51 248.19 0 257.31 0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+
+      <button 
+        class="
+          wrap-code-button
+          tw-select-none 
+          tw-mx-2 
+          tw-hidden 
+          group-[.is-open]:tw-block 
+          group-[.is-wrap]:tw-text-fgColor-link 
+          print:!tw-hidden" 
+        title="Toggle code wrap"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+      
+      <button 
+        class="
+          copy-code-button
+          tw-select-none
+          tw-mx-2 
+          tw-hidden
+          group-[.is-open]:tw-block
+          hover:tw-text-fgColor-link 
+          print:!tw-hidden"
+        title="Copy code">
+          <span class="copy-icon tw-block"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"/></svg></span>
+          <span class="check-icon tw-hidden"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+      </button>
+        
+      <button 
+        class="
+          tw-select-none 
+          tw-mx-2 
+          tw-block 
+          group-[.is-open]:tw-hidden 
+          print:!tw-hidden" 
+        disabled
+        aria-hidden="true"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8 0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8 0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button>
+    </div>
+  </div>
+  <pre style="counter-reset: codeblock;" class="tw-block tw-m-0 tw-p-0"><code 
+    id="codeblock-id-1" 
+    class="
+      chroma 
+      !tw-block 
+      tw-p-0
+      tw-m-0
+      tw-transition-[max-height] 
+      tw-duration-500 
+      tw-ease-in-out 
+      group-[.is-closed]:!tw-max-h-0 
+      group-[.is-wrap]:tw-text-wrap
+      tw-overflow-y-hidden
+      tw-overflow-x-auto
+      tw-scrollbar-thin
+      "><span class="line"><span class="cl"><span class="c1">// native/jni/core/applets.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="n">main_fun</span> <span class="n">applet_main</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="n">su_client_main</span><span class="p">,</span> <span class="n">resetprop_main</span><span class="p">,</span> <span class="n">magiskhide_main</span><span class="p">,</span> <span class="n">nullptr</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">call_applet</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Applets
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">string_view</span> <span class="n">base</span> <span class="o">=</span> <span class="nf">basename</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">applet_names</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">base</span> <span class="o">==</span> <span class="n">applet_names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// 根据可执行文件的名称执行具体的类方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">applet_main</span><span class="p">[</span><span class="n">i</span><span class="p">])(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if ENABLE_INJECT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="k">if</span> <span class="p">(</span><span class="nf">str_starts</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s">&#34;app_process&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nf">app_process_main</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;%s: applet not found</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">base</span><span class="p">.</span><span class="nf">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre>
+</div>
+<h3 id="一magisk-resetprop入口" class="headerLink">
+    <a href="#%e4%b8%80magisk-resetprop%e5%85%a5%e5%8f%a3" class="header-mark"></a>一、Magisk Resetprop入口</h3><div class="code-block highlight is-open show-line-numbers  tw-group tw-my-2">
+  <div class="
+    code-block-title 
+    
+    tw-flex 
+    tw-flex-row 
+    tw-justify-between 
+    tw-w-full tw-bg-bgColor-secondary
+    ">      
+    <button 
+      class="
+        tw-select-none 
+        tw-mx-2 
+        tw-block
+        group-[.is-open]:tw-rotate-90
+        tw-transition-[transform] 
+        tw-duration-500 
+        tw-ease-in-out
+        print:!tw-hidden"
+      disabled
+      aria-hidden="true"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button>
+
+    <div class="code-block-title-bar tw-w-full">
+      <p class="tw-select-none !tw-my-1">c</p>]]></description>
 </item><item>
     <title>重读Magisk内部实现细节3</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</link>
     <pubDate>Sun, 18 Jun 2023 13:33:34 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</guid>
-    <description><![CDATA[前言Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide当中</p>
+<h3 id="一magisk-hide入口" class="headerLink">
+    <a href="#%e4%b8%80magisk-hide%e5%85%a5%e5%8f%a3" class="header-mark"></a>一、Magisk Hide入口</h3><p>不管是在Magisk Manager中管理Magisk Hide</p>]]></description>
 </item><item>
     <title>Magisk检测方式</title>
     <link>https://tcc0lin.github.io/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/</link>
     <pubDate>Sat, 17 Jun 2023 11:45:41 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[一、市面现存的检测方式 1 Magisk Detector来源于Magisk Detector（现已停止维护），我们可以从官方的细节文档看出它之前的设计思路 ，]]></description>
+    <description><![CDATA[<h3 id="一市面现存的检测方式" class="headerLink">
+    <a href="#%e4%b8%80%e5%b8%82%e9%9d%a2%e7%8e%b0%e5%ad%98%e7%9a%84%e6%a3%80%e6%b5%8b%e6%96%b9%e5%bc%8f" class="header-mark"></a>一、市面现存的检测方式</h3><h4 id="1-magisk-detector" class="headerLink">
+    <a href="#1-magisk-detector" class="header-mark"></a>1 Magisk Detector</h4><p>来源于<a href="https://github.com/vvb2060/MagiskDetector" target="_blank" rel="noopener noreferrer">Magisk Detector</a>（现已停止维护），我们可以从官方的<a href="https://github.com/vvb2060/MagiskDetector/blob/master/README_ZH.md" target="_blank" rel="noopener noreferrer">细节文档</a>看出它之前的设计思路
+，目前从最新的代码上看，仅仅存在三种检测方式</p>]]></description>
 </item><item>
     <title>重读Magisk内部实现细节2</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</link>
     <pubDate>Sun, 11 Jun 2023 11:36:47 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</guid>
-    <description><![CDATA[前言承接上文，经过Magisk修补后的boot.img在启动引导过程中为了实现Root的功能很关键的一步在于patch了init.rc和se]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>承接上文，经过Magisk修补后的boot.img在启动引导过程中为了实现Root的功能很关键的一步在于patch了init.rc和sepolicy文件，在Magisk正式把init的执行权交由二阶段的原生init之后，便引导了Magisk deamon的启动</p>
+<h3 id="一magisk是如何工作的" class="headerLink">
+    <a href="#%e4%b8%80magisk%e6%98%af%e5%a6%82%e4%bd%95%e5%b7%a5%e4%bd%9c%e7%9a%84" class="header-mark"></a>一、Magisk是如何工作的？</h3><h4 id="1-initrc" class="headerLink">
+    <a href="#1-initrc" class="header-mark"></a>1 init.rc</h4><p>首先了解下init.rc，它是一个配置文件，内部由Android初始化语言（Android Init Language）编写的脚本，主要包含五种类型语句：Action、Command、Service、Option 和 Import，关键的两种类型是Action和Service</p>]]></description>
 </item><item>
     <title>重读Magisk内部实现细节</title>
     <link>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/</link>
     <pubDate>Fri, 09 Jun 2023 22:36:47 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/</guid>
-    <description><![CDATA[前言相信Magisk对于移动安全从业者来说都不陌生了，我虽然也是一个版本接着一个版本的使用，但是始终没有去摸透Magisk的生态，希望借助之]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>相信Magisk对于移动安全从业者来说都不陌生了，我虽然也是一个版本接着一个版本的使用，但是始终没有去摸透Magisk的生态，希望借助之后想写的Magisk系列的文章来深度学习下Magisk，也正如Magisk在其主页所说的那样</p>
+<blockquote>
+  <p>Magisk is a suite of open source software for customizing Android, supporting devices higher than Android 6.0.
+Some highlight features:</p>
+<ul>
+<li>MagiskSU: Provide root access for applications</li>
+<li>Magisk Modules: Modify read-only partitions by installing modules</li>
+<li>MagiskBoot: The most complete tool for unpacking and repacking Android boot images</li>
+<li>Zygisk: Run code in every Android applications&rsquo; processes</li>
+</ul>
+</blockquote><p>Magisk作为一套工具包，它的实现原理（包括它的su实现、boot patch、module机制等等）都是很值得去阅读理解的</p>]]></description>
 </item></channel>
 </rss>

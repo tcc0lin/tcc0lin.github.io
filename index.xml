@@ -1,8 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>tcc0lin&#39;s blog</title>
+        <title>tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/</link>
-        <description>tcc0lin&#39;s blog</description>
+        <description>tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sat, 31 Aug 2024 23:14:32 &#43;0800</lastBuildDate>
             <atom:link href="https://tcc0lin.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
@@ -11,49 +11,73 @@
     <pubDate>Sat, 31 Aug 2024 23:14:32 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/keyattestation%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</guid>
-    <description><![CDATA[思路怎么可以利用Android提供的KeyAttestation认证方式来做设备异常性的检测呢？首先想想KeyAttestation是什么？]]></description>
+    <description><![CDATA[<h3 id="思路" class="headerLink">
+    <a href="#%e6%80%9d%e8%b7%af" class="header-mark"></a>思路</h3><p>怎么可以利用Android提供的KeyAttestation认证方式来做设备异常性的检测呢？首先想想KeyAttestation是什么？能够提供什么？</p>
+<ol>
+<li>提供可信环境可以支持存储密钥
+设备端可以将密钥保存在KeyStore当中并认为该密钥具有绝对安全性</li>
+<li>设备身份和完整性校验
+验证密钥可信度的方式就是对整条证书链做校验并最终提取根证书进行校验</li>
+</ol>
+<p>因此可以看出，核心是对证书链的校验及对根证书的数据进行校验，证书的内容可以从<a href="https://source.android.com/docs/security/features/keystore/attestation?hl=zh-cn#construction" target="_blank" rel="noopener noreferrer">官方文档</a>中了解</p>]]></description>
 </item><item>
     <title>KeyAttestation原理理解</title>
     <link>https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
     <pubDate>Fri, 30 Aug 2024 23:01:31 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/keyattestation%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
-    <description><![CDATA[结合github项目KeyAttestation来学习KeyAttestation原理 一、项目结构 1.1 App展示 页面展示来自于attestat]]></description>
+    <description><![CDATA[<p>结合github项目<a href="https://github.com/vvb2060/KeyAttestation" target="_blank" rel="noopener noreferrer">KeyAttestation</a>来学习KeyAttestation原理</p>
+<h3 id="一项目结构" class="headerLink">
+    <a href="#%e4%b8%80%e9%a1%b9%e7%9b%ae%e7%bb%93%e6%9e%84" class="header-mark"></a>一、项目结构</h3><h4 id="11-app展示" class="headerLink">
+    <a href="#11-app%e5%b1%95%e7%a4%ba" class="header-mark"></a>1.1 App展示</h4><p><img class="tw-inline" loading="lazy" src=https://raw.githubusercontent.com/tcc0lin/picx-images-hosting/master/WechatIMG55.86tl7csurn.webp     >
+<img class="tw-inline" loading="lazy" src=https://github.com/tcc0lin/picx-images-hosting/raw/master/WechatIMG54.8z6gp39h1y.webp     >
+页面展示来自于attestationResult这个回调结果</p>]]></description>
 </item><item>
     <title>Linux Kprobe原理探究</title>
     <link>https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</link>
     <pubDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</guid>
-    <description><![CDATA[之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括 App访问、操作了哪些文件 执行了哪些操作]]></description>
+    <description><![CDATA[<p>之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括</p>
+<ul>
+<li>App访问、操作了哪些文件</li>
+<li>执行了哪些操作</li>
+<li>对于相关操作进行针对性的修改等等</li>
+</ul>
+<p>其中很棘手的问题在于如何应对App中越来越常见的内联系统调用，对于内联系统调用的监控我不希望通过ptrace这类进程注入的方式来实现，而是想寻求通过定制系统或者相关的方式来实现以达到无侵入App的目的</p>]]></description>
 </item><item>
     <title>基于Kernel Kprobe机制的改机架构实现</title>
     <link>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/</link>
     <pubDate>Wed, 27 Mar 2024 18:51:18 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/</guid>
-    <description><![CDATA[一、背景如上文Linux Kprobe原理探究 所提及的，Kprobe有多种玩法，在设备改机场景中可以通过对内核系统函数的篡改以完成改机的目的，]]></description>
+    <description><![CDATA[<h3 id="一背景" class="headerLink">
+    <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="header-mark"></a>一、背景</h3><p>如上文<a href="https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/" target="_blank" rel="noopener noreferrer">Linux Kprobe原理探究
+</a>所提及的，Kprobe有多种玩法，在设备改机场景中可以通过对内核系统函数的篡改以完成改机的目的，本文就是基于Kernel Kprobe机制来搭建一套完整的改机架构</p>]]></description>
 </item><item>
     <title>LSPlant源码学习</title>
     <link>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
     <pubDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
-    <description><![CDATA[LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架 从官方README上看，对于L]]></description>
+    <description><![CDATA[<p>LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架</p>
+<p>从官方README上看，对于LSPlant的使用分为几种</p>]]></description>
 </item><item>
     <title>Zygisk-v27.0源码阅读</title>
     <link>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
     <pubDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
-    <description><![CDATA[隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的]]></description>
+    <description><![CDATA[<p>隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以<code>(zygisk_enabled)</code>作为关键搜索词切入</p>]]></description>
 </item><item>
     <title>Art方法调用流程分析</title>
     <link>https://tcc0lin.github.io/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/</link>
     <pubDate>Fri, 01 Mar 2024 19:51:22 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/</guid>
-    <description><![CDATA[一、关于JavaVMJava是一门跨平台的语言，系统实际运行的是Java字节码，由Java虚拟机去解释执行。解释执行的过程可以看做是一个循环]]></description>
+    <description><![CDATA[<h3 id="一关于javavm" class="headerLink">
+    <a href="#%e4%b8%80%e5%85%b3%e4%ba%8ejavavm" class="header-mark"></a>一、关于JavaVM</h3><p>Java是一门跨平台的语言，系统实际运行的是Java字节码，由Java虚拟机去解释执行。解释执行的过程可以看做是一个循环，对每条指令进行解析，并针对指令的名称通过巨大的switch-case分发到不同的分支中处理。Java虚拟机的原理就类似这样，但JVM对于性能做了很多优化，比如JIT运行时将字节码优化成对应平台的二进制代码，提高后续运行速度等</p>
+<p>Android代码既然是用Java代码编写的，那么运行时应该也会有一个解析字节码的虚拟机。和标准的JVM不同，Android中实际会将Java代码编译为Dalvik字节码，运行时解析的也是用自研的虚拟机实现。之所以使用自研实现，也许一方面有商业版权的考虑，另一方面也确实是适应了移动端的的运行场景。Dalvik指令基于寄存器，占1-2字节，Java虚拟机指令基于栈，每条指令只占1字节；因此Dalvik虚拟机用空间换时间从而获得比OracleJVM更快的执行速度</p>]]></description>
 </item><item>
     <title>基于CEF和定制Chromium的浏览器集群</title>
     <link>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8Ecef%E5%92%8C%E5%AE%9A%E5%88%B6chromium%E7%9A%84%E6%B5%8F%E8%A7%88%E5%99%A8%E9%9B%86%E7%BE%A4/</link>
@@ -67,13 +91,17 @@
     <pubDate>Tue, 27 Feb 2024 16:46:38 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/arm%E4%B8%8Earm64%E7%9A%84%E6%A0%88%E5%B9%B3%E8%A1%A1%E7%90%86%E8%A7%A3/</guid>
-    <description><![CDATA[https://blog.csdn.net/boildoctor/article/details/123402047 https://www.cnblogs.com/sky-heaven/p/15885335.html https://blog.csdn.net/boildoctor/article/details/123402047 https://www.jianshu.com/p/b6071091abdc https://blog.csdn.net/heshuangzong/article/details/126911474]]></description>
+    <description><![CDATA[<p><a href="https://blog.csdn.net/boildoctor/article/details/123402047" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/boildoctor/article/details/123402047</a>
+<a href="https://www.cnblogs.com/sky-heaven/p/15885335.html" target="_blank" rel="noopener noreferrer">https://www.cnblogs.com/sky-heaven/p/15885335.html</a>
+<a href="https://blog.csdn.net/boildoctor/article/details/123402047" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/boildoctor/article/details/123402047</a>
+<a href="https://www.jianshu.com/p/b6071091abdc" target="_blank" rel="noopener noreferrer">https://www.jianshu.com/p/b6071091abdc</a>
+<a href="https://blog.csdn.net/heshuangzong/article/details/126911474" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/heshuangzong/article/details/126911474</a></p>]]></description>
 </item><item>
     <title>Dobby 短指令hook方式</title>
     <link>https://tcc0lin.github.io/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</link>
     <pubDate>Wed, 21 Feb 2024 19:25:42 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[从上一篇Dobby的文章可以了解到Dobby对于inline hook的实现是通过替换origin method的前三行指令（前12个字节）来跳]]></description>
+    <description><![CDATA[<p>从上一篇Dobby的文章可以了解到Dobby对于inline hook的实现是通过替换origin method的前三行指令（前12个字节）来跳转到对应的trampoline上，那对于指令数少于三行的函数它是怎么做到inline hook的呢？从它的案例中可以发现</p>]]></description>
 </item></channel>
 </rss>

@@ -1,21 +1,26 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Riru原理 - 标签 - tcc0lin&#39;s blog</title>
+        <title>Riru原理 - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/riru%E5%8E%9F%E7%90%86/</link>
-        <description>Riru原理 - 标签 - tcc0lin&#39;s blog</description>
+        <description>Riru原理 - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 18 Aug 2023 09:07:13 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/riru%E5%8E%9F%E7%90%86/" rel="self" type="application/rss+xml" /><item>
     <title>探讨新的riru加载方式</title>
     <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/</link>
     <pubDate>Fri, 18 Aug 2023 09:07:13 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[前言最近在搜索riru相关的项目时偶尔发现了HuskyDG riru项目中的一个实验性想法 也就是更换加载riru的方式，众所周知，riru.s]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>最近在搜索riru相关的项目时偶尔发现了<a href="https://github.com/HuskyDG/Riru" target="_blank" rel="noopener noreferrer">HuskyDG riru</a>项目中的一个实验性想法</p>
+<p><img class="tw-inline" loading="lazy" src=https://github.com/tcc0lin/self_pic/blob/main/riru-newload.png?raw=true     ></p>
+<p>也就是更换加载riru的方式，众所周知，riru.so load是通过赋值ro.dalvik.vm.native.bridge为libriruloader.so来完成的，而HuskyDG则提出了一个新的试验性加载方式&mdash;通过修改libandroid_runtime.so替换ro.zygote属性来完成加载</p>]]></description>
 </item><item>
     <title>Riru原理理解</title>
     <link>https://tcc0lin.github.io/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
     <pubDate>Tue, 25 Jul 2023 11:34:11 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
-    <description><![CDATA[一、前言什么是riru？正如它Github上面所提到的那样，它提供的能力是允许模块能够将自己的代码注入到各个App进程或者是system_s]]></description>
+    <description><![CDATA[<h3 id="一前言" class="headerLink">
+    <a href="#%e4%b8%80%e5%89%8d%e8%a8%80" class="header-mark"></a>一、前言</h3><p>什么是riru？正如它Github上面所提到的那样，它提供的能力是允许模块能够将自己的代码注入到各个App进程或者是system_server进程中，而这一切的实现就是基于它对于zygote进程的注入。</p>
+<p>那具体是怎么对于zygote进行注入的呢？<a href="https://github.com/RikkaApps/Riru" target="_blank" rel="noopener noreferrer">文档</a>中也提到，在早期的版本中，riru通过替换libmemtrack.so这个系统库的方式，原因是一方面zygote会加载该系统库，另一方面则是因为这个库足够小，仅仅只有十个函数，也就意味着替换掉它所造成的影响面是很小的，但是后续来看，由于使用到这个so的进程比较多，除了zygote还有SurfaceFlinger（用于显示系统）、mediaserver（用于媒体处理）等等，因此会造成一些意想不到的错误。</p>]]></description>
 </item></channel>
 </rss>

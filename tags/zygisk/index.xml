@@ -1,21 +1,24 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Zygisk - 标签 - tcc0lin&#39;s blog</title>
+        <title>Zygisk - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/zygisk/</link>
-        <description>Zygisk - 标签 - tcc0lin&#39;s blog</description>
+        <description>Zygisk - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/zygisk/" rel="self" type="application/rss+xml" /><item>
     <title>Zygisk-v27.0源码阅读</title>
     <link>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
     <pubDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
-    <description><![CDATA[隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的]]></description>
+    <description><![CDATA[<p>隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以<code>(zygisk_enabled)</code>作为关键搜索词切入</p>]]></description>
 </item><item>
     <title>Zygisk源码阅读</title>
     <link>https://tcc0lin.github.io/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
     <pubDate>Sun, 11 Jun 2023 11:36:47 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
-    <description><![CDATA[基于Magisk v25.0 一、Zygisk注入 1. magic_mount挂载app_processmagic_mount的原理是挂载tmpfs作为目录]]></description>
+    <description><![CDATA[<p>基于Magisk v25.0</p>
+<h3 id="一zygisk注入" class="headerLink">
+    <a href="#%e4%b8%80zygisk%e6%b3%a8%e5%85%a5" class="header-mark"></a>一、Zygisk注入</h3><h4 id="1-magic_mount挂载app_process" class="headerLink">
+    <a href="#1-magic_mount%e6%8c%82%e8%bd%bdapp_process" class="header-mark"></a>1. magic_mount挂载app_process</h4><p>magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的</p>]]></description>
 </item></channel>
 </rss>

@@ -1,14 +1,17 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Frida特征魔改 - 标签 - tcc0lin&#39;s blog</title>
+        <title>Frida特征魔改 - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</link>
-        <description>Frida特征魔改 - 标签 - tcc0lin&#39;s blog</description>
+        <description>Frida特征魔改 - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 01 Aug 2023 18:30:58 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" rel="self" type="application/rss+xml" /><item>
     <title>StrongR Frida特征魔改</title>
     <link>https://tcc0lin.github.io/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</link>
     <pubDate>Tue, 01 Aug 2023 18:30:58 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</guid>
-    <description><![CDATA[一、背景参考项目strongR-frida对frida14.2.18进行魔改 二、魔改点patch文件总共有八个，分别是对八个主要特征进行魔改]]></description>
+    <description><![CDATA[<h3 id="一背景" class="headerLink">
+    <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="header-mark"></a>一、背景</h3><p>参考项目<a href="https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core" target="_blank" rel="noopener noreferrer">strongR-frida</a>对frida14.2.18进行魔改</p>
+<h3 id="二魔改点" class="headerLink">
+    <a href="#%e4%ba%8c%e9%ad%94%e6%94%b9%e7%82%b9" class="header-mark"></a>二、魔改点</h3><p><a href="https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core" target="_blank" rel="noopener noreferrer">patch文件</a>总共有八个，分别是对八个主要特征进行魔改，下面逐个分析下</p>]]></description>
 </item></channel>
 </rss>

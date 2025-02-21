@@ -1,21 +1,56 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Magisk Hide隐藏 - 标签 - tcc0lin&#39;s blog</title>
+        <title>Magisk Hide隐藏 - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/magisk-hide%E9%9A%90%E8%97%8F/</link>
-        <description>Magisk Hide隐藏 - 标签 - tcc0lin&#39;s blog</description>
+        <description>Magisk Hide隐藏 - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 16 Jul 2023 00:28:08 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/magisk-hide%E9%9A%90%E8%97%8F/" rel="self" type="application/rss+xml" /><item>
     <title>Riru MomoHider源码分析</title>
     <link>https://tcc0lin.github.io/riru-momohider%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
     <pubDate>Sun, 16 Jul 2023 00:28:08 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/riru-momohider%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</guid>
-    <description><![CDATA[一、前言同样的，作为一个riru模块，从该项目的简介中，就可以发现它的主要作用了 Riru - MomoHider (aka IsolatedMagiskHider) 主要针对isolated进程所做的隐藏，MomoH]]></description>
+    <description><![CDATA[<h3 id="一前言" class="headerLink">
+    <a href="#%e4%b8%80%e5%89%8d%e8%a8%80" class="header-mark"></a>一、前言</h3><p>同样的，作为一个riru模块，从该项目的简介中，就可以发现它的主要作用了</p>
+<blockquote>
+  <p>Riru - MomoHider (aka IsolatedMagiskHider)</p>
+</blockquote><p>主要针对isolated进程所做的隐藏，MomoHider提供了几个配置选项来从多个角度隐藏MagiskHide，如下</p>
+
+<div class="table-wrapper">
+  <table>
+    <thead>
+        <tr>
+            <th style="text-align: ">配置项</th>
+            <th style="text-align: ">说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="text-align: ">isolated</td>
+            <td style="text-align: ">对每一个isolated processes卸载magisk相关的文件，但是无法控制卸载时机，可能会导致部分模块无法正常使用</td>
+        </tr>
+        <tr>
+            <td style="text-align: ">setns</td>
+            <td style="text-align: ">在isolated processes中能够更快隐藏Magisk</td>
+        </tr>
+        <tr>
+            <td style="text-align: ">app_zygote_magic</td>
+            <td style="text-align: ">让momo无法检测到MagiskHide是运行状态</td>
+        </tr>
+        <tr>
+            <td style="text-align: ">initrc</td>
+            <td style="text-align: ">隐藏修改init.rc的堆栈</td>
+        </tr>
+    </tbody>
+  </table>
+</div>
+<p>这些配置应该是作者最初的想法，现在某些配置已经无法正常使用了，所以还是从源码中看看现在这个模块具体做了哪些事</p>]]></description>
 </item><item>
     <title>Riru Unshare源码分析</title>
     <link>https://tcc0lin.github.io/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
     <pubDate>Tue, 04 Jul 2023 23:54:48 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</guid>
-    <description><![CDATA[一、前言在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zy]]></description>
+    <description><![CDATA[<h3 id="一前言" class="headerLink">
+    <a href="#%e4%b8%80%e5%89%8d%e8%a8%80" class="header-mark"></a>一、前言</h3><p>在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zygote共同使用同一个namespace，如果对这类进程进行unmount的话，会导致所有app都无法正正常访问到su，对于这种情况，可以使用riru-unshare模块来处理使指定的独立进程不与zygote共享namespace</p>]]></description>
 </item></channel>
 </rss>

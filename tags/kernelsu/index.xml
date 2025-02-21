@@ -1,8 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>KernelSU - 标签 - tcc0lin&#39;s blog</title>
+        <title>KernelSU - 标签 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/tags/kernelsu/</link>
-        <description>KernelSU - 标签 - tcc0lin&#39;s blog</description>
+        <description>KernelSU - 标签 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 15 Dec 2023 22:34:31 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/kernelsu/" rel="self" type="application/rss+xml" /><item>
     <title>KernelSU原理分析</title>
     <link>https://tcc0lin.github.io/kernelsu%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/</link>

@@ -1,15 +1,17 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Android - 分类 - tcc0lin&#39;s blog</title>
+        <title>Android - 分类 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/categories/android/</link>
-        <description>Android - 分类 - tcc0lin&#39;s blog</description>
+        <description>Android - 分类 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 01 Mar 2024 19:51:22 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/android/" rel="self" type="application/rss+xml" /><item>
     <title>Art方法调用流程分析</title>
     <link>https://tcc0lin.github.io/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/</link>
     <pubDate>Fri, 01 Mar 2024 19:51:22 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/art%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/</guid>
-    <description><![CDATA[一、关于JavaVMJava是一门跨平台的语言，系统实际运行的是Java字节码，由Java虚拟机去解释执行。解释执行的过程可以看做是一个循环]]></description>
+    <description><![CDATA[<h3 id="一关于javavm" class="headerLink">
+    <a href="#%e4%b8%80%e5%85%b3%e4%ba%8ejavavm" class="header-mark"></a>一、关于JavaVM</h3><p>Java是一门跨平台的语言，系统实际运行的是Java字节码，由Java虚拟机去解释执行。解释执行的过程可以看做是一个循环，对每条指令进行解析，并针对指令的名称通过巨大的switch-case分发到不同的分支中处理。Java虚拟机的原理就类似这样，但JVM对于性能做了很多优化，比如JIT运行时将字节码优化成对应平台的二进制代码，提高后续运行速度等</p>
+<p>Android代码既然是用Java代码编写的，那么运行时应该也会有一个解析字节码的虚拟机。和标准的JVM不同，Android中实际会将Java代码编译为Dalvik字节码，运行时解析的也是用自研的虚拟机实现。之所以使用自研实现，也许一方面有商业版权的考虑，另一方面也确实是适应了移动端的的运行场景。Dalvik指令基于寄存器，占1-2字节，Java虚拟机指令基于栈，每条指令只占1字节；因此Dalvik虚拟机用空间换时间从而获得比OracleJVM更快的执行速度</p>]]></description>
 </item><item>
     <title>Android内存dump</title>
     <link>https://tcc0lin.github.io/android%E5%86%85%E5%AD%98dump/</link>

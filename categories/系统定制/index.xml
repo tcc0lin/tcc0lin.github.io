@@ -1,35 +1,107 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>系统定制 - 分类 - tcc0lin&#39;s blog</title>
+        <title>系统定制 - 分类 - tcc0lin&#39;s security blog</title>
         <link>https://tcc0lin.github.io/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/</link>
-        <description>系统定制 - 分类 - tcc0lin&#39;s blog</description>
+        <description>系统定制 - 分类 - tcc0lin&#39;s security blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 24 Sep 2023 19:21:12 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/" rel="self" type="application/rss+xml" /><item>
     <title>Android11AOSP编译流程</title>
     <link>https://tcc0lin.github.io/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
     <pubDate>Sun, 24 Sep 2023 19:21:12 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
-    <description><![CDATA[前言 一、编译环境搭建 1 物料准备 设备：pixel2（walleye） 源码：aosp源码 build id：RP1A.200720.009 tag：andro]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><h3 id="一编译环境搭建" class="headerLink">
+    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
+    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
+<li>设备：pixel2（walleye）</li>
+<li>源码：<a href="https://source.android.google.cn/docs/setup/about/build-numbers?hl=zh-cn" target="_blank" rel="noopener noreferrer">aosp源码</a>
+<ul>
+<li>build id：RP1A.200720.009</li>
+<li>tag：android-11.0.0_r1</li>
+<li>sdk version：Android11</li>
+</ul>
+</li>
+<li>驱动源码准备：<a href="https://developers.google.cn/android/drivers" target="_blank" rel="noopener noreferrer">驱动源码</a></li>
+</ul>
+<h4 id="2-工具准备" class="headerLink">
+    <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="header-mark"></a>2 工具准备</h4><ul>
+<li>编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘）</li>
+<li>三方库准备
+<div class="code-block highlight is-open show-line-numbers  tw-group tw-my-2">
+  <div class="
+    code-block-title 
+    
+    tw-flex 
+    tw-flex-row 
+    tw-justify-between 
+    tw-w-full tw-bg-bgColor-secondary
+    ">      
+    <button 
+      class="
+        tw-select-none 
+        tw-mx-2 
+        tw-block
+        group-[.is-open]:tw-rotate-90
+        tw-transition-[transform] 
+        tw-duration-500 
+        tw-ease-in-out
+        print:!tw-hidden"
+      disabled
+      aria-hidden="true"><svg class="icon"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button>
+
+    <div class="code-block-title-bar tw-w-full">
+      <p class="tw-select-none !tw-my-1">shell</p>]]></description>
 </item><item>
     <title>Super分区定制</title>
     <link>https://tcc0lin.github.io/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/</link>
     <pubDate>Mon, 31 Jul 2023 20:05:53 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/</guid>
-    <description><![CDATA[一、编译环境搭建 1 物料准备 设备：红米note11（MIUI12 Android11） 原生super.img镜像文件，参考下载网站 2 工具准备 编译]]></description>
+    <description><![CDATA[<h3 id="一编译环境搭建" class="headerLink">
+    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
+    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
+<li>设备：红米note11（MIUI12 Android11）</li>
+<li>原生super.img镜像文件，参考<a href="https://xiaomifirmwareupdater.com/miui/selenes/" target="_blank" rel="noopener noreferrer">下载网站</a></li>
+</ul>
+<h4 id="2-工具准备" class="headerLink">
+    <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="header-mark"></a>2 工具准备</h4><ul>
+<li>编译支撑系统：ubuntu14（经测试不受版本影响，正常来说ubuntu都可以安装所有的工具）</li>
+<li><a href="https://github.com/anestisb/android-simg2img" target="_blank" rel="noopener noreferrer">simg2img</a></li>
+<li><a href="https://github.com/LonelyFool/lpunpack_and_lpmake" target="_blank" rel="noopener noreferrer">lpunpack/lmake</a></li>
+<li>imjtool</li>
+</ul>
+<h3 id="二案例说明内置应用" class="headerLink">
+    <a href="#%e4%ba%8c%e6%a1%88%e4%be%8b%e8%af%b4%e6%98%8e%e5%86%85%e7%bd%ae%e5%ba%94%e7%94%a8" class="header-mark"></a>二、案例说明（内置应用）</h3><h4 id="1-镜像格式转化" class="headerLink">
+    <a href="#1-%e9%95%9c%e5%83%8f%e6%a0%bc%e5%bc%8f%e8%bd%ac%e5%8c%96" class="header-mark"></a>1 镜像格式转化</h4><p>正常image镜像都是Android sparse image格式的</p>]]></description>
 </item><item>
     <title>基于内核的改机策略</title>
     <link>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</link>
     <pubDate>Mon, 10 Jul 2023 00:10:12 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</guid>
-    <description><![CDATA[以红米Note11内核改机为例说明 sys.c：内核版本 statfs.c：文件信息 stat.c：文件信息 readdir.c：目录下的文件列表 o]]></description>
+    <description><![CDATA[<p>以红米Note11内核改机为例说明</p>
+<ul>
+<li>sys.c：内核版本</li>
+<li>statfs.c：文件信息</li>
+<li>stat.c：文件信息</li>
+<li>readdir.c：目录下的文件列表</li>
+<li>open.c：文件重定向</li>
+</ul>]]></description>
 </item><item>
     <title>红米Note11内核编译流程</title>
     <link>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
     <pubDate>Fri, 30 Jun 2023 23:50:17 &#43;0800</pubDate><author>
         <name>tcc0lin</name>
     </author><guid>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
-    <description><![CDATA[前言涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的源码，可以根据自身设备的型号来选择，下面简单描述下编译流程 一]]></description>
+    <description><![CDATA[<h3 id="前言" class="headerLink">
+    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource" target="_blank" rel="noopener noreferrer">源码</a>，可以根据自身设备的型号来选择，下面简单描述下编译流程</p>
+<h3 id="一编译环境搭建" class="headerLink">
+    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
+    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
+<li>设备：红米note11（MIUI12 Android11）</li>
+<li>源码：<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource/tree/selene-r-oss" target="_blank" rel="noopener noreferrer">selene版本内核源码</a>
+<blockquote>
+  <p>需要注意的是note11(selenes)是国内的叫法，而国际版对应的是红米10(selene)</p>]]></description>
 </item></channel>
 </rss>
