@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>源码编译 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sun, 20 Aug 2023 22:27:03 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Frida源码编译说明</title>
+      <link>http://localhost:1313/posts/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/</link>
+      <pubDate>Sun, 20 Aug 2023 22:27:03 +0800</pubDate>
+      <guid>http://localhost:1313/posts/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/</guid>
+      <category domain="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6/">Hook框架</category>
+      <description>&lt;h3 id=&#34;一编译环境搭建&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、编译环境搭建&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;这次编译的目标版本是14.2.18&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Frida调试环境搭建</title>
+      <link>http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</link>
+      <pubDate>Tue, 21 Feb 2023 22:51:53 +0800</pubDate>
+      <guid>http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</guid>
+      <category domain="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6/">Hook框架</category>
+      <description>&lt;h2 id=&#34;一背景&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、背景&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e8%83%8c%e6%99%af&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h2&gt;&lt;p&gt;从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts+npm，优势在于&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

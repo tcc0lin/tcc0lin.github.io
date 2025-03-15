@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>加密算法 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 30 Oct 2023 19:03:37 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>多种AES算法原理理解</title>
+      <link>http://localhost:1313/posts/%E5%A4%9A%E7%A7%8Daes%E7%AE%97%E6%B3%95%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</link>
+      <pubDate>Mon, 30 Oct 2023 19:03:37 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E5%A4%9A%E7%A7%8Daes%E7%AE%97%E6%B3%95%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>多种AES算法原理理解</description>
+    </item>
+    <item>
+      <title>还原白盒AES密钥的思路</title>
+      <link>http://localhost:1313/posts/%E8%BF%98%E5%8E%9F%E7%99%BD%E7%9B%92aes%E5%AF%86%E9%92%A5%E7%9A%84%E6%80%9D%E8%B7%AF/</link>
+      <pubDate>Mon, 30 Oct 2023 19:02:09 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E8%BF%98%E5%8E%9F%E7%99%BD%E7%9B%92aes%E5%AF%86%E9%92%A5%E7%9A%84%E6%80%9D%E8%B7%AF/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>还原白盒AES密钥的思路</description>
+    </item>
+    <item>
+      <title>基于Chow方案的白盒AES理解</title>
+      <link>http://localhost:1313/posts/%E5%9F%BA%E4%BA%8Echow%E6%96%B9%E6%A1%88%E7%9A%84%E7%99%BD%E7%9B%92aes%E7%90%86%E8%A7%A3/</link>
+      <pubDate>Mon, 30 Oct 2023 18:59:38 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E5%9F%BA%E4%BA%8Echow%E6%96%B9%E6%A1%88%E7%9A%84%E7%99%BD%E7%9B%92aes%E7%90%86%E8%A7%A3/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>基于Chow方案的白盒AES理解</description>
+    </item>
+    <item>
+      <title>从FIPS 197中理解AES算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Efips-197%E4%B8%AD%E7%90%86%E8%A7%A3aes%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Efips-197%E4%B8%AD%E7%90%86%E8%A7%A3aes%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>从FIPS 197中理解AES算法</description>
+    </item>
+    <item>
+      <title>从FIPS 46-3中理解DES算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;p&gt;DES是一种对称密钥的块加密算法。”对称密钥”，是因为加密、解密用的密钥是一样的（这不同于RSA等非对称密钥体系）。“块加密”，是因为这种算法把明文划分为很多个等长的块(block)，对每个块进行加密，最后以某种手段拼在一起。“块加密”亦称“分组加密”。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

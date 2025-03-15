@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Magisk - 分类 - 佛光普照</title>
+    <link>http://localhost:1313/categories/magisk/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 06 Mar 2024 22:56:31 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/magisk/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Zygisk-v27.0源码阅读</title>
+      <link>http://localhost:1313/posts/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
+      <pubDate>Wed, 06 Mar 2024 22:56:31 +0800</pubDate>
+      <guid>http://localhost:1313/posts/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;p&gt;隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以&lt;code&gt;(zygisk_enabled)&lt;/code&gt;作为关键搜索词切入&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>重读Magisk内部实现细节4</title>
+      <link>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</link>
+      <pubDate>Tue, 27 Jun 2023 09:56:08 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;h3 id=&#34;前言&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;前言&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e5%89%8d%e8%a8%80&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;Magisk内部实现细节的第四篇，在前两篇着重讲了Magisk的三个重要功能的两个&amp;mdash;su以及hide，这篇就来分析下最后一个重要功能&amp;mdash;resetprop，这三个功能Magisk也分别导出了三个可执行文件&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>重读Magisk内部实现细节3</title>
+      <link>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</link>
+      <pubDate>Sun, 18 Jun 2023 13:33:34 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%823/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;h3 id=&#34;前言&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;前言&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e5%89%8d%e8%a8%80&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;Magisk内部实现细节的第三篇，主要通过源码来了解下Magisk Hide的原理，这部分代码在native/jni/magiskhide当中&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Zygisk源码阅读</title>
+      <link>http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
+      <pubDate>Sun, 11 Jun 2023 11:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;p&gt;基于Magisk v25.0&lt;/p&gt;&#xA;&lt;h3 id=&#34;一zygisk注入&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、Zygisk注入&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80zygisk%e6%b3%a8%e5%85%a5&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;h4 id=&#34;1-magic_mount挂载app_process&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;1. magic_mount挂载app_process&lt;/span&gt;&#xA;  &lt;a href=&#34;#1-magic_mount%e6%8c%82%e8%bd%bdapp_process&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;p&gt;magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>重读Magisk内部实现细节2</title>
+      <link>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</link>
+      <pubDate>Sun, 11 Jun 2023 11:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;h3 id=&#34;前言&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;前言&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e5%89%8d%e8%a8%80&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;承接上文，经过Magisk修补后的boot.img在启动引导过程中为了实现Root的功能很关键的一步在于patch了init.rc和sepolicy文件，在Magisk正式把init的执行权交由二阶段的原生init之后，便引导了Magisk deamon的启动&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>重读Magisk内部实现细节</title>
+      <link>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/</link>
+      <pubDate>Fri, 09 Jun 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;h3 id=&#34;前言&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;前言&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e5%89%8d%e8%a8%80&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;相信Magisk对于移动安全从业者来说都不陌生了，我虽然也是一个版本接着一个版本的使用，但是始终没有去摸透Magisk的生态，希望借助之后想写的Magisk系列的文章来深度学习下Magisk，也正如Magisk在其主页所说的那样&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

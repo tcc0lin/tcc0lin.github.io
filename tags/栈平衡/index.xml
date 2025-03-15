@@ -1,18 +1,20 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>栈平衡 - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/%E6%A0%88%E5%B9%B3%E8%A1%A1/</link>
-        <description>栈平衡 - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 27 Feb 2024 16:46:38 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/%E6%A0%88%E5%B9%B3%E8%A1%A1/" rel="self" type="application/rss+xml" /><item>
-    <title>Arm与Arm64的栈平衡理解</title>
-    <link>https://tcc0lin.github.io/arm%E4%B8%8Earm64%E7%9A%84%E6%A0%88%E5%B9%B3%E8%A1%A1%E7%90%86%E8%A7%A3/</link>
-    <pubDate>Tue, 27 Feb 2024 16:46:38 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/arm%E4%B8%8Earm64%E7%9A%84%E6%A0%88%E5%B9%B3%E8%A1%A1%E7%90%86%E8%A7%A3/</guid>
-    <description><![CDATA[<p><a href="https://blog.csdn.net/boildoctor/article/details/123402047" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/boildoctor/article/details/123402047</a>
-<a href="https://www.cnblogs.com/sky-heaven/p/15885335.html" target="_blank" rel="noopener noreferrer">https://www.cnblogs.com/sky-heaven/p/15885335.html</a>
-<a href="https://blog.csdn.net/boildoctor/article/details/123402047" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/boildoctor/article/details/123402047</a>
-<a href="https://www.jianshu.com/p/b6071091abdc" target="_blank" rel="noopener noreferrer">https://www.jianshu.com/p/b6071091abdc</a>
-<a href="https://blog.csdn.net/heshuangzong/article/details/126911474" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/heshuangzong/article/details/126911474</a></p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>栈平衡 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/%E6%A0%88%E5%B9%B3%E8%A1%A1/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 27 Feb 2024 16:46:38 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E6%A0%88%E5%B9%B3%E8%A1%A1/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Arm与Arm64的栈平衡理解</title>
+      <link>http://localhost:1313/posts/arm%E4%B8%8Earm64%E7%9A%84%E6%A0%88%E5%B9%B3%E8%A1%A1%E7%90%86%E8%A7%A3/</link>
+      <pubDate>Tue, 27 Feb 2024 16:46:38 +0800</pubDate>
+      <guid>http://localhost:1313/posts/arm%E4%B8%8Earm64%E7%9A%84%E6%A0%88%E5%B9%B3%E8%A1%A1%E7%90%86%E8%A7%A3/</guid>
+      <category domain="http://localhost:1313/categories/%E6%B1%87%E7%BC%96%E5%9F%BA%E7%A1%80/">汇编基础</category>
+      <description>&lt;p&gt;&lt;a href=&#34;https://blog.csdn.net/boildoctor/article/details/123402047&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;https://blog.csdn.net/boildoctor/article/details/123402047&lt;/a&gt;&#xA;&lt;a href=&#34;https://www.cnblogs.com/sky-heaven/p/15885335.html&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;https://www.cnblogs.com/sky-heaven/p/15885335.html&lt;/a&gt;&#xA;&lt;a href=&#34;https://blog.csdn.net/boildoctor/article/details/123402047&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;https://blog.csdn.net/boildoctor/article/details/123402047&lt;/a&gt;&#xA;&lt;a href=&#34;https://www.jianshu.com/p/b6071091abdc&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;https://www.jianshu.com/p/b6071091abdc&lt;/a&gt;&#xA;&lt;a href=&#34;https://blog.csdn.net/heshuangzong/article/details/126911474&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;https://blog.csdn.net/heshuangzong/article/details/126911474&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
 </rss>

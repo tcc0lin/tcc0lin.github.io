@@ -1,46 +1,12 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>MD5算法 - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/md5%E7%AE%97%E6%B3%95/</link>
-        <description>MD5算法 - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/md5%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
-    <title>从RFC1321中理解MD5算法</title>
-    <link>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[<h3 id="一前置知识点" class="headerLink">
-    <a href="#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9" class="header-mark"></a>一、前置知识点</h3><p>MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）</p>
-<h3 id="二算法流程" class="headerLink">
-    <a href="#%e4%ba%8c%e7%ae%97%e6%b3%95%e6%b5%81%e7%a8%8b" class="header-mark"></a>二、算法流程</h3><p>根据上面所说，MD5算法的输入是任意长度的信息，长度可以是0，也可以不是8的倍数，针对任意长度的输入，就需要通过下面的五个步骤来计算出它的MD5值</p>
-<h4 id="1-补位" class="headerLink">
-    <a href="#1-%e8%a1%a5%e4%bd%8d" class="header-mark"></a>1 补位</h4><p>输入可以是不定长的信息，但是实际上转化到算法逻辑中时又需要根据定长的信息来计算，因此，首先需要做的就是补位操作，方法如下：
-将二进制数据对512进行取模，如果有余数不等于448，则将余数补足到448的长度，补足的规则是先补1，后面全补0，相当于N*512+448的长度，N为一个非负整数（也包括0）</p>]]></description>
-</item><item>
-    <title>探讨关于MD5算法的魔改方式</title>
-    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[<ul>
-<li>写法
-<ul>
-<li>函数名</li>
-<li>常量初始化方式</li>
-</ul>
-</li>
-<li>算法常量
-<ul>
-<li>IV</li>
-<li>转换变量</li>
-<li>T常量表</li>
-</ul>
-</li>
-<li>算法流程
-<ul>
-<li>非线性函数</li>
-</ul>
-</li>
-</ul>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MD5算法 - 标签 - </title>
+    <link>http://localhost:1313/tags/md5%E7%AE%97%E6%B3%95/</link>
+    <description></description>
+    <generator>Hugo 0.144.2 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate></lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/md5%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
 </rss>

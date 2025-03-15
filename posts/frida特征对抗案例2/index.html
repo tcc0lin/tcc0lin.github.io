@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Frida特征对抗案例2 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="一、资源准备 com.jingdong.app.mall 12.1.0 pixel2 android10.0 frida 14.2.2 二、分析思路 使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试
+"><meta name="keywords" content='frida, 对抗案例'>
+  <meta itemprop="name" content="Frida特征对抗案例2">
+  <meta itemprop="description" content="一、资源准备 com.jingdong.app.mall 12.1.0 pixel2 android10.0 frida 14.2.2 二、分析思路 使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试">
+  <meta itemprop="datePublished" content="2023-08-19T23:05:38+08:00">
+  <meta itemprop="dateModified" content="2023-08-19T23:05:38+08:00">
+  <meta itemprop="wordCount" content="2575">
+  <meta itemprop="keywords" content="Frida,对抗案例"><meta property="og:url" content="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Frida特征对抗案例2">
+  <meta property="og:description" content="一、资源准备 com.jingdong.app.mall 12.1.0 pixel2 android10.0 frida 14.2.2 二、分析思路 使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-08-19T23:05:38+08:00">
+    <meta property="article:modified_time" content="2023-08-19T23:05:38+08:00">
+    <meta property="article:tag" content="Frida">
+    <meta property="article:tag" content="对抗案例">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Frida特征对抗案例2">
+  <meta name="twitter:description" content="一、资源准备 com.jingdong.app.mall 12.1.0 pixel2 android10.0 frida 14.2.2 二、分析思路 使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/" title="Frida特征对抗案例2 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B1/" title="Frida特征对抗案例1" /><link rel="next" type="text/html" href="http://localhost:1313/posts/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/" title="Frida源码编译说明" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/index.md" title="Frida特征对抗案例2 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Frida特征对抗案例2",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2\/"
+    },"genre": "posts","keywords": "frida, 对抗案例","wordcount":  2575 ,
+    "url": "http:\/\/localhost:1313\/posts\/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2\/","datePublished": "2023-08-19T23:05:38+08:00","dateModified": "2023-08-19T23:05:38+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Frida特征对抗案例2</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Frida特征对抗案例2</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/hook%E6%A1%86%E6%9E%B6/" class="post-category" title="分类 - Hook框架"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Hook框架</a></span></div><div class="post-meta-line"><span title="发布于 2023-08-19 23:05:38"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-08-19">2023-08-19</time></span>&nbsp;<span title="2575 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 2600 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 6 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一资源准备">一、资源准备</a></li>
+        <li><a href="#二分析思路">二、分析思路</a></li>
+        <li><a href="#三-总结">三 总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="一资源准备" class="heading-element"><span>一、资源准备</span>
+  <a href="#%e4%b8%80%e8%b5%84%e6%ba%90%e5%87%86%e5%a4%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>com.jingdong.app.mall 12.1.0</li>
+<li>pixel2 android10.0</li>
+<li>frida 14.2.2</li>
+</ul>
+<h3 id="二分析思路" class="heading-element"><span>二、分析思路</span>
+  <a href="#%e4%ba%8c%e5%88%86%e6%9e%90%e6%80%9d%e8%b7%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>使用frida以spawn模式启动，可以发现进程直接崩溃，说明存在反调试</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Spawned <span class="sb">`</span>com.jingdong.app.mall<span class="sb">`</span>. Resuming main thread!                  
+</span></span><span class="line"><span class="cl"><span class="o">[</span>Pixel 2::com.jingdong.app.mall<span class="o">]</span>-&gt; Process terminated
+</span></span><span class="line"><span class="cl"><span class="o">[</span>Pixel 2::com.jingdong.app.mall<span class="o">]</span>-&gt;</span></span></code></pre></td></tr></table>
+</div>
+</div><p>通常检测逻辑是放在native层的，因此进一步判断是哪个so导致的</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">hook_dlopen</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">Module</span><span class="p">.</span><span class="nx">findExportByName</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s2">&#34;android_dlopen_ext&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">onEnter</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kd">var</span> <span class="nx">pathptr</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="nx">pathptr</span> <span class="o">!==</span> <span class="kc">undefined</span> <span class="o">&amp;&amp;</span> <span class="nx">pathptr</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">ptr</span><span class="p">(</span><span class="nx">pathptr</span><span class="p">).</span><span class="nx">readCString</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;load &#34;</span> <span class="o">+</span> <span class="nx">path</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>由so的加载流程可知，so都是是顺序加载，从命令行中当加载libJDMobileSec之后，进程就崩溃了，可以猜测反调试点在libJDMobileSec中</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">Spawned</span> <span class="err">`</span><span class="n">com</span><span class="o">.</span><span class="n">jingdong</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">mall</span><span class="err">`</span><span class="o">.</span> <span class="n">Resuming</span> <span class="n">main</span> <span class="n">thread</span><span class="o">!</span>                  
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">Pixel</span> <span class="mi">2</span><span class="p">::</span><span class="n">com</span><span class="o">.</span><span class="n">jingdong</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">mall</span><span class="p">]</span><span class="o">-&gt;</span> <span class="nb">load</span> <span class="o">/</span><span class="n">system</span><span class="o">/</span><span class="n">framework</span><span class="o">/</span><span class="n">oat</span><span class="o">/</span><span class="n">arm</span><span class="o">/</span><span class="n">org</span><span class="o">.</span><span class="n">apache</span><span class="o">.</span><span class="n">http</span><span class="o">.</span><span class="n">legacy</span><span class="o">.</span><span class="n">odex</span>
+</span></span><span class="line"><span class="cl"><span class="nb">load</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">app</span><span class="o">/</span><span class="n">com</span><span class="o">.</span><span class="n">jingdong</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">mall</span><span class="o">-</span><span class="n">OXNoca8Sb7xq1IC0YJW2PA</span><span class="o">==/</span><span class="n">oat</span><span class="o">/</span><span class="n">arm</span><span class="o">/</span><span class="n">base</span><span class="o">.</span><span class="n">odex</span>
+</span></span><span class="line"><span class="cl"><span class="nb">load</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">app</span><span class="o">/</span><span class="n">com</span><span class="o">.</span><span class="n">jingdong</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">mall</span><span class="o">-</span><span class="n">OXNoca8Sb7xq1IC0YJW2PA</span><span class="o">==/</span><span class="n">lib</span><span class="o">/</span><span class="n">arm</span><span class="o">/</span><span class="n">libJDMobileSec</span><span class="o">.</span><span class="n">so</span>
+</span></span><span class="line"><span class="cl"><span class="n">Process</span> <span class="n">terminated</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>同样需要判断具体检测的函数在哪个部分，优先确定JNI_OnLoad的偏移是0x56BC</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">hook_dlopen</span><span class="p">(</span><span class="nx">soName</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">Module</span><span class="p">.</span><span class="nx">findExportByName</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s2">&#34;android_dlopen_ext&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">onEnter</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kd">var</span> <span class="nx">pathptr</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="nx">pathptr</span> <span class="o">!==</span> <span class="kc">undefined</span> <span class="o">&amp;&amp;</span> <span class="nx">pathptr</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">ptr</span><span class="p">(</span><span class="nx">pathptr</span><span class="p">).</span><span class="nx">readCString</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">soName</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">this</span><span class="p">.</span><span class="nx">is_can_hook</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">onLeave</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">retval</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">is_can_hook</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="nx">hook_JNI_OnLoad</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">hook_JNI_OnLoad</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">module</span> <span class="o">=</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">findModuleByName</span><span class="p">(</span><span class="s2">&#34;libJDMobileSec.so&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x56BC</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">onEnter</span><span class="p">(</span><span class="nx">args</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;call JNI_OnLoad&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">setImmediate</span><span class="p">(</span><span class="nx">hook_dlopen</span><span class="p">,</span><span class="s2">&#34;libJDMobileSec.so&#34;</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>看到是在JNI_OnLoad之后进程崩溃的，说明检测逻辑应该是JNI_OnLoad里面</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Spawned <span class="sb">`</span>com.jingdong.app.mall<span class="sb">`</span>. Resuming main thread!                  
+</span></span><span class="line"><span class="cl"><span class="o">[</span>Pixel 2::com.jingdong.app.mall<span class="o">]</span>-&gt; call JNI_OnLoad
+</span></span><span class="line"><span class="cl">Process terminated</span></span></code></pre></td></tr></table>
+</div>
+</div><p>测试下是否有新起线程检测</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">hook_pthread_create</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">base</span> <span class="o">=</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">findModuleByName</span><span class="p">(</span><span class="s2">&#34;libJDMobileSec.so&#34;</span><span class="p">).</span><span class="nx">base</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;libJDMobileSec.so --- &#34;</span> <span class="o">+</span> <span class="nx">base</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">Module</span><span class="p">.</span><span class="nx">findExportByName</span><span class="p">(</span><span class="s2">&#34;libc.so&#34;</span><span class="p">,</span> <span class="s2">&#34;pthread_create&#34;</span><span class="p">),{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">onEnter</span><span class="p">(</span><span class="nx">args</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">func_addr</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;The thread function address is &#34;</span> <span class="o">+</span> <span class="nx">func_addr</span> <span class="o">+</span> <span class="s2">&#34; offset:&#34;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">func_addr</span><span class="o">-</span><span class="nx">base</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到有个新起的线程</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Spawned <span class="sb">`</span>com.jingdong.app.mall<span class="sb">`</span>. Resuming main thread!                  
+</span></span><span class="line"><span class="cl"><span class="o">[</span>Pixel 2::com.jingdong.app.mall<span class="o">]</span>-&gt; call JNI_OnLoad
+</span></span><span class="line"><span class="cl">libJDMobileSec.so --- 0xce055000
+</span></span><span class="line"><span class="cl">The thread <span class="k">function</span> address is 0xce06151d offset:c51d
+</span></span><span class="line"><span class="cl">Process terminated</span></span></code></pre></td></tr></table>
+</div>
+</div><p>优先nop掉看是否该点是检测点，追溯到JNI_OnLoad方法里面偏移0x688A上</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">bypass</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">module</span> <span class="o">=</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">findModuleByName</span><span class="p">(</span><span class="s2">&#34;libJDMobileSec.so&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">nop</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x688A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>nop掉之后还是崩溃，看来检测点可能不是这里或者不止一个，继续尝试其他hook点</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">replace_str</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">pt_strstr</span> <span class="o">=</span> <span class="nx">Module</span><span class="p">.</span><span class="nx">findExportByName</span><span class="p">(</span><span class="s2">&#34;libc.so&#34;</span><span class="p">,</span> <span class="s1">&#39;strstr&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">pt_strstr</span><span class="p">,</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">onEnter</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">var</span> <span class="nx">str1</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">readCString</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">var</span> <span class="nx">str2</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">readCString</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;strstr--&gt;&#34;</span><span class="p">,</span> <span class="nx">str1</span><span class="p">,</span> <span class="nx">str2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// console.log(&#39;strstr called from:\\n&#39; + Thread.backtrace(this.context, Backtracer.ACCURATE).map(DebugSymbol.fromAddress).join(&#39;\\n&#39;) + &#39;\\n&#39;);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">// console.log(&#39;strstr called from:\\n&#39; + Thread.backtrace(this.context, Backtracer.FUZZY).map(DebugSymbol.fromAddress).join(&#39;\\n&#39;) + &#39;\\n&#39;);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>看看字符比较会不会有发现</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">strstr--&gt; bb123000-bb222000 r--p <span class="m">00000000</span> 103:1d <span class="m">2720259</span>                           /data/app/com.jingdong.app.mall-OXNoca8Sb7xq1IC0YJW2PA<span class="o">==</span>/oat/arm/base.odex
+</span></span><span class="line"><span class="cl"> com.saurik.substrate
+</span></span><span class="line"><span class="cl">strstr called from:<span class="se">\n</span>0xcdf5dbfb libJDMobileSec.so!0xabfb<span class="se">\n</span>0xcdf6e5a1 libJDMobileSec.so!0x1b5a1<span class="se">\n</span>
+</span></span><span class="line"><span class="cl">strstr--&gt; bb222000-bb272000 r--p <span class="m">00000000</span> 103:06 <span class="m">1437</span>                              /system/framework/oat/arm/org.apache.http.legacy.odex
+</span></span><span class="line"><span class="cl"> re.frida.server/frida-agent-32.so
+</span></span><span class="line"><span class="cl">strstr called from:<span class="se">\n</span>0xcdf5da3f libJDMobileSec.so!0xaa3f<span class="se">\n</span>0xcdf6e5a1 libJDMobileSec.so!0x1b5a1<span class="se">\n</span>
+</span></span><span class="line"><span class="cl">strstr--&gt; bb222000-bb272000 r--p <span class="m">00000000</span> 103:06 <span class="m">1437</span>                              /system/framework/oat/arm/org.apache.http.legacy.odex
+</span></span><span class="line"><span class="cl"> re.frida.server/frida-agent-64.so
+</span></span><span class="line"><span class="cl">strstr called from:<span class="se">\n</span>0xcdf5da85 libJDMobileSec.so!0xaa85<span class="se">\n</span>0xcdf6e5a1 libJDMobileSec.so!0x1b5a1<span class="se">\n</span>
+</span></span><span class="line"><span class="cl">strstr--&gt; bb222000-bb272000 r--p <span class="m">00000000</span> 103:06 <span class="m">1437</span>                              /system/framework/oat/arm/org.apache.http.legacy.odex
+</span></span><span class="line"><span class="cl"> com.saurik.substrate
+</span></span><span class="line"><span class="cl">strstr called from:<span class="se">\n</span>0xcdf5dbfb libJDMobileSec.so!0xabfb<span class="se">\n</span>0xcdf6e5a1 libJDMobileSec.so!0x1b5a1<span class="se">\n</span>
+</span></span><span class="line"><span class="cl">strstr--&gt; bb272000-bc06a000 r--p <span class="m">00000000</span> 103:1d <span class="m">1032201</span>                           /data/local/tmp/re.frida.server/frida-agent-32.so
+</span></span><span class="line"><span class="cl"> re.frida.server/frida-agent-32.so
+</span></span><span class="line"><span class="cl">strstr called from:<span class="err">\</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>从日志中看出来应该是比较了maps中是否包含frida-agent、substrate等特征，根据堆栈确定调用点大致是在0xaa85、0xabfb这几个偏移上，从ida上看都集中在sub_A934这个函数里面，看看交叉引用的地方
+，在JNI_OnLoad中有两处，nop掉看看效果</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">bypass</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">module</span> <span class="o">=</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">findModuleByName</span><span class="p">(</span><span class="s2">&#34;libJDMobileSec.so&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">nop</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x688A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">nop</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x623A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">nop</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x634A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>nop掉两处后就可以正常调试了，说明sub_A934这个函数就是反调试检测的函数，看看具体sub_A934的函数逻辑是什么</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span><span class="lnt">199
+</span><span class="lnt">200
+</span><span class="lnt">201
+</span><span class="lnt">202
+</span><span class="lnt">203
+</span><span class="lnt">204
+</span><span class="lnt">205
+</span><span class="lnt">206
+</span><span class="lnt">207
+</span><span class="lnt">208
+</span><span class="lnt">209
+</span><span class="lnt">210
+</span><span class="lnt">211
+</span><span class="lnt">212
+</span><span class="lnt">213
+</span><span class="lnt">214
+</span><span class="lnt">215
+</span><span class="lnt">216
+</span><span class="lnt">217
+</span><span class="lnt">218
+</span><span class="lnt">219
+</span><span class="lnt">220
+</span><span class="lnt">221
+</span><span class="lnt">222
+</span><span class="lnt">223
+</span><span class="lnt">224
+</span><span class="lnt">225
+</span><span class="lnt">226
+</span><span class="lnt">227
+</span><span class="lnt">228
+</span><span class="lnt">229
+</span><span class="lnt">230
+</span><span class="lnt">231
+</span><span class="lnt">232
+</span><span class="lnt">233
+</span><span class="lnt">234
+</span><span class="lnt">235
+</span><span class="lnt">236
+</span><span class="lnt">237
+</span><span class="lnt">238
+</span><span class="lnt">239
+</span><span class="lnt">240
+</span><span class="lnt">241
+</span><span class="lnt">242
+</span><span class="lnt">243
+</span><span class="lnt">244
+</span><span class="lnt">245
+</span><span class="lnt">246
+</span><span class="lnt">247
+</span><span class="lnt">248
+</span><span class="lnt">249
+</span><span class="lnt">250
+</span><span class="lnt">251
+</span><span class="lnt">252
+</span><span class="lnt">253
+</span><span class="lnt">254
+</span><span class="lnt">255
+</span><span class="lnt">256
+</span><span class="lnt">257
+</span><span class="lnt">258
+</span><span class="lnt">259
+</span><span class="lnt">260
+</span><span class="lnt">261
+</span><span class="lnt">262
+</span><span class="lnt">263
+</span><span class="lnt">264
+</span><span class="lnt">265
+</span><span class="lnt">266
+</span><span class="lnt">267
+</span><span class="lnt">268
+</span><span class="lnt">269
+</span><span class="lnt">270
+</span><span class="lnt">271
+</span><span class="lnt">272
+</span><span class="lnt">273
+</span><span class="lnt">274
+</span><span class="lnt">275
+</span><span class="lnt">276
+</span><span class="lnt">277
+</span><span class="lnt">278
+</span><span class="lnt">279
+</span><span class="lnt">280
+</span><span class="lnt">281
+</span><span class="lnt">282
+</span><span class="lnt">283
+</span><span class="lnt">284
+</span><span class="lnt">285
+</span><span class="lnt">286
+</span><span class="lnt">287
+</span><span class="lnt">288
+</span><span class="lnt">289
+</span><span class="lnt">290
+</span><span class="lnt">291
+</span><span class="lnt">292
+</span><span class="lnt">293
+</span><span class="lnt">294
+</span><span class="lnt">295
+</span><span class="lnt">296
+</span><span class="lnt">297
+</span><span class="lnt">298
+</span><span class="lnt">299
+</span><span class="lnt">300
+</span><span class="lnt">301
+</span><span class="lnt">302
+</span><span class="lnt">303
+</span><span class="lnt">304
+</span><span class="lnt">305
+</span><span class="lnt">306
+</span><span class="lnt">307
+</span><span class="lnt">308
+</span><span class="lnt">309
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">sub_A934</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="p">......</span>
+</span></span><span class="line"><span class="cl">  <span class="n">v0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1072311660</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">v1</span> <span class="o">=</span> <span class="mi">1723222422</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">v47</span> <span class="o">=</span> <span class="n">dword_24ED8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1703318409</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">do</span>
+</span></span><span class="line"><span class="cl">  <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">              <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                  <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                  <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                              <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                  <span class="k">while</span> <span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                  <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                    <span class="k">while</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mi">1401839159</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                      <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1703318409</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                      <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v2</span> <span class="o">=</span> <span class="mi">775535239</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                        <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v47</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                          <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">419580537</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                                    <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">1993647575</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                      <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                    <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">1993647576</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                      <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">s</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                        <span class="k">goto</span> <span class="n">LABEL_73</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v3</span> <span class="o">=</span> <span class="nf">sub_97C4</span><span class="p">((</span><span class="kt">float</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_21C24</span><span class="p">,</span> <span class="mi">33</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v4</span> <span class="o">=</span> <span class="n">v1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v5</span> <span class="o">=</span> <span class="n">v0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v6</span> <span class="o">=</span> <span class="nf">strstr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                                      <span class="nf">free</span><span class="p">(</span><span class="n">v3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v2</span> <span class="o">=</span> <span class="mi">509119054</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v7</span> <span class="o">=</span> <span class="n">v6</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v0</span> <span class="o">=</span> <span class="n">v5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">v1</span> <span class="o">=</span> <span class="n">v4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="k">if</span> <span class="p">(</span> <span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                      <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v8</span> <span class="o">=</span> <span class="n">v0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v9</span> <span class="o">=</span> <span class="nf">sub_97C4</span><span class="p">((</span><span class="kt">float</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_21CA8</span><span class="p">,</span> <span class="mi">33</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v10</span> <span class="o">=</span> <span class="nf">strstr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v9</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v11</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="n">v9</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v0</span> <span class="o">=</span> <span class="n">v8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v1</span> <span class="o">=</span> <span class="n">v4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                        <span class="nf">free</span><span class="p">(</span><span class="n">v11</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">v2</span> <span class="o">=</span> <span class="mi">509119054</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                        <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v10</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nl">LABEL_73</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                                          <span class="n">v2</span> <span class="o">=</span> <span class="mi">1287785172</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                                  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                                  <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">1723222421</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                  <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="n">v1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nl">LABEL_108</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                                    <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">370315561</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                                <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1282738887</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                  <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1401839158</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                  <span class="n">v2</span> <span class="o">=</span> <span class="mi">3915268</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                  <span class="k">if</span> <span class="p">(</span> <span class="n">v49</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                    <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1282738886</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                              <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="n">v0</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1282738886</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                              <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">s</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">v51</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">v7</span> <span class="o">=</span> <span class="nf">fgets</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v51</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">stream</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">104947837</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                  <span class="n">v2</span> <span class="o">=</span> <span class="mi">1993647576</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">1389383840</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">1389383841</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                              <span class="nf">fclose</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                              <span class="nf">sub_113FC</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v12</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v13</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span> <span class="o">^</span> <span class="mh">0xFFFFFFFE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v14</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v13</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">v14</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">v12</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v15</span> <span class="o">=</span> <span class="n">v13</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v16</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v17</span> <span class="o">=</span> <span class="n">v14</span> <span class="o">^</span> <span class="n">v12</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">v16</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v7</span> <span class="o">=</span> <span class="p">((</span><span class="n">v15</span> <span class="o">|</span> <span class="n">v16</span><span class="p">)</span> <span class="o">^</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">v17</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1072311659</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                                <span class="n">v2</span> <span class="o">=</span> <span class="mi">327108677</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">1287785171</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">1287785172</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">s</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                              <span class="k">goto</span> <span class="n">LABEL_87</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v18</span> <span class="o">=</span> <span class="n">v1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v19</span> <span class="o">=</span> <span class="n">v0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v20</span> <span class="o">=</span> <span class="nf">sub_97C4</span><span class="p">((</span><span class="kt">float</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_21BD4</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v21</span> <span class="o">=</span> <span class="nf">strstr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v20</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v22</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="n">v20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v0</span> <span class="o">=</span> <span class="n">v19</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v1</span> <span class="o">=</span> <span class="n">v18</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="nf">free</span><span class="p">(</span><span class="n">v22</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1046283837</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                            <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v21</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nl">LABEL_87</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1282738886</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">775535238</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">775535239</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v23</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v24</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">|</span> <span class="mh">0xFFFFFFFE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v25</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="n">v24</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v25</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v23</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v7</span> <span class="o">=</span> <span class="n">v24</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v26</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v26</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v27</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v28</span> <span class="o">=</span> <span class="n">v25</span> <span class="o">^</span> <span class="n">v23</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v27</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v7</span> <span class="o">=</span> <span class="p">((</span><span class="n">v26</span> <span class="o">|</span> <span class="n">v27</span><span class="p">)</span> <span class="o">^</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">v28</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">909066482</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                          <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">v2</span> <span class="o">=</span> <span class="mi">129779082</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">509119053</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">509119054</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v29</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v30</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span> <span class="o">^</span> <span class="mh">0xFFFFFFFE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v31</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v30</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v31</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v29</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v32</span> <span class="o">=</span> <span class="n">v30</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v33</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v34</span> <span class="o">=</span> <span class="n">v31</span> <span class="o">^</span> <span class="n">v29</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v33</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v7</span> <span class="o">=</span> <span class="p">((</span><span class="n">v32</span> <span class="o">|</span> <span class="n">v33</span><span class="p">)</span> <span class="o">^</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">v34</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1072311659</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                          <span class="n">v2</span> <span class="o">=</span> <span class="mi">1389383841</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">327108676</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">327108677</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">goto</span> <span class="n">LABEL_73</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                  <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="mi">129779081</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                  <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">129779082</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                  <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v35</span> <span class="o">=</span> <span class="nf">sub_97C4</span><span class="p">((</span><span class="kt">float</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_21BA0</span><span class="p">,</span> <span class="mi">13</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v36</span> <span class="o">=</span> <span class="nf">getpid</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                    <span class="nf">sprintf</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v52</span><span class="p">,</span> <span class="n">v35</span><span class="p">,</span> <span class="n">v36</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="nf">free</span><span class="p">(</span><span class="n">v35</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1072311660</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v37</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v52</span><span class="p">,</span> <span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_1B5A1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">stream</span> <span class="o">=</span> <span class="n">v37</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span> <span class="n">v37</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="nf">LOBYTE</span><span class="p">(</span><span class="n">v37</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v49</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)</span><span class="n">v37</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v38</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">|</span> <span class="mh">0xFFFFFFFE</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">v38</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v39</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">v39</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v7</span> <span class="o">=</span> <span class="p">((</span><span class="n">v38</span> <span class="o">|</span> <span class="n">v39</span><span class="p">)</span> <span class="o">^</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">v39</span> <span class="o">^</span> <span class="n">v38</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">909066482</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1401839158</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1046283838</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                  <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1072311659</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                  <span class="nf">fclose</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                  <span class="nf">sub_113FC</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                  <span class="n">v2</span> <span class="o">=</span> <span class="mi">1389383841</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">              <span class="p">}</span>
+</span></span><span class="line"><span class="cl">              <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">909066483</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">              <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1046283837</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">              <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">fclose</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">sub_113FC</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">                <span class="k">goto</span> <span class="n">LABEL_87</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">              <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">813385351</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">              <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">909066482</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="n">v40</span> <span class="o">=</span> <span class="nf">sub_97C4</span><span class="p">((</span><span class="kt">float</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_21BA0</span><span class="p">,</span> <span class="mi">13</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">              <span class="n">v41</span> <span class="o">=</span> <span class="nf">getpid</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">              <span class="nf">sprintf</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v52</span><span class="p">,</span> <span class="n">v40</span><span class="p">,</span> <span class="n">v41</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">              <span class="nf">free</span><span class="p">(</span><span class="n">v40</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">              <span class="n">v0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1072311660</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">              <span class="nf">fopen</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v52</span><span class="p">,</span> <span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">unk_1B5A1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">              <span class="n">v2</span> <span class="o">=</span> <span class="mi">129779082</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">419580538</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">813385350</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v2</span> <span class="o">=</span> <span class="mi">4185867</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">370315562</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">419580537</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v42</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="p">((</span><span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span> <span class="o">^</span> <span class="mh">0xFFFFFFFE</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span><span class="p">)</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v42</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v43</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v43</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v7</span> <span class="o">=</span> <span class="p">(</span><span class="n">v42</span> <span class="o">&amp;</span> <span class="n">v43</span> <span class="o">|</span> <span class="n">v43</span> <span class="o">^</span> <span class="n">v42</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">813385350</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v2</span> <span class="o">=</span> <span class="mi">4185867</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mi">104947838</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="k">switch</span> <span class="p">(</span> <span class="n">v2</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="o">-</span><span class="mi">104947837</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">fclose</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v2</span> <span class="o">=</span> <span class="mi">3915268</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="mi">3915268</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">          <span class="k">goto</span> <span class="n">LABEL_108</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="mi">4185867</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v44</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="p">((</span><span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span> <span class="o">^</span> <span class="mh">0xFFFFFFFE</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="o">*</span> <span class="o">~-</span><span class="n">x</span><span class="p">)</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v44</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v45</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v45</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v7</span> <span class="o">=</span> <span class="p">(</span><span class="n">v44</span> <span class="o">&amp;</span> <span class="n">v45</span> <span class="o">|</span> <span class="n">v45</span> <span class="o">^</span> <span class="n">v44</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">v2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">813385350</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span> <span class="o">!</span><span class="n">v7</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v2</span> <span class="o">=</span> <span class="mi">1723222422</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">while</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">370315561</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">_stack_chk_guard</span> <span class="o">-</span> <span class="n">v53</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>代码量不长，检测点应该都收敛在maps中，两个需要注意的函数</p>
+<ul>
+<li>sub_97C4
+负责字符动态解密的，有多处调用
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">_BYTE</span> <span class="o">*</span><span class="kr">__fastcall</span> <span class="nf">sub_97C4</span><span class="p">(</span><span class="kt">float</span> <span class="o">*</span><span class="n">a1</span><span class="p">,</span> <span class="kt">signed</span> <span class="kt">int</span> <span class="n">a2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="kt">signed</span> <span class="kt">int</span> <span class="n">v2</span><span class="p">;</span> <span class="c1">// r4
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">float</span> <span class="o">*</span><span class="n">v3</span><span class="p">;</span> <span class="c1">// r5
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">_BYTE</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span> <span class="c1">// r0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">_BYTE</span> <span class="o">*</span><span class="n">v5</span><span class="p">;</span> <span class="c1">// r1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">signed</span> <span class="kt">int</span> <span class="n">v6</span><span class="p">;</span> <span class="c1">// r2
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">float</span> <span class="n">v7</span><span class="p">;</span> <span class="c1">// s0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">v2</span> <span class="o">=</span> <span class="n">a2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">v3</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="n">a2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span> <span class="n">v2</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">v5</span> <span class="o">=</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">v6</span> <span class="o">=</span> <span class="n">v2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">do</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">v7</span> <span class="o">=</span> <span class="o">*</span><span class="n">v3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">++</span><span class="n">v3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">--</span><span class="n">v6</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">v5</span><span class="o">++</span> <span class="o">=</span> <span class="p">((</span><span class="kt">signed</span> <span class="kt">int</span><span class="p">)(</span><span class="kt">float</span><span class="p">)(</span><span class="n">v7</span> <span class="o">+</span> <span class="n">v7</span><span class="p">)</span> <span class="o">^</span> <span class="mh">0xDE</span><span class="p">)</span> <span class="o">+</span> <span class="mi">34</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span> <span class="n">v6</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span><span class="p">[</span><span class="n">v2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>sub_113FC
+syscall执行系统编号37的功能，就是kill，等待1秒后杀死当前进程
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">int sub_113FC()
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">__pid_t v0; // r0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">sleep(1u);
+</span></span><span class="line"><span class="cl">v0 = getpid();
+</span></span><span class="line"><span class="cl">return syscall(37, v0, 9);
+</span></span><span class="line"><span class="cl">}</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h3 id="三-总结" class="heading-element"><span>三 总结</span>
+  <a href="#%e4%b8%89-%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>完整代码看这里<a href="https://github.com/tcc0lin/SecCase/blob/main/libJDMobileSec.js"target="_blank" rel="external nofollow noopener noreferrer">libJDMobileSec.js</a></p>
+</div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B1/" title="Frida特征对抗案例1">Frida特征对抗案例1</a></li><li>
+          <a href="/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" title="StrongR Frida特征魔改">StrongR Frida特征魔改</a></li><li>
+          <a href="/posts/frida%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" title="Frida源码阅读">Frida源码阅读</a></li><li>
+          <a href="/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" title="Frida调试环境搭建">Frida调试环境搭建</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-08-19 23:05:38">更新于 2023-08-19&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/" data-title="Frida特征对抗案例2" data-hashtags="frida,对抗案例"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/" data-hashtag="frida"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B2/" data-title="Frida特征对抗案例2"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/frida/" class="post-tag" title="标签 - Frida">Frida</a><a href="/tags/%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B/" class="post-tag" title="标签 - 对抗案例">对抗案例</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/" class="post-nav-item" rel="prev" title="Frida源码编译说明"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Frida源码编译说明</a><a href="/posts/frida%E7%89%B9%E5%BE%81%E5%AF%B9%E6%8A%97%E6%A1%88%E4%BE%8B1/" class="post-nav-item" rel="next" title="Frida特征对抗案例1">Frida特征对抗案例1<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

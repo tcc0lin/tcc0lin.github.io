@@ -1,50 +1,12 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>SHA256算法 - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/sha256%E7%AE%97%E6%B3%95/</link>
-        <description>SHA256算法 - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/sha256%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
-    <title>从RFC6234中理解SHA2-256算法</title>
-    <link>https://tcc0lin.github.io/%E4%BB%8Erfc6234%E4%B8%AD%E7%90%86%E8%A7%A3sha2-256%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E4%BB%8Erfc6234%E4%B8%AD%E7%90%86%E8%A7%A3sha2-256%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[<h3 id="一前置知识点" class="headerLink">
-    <a href="#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9" class="header-mark"></a>一、前置知识点</h3><p>SHA2-256算法是SHA第二代的算法，256指的是它的算法结果会产生256位数据，也就是32字节、64位长度的16进制字符。</p>
-<h3 id="二算法流程" class="headerLink">
-    <a href="#%e4%ba%8c%e7%ae%97%e6%b3%95%e6%b5%81%e7%a8%8b" class="header-mark"></a>二、算法流程</h3><p>算法流程就不多做介绍，同其他哈希算法流程类似，都需要经历补位、填充长度以及分组，不同的是每轮循环所做的操作</p>
-<h4 id="1-补位" class="headerLink">
-    <a href="#1-%e8%a1%a5%e4%bd%8d" class="header-mark"></a>1 补位</h4><p>基本一样，不做额外说明</p>
-<h4 id="2-记录信息长度" class="headerLink">
-    <a href="#2-%e8%ae%b0%e5%bd%95%e4%bf%a1%e6%81%af%e9%95%bf%e5%ba%a6" class="header-mark"></a>2 记录信息长度</h4><p>同上</p>
-<h4 id="3-初始化变量" class="headerLink">
-    <a href="#3-%e5%88%9d%e5%a7%8b%e5%8c%96%e5%8f%98%e9%87%8f" class="header-mark"></a>3 初始化变量</h4><p>依旧是从常量的初始化开始，根据结果256位来看，需要8个常量组成，常量的计算方式是取自自然数中前面8个素数(2,3,5,7,11,13,17,19)的平方根的小数部分的前32位，举例看</p>]]></description>
-</item><item>
-    <title>探讨关于SHA256算法的魔改方式</title>
-    <link>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha256%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha256%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[<ul>
-<li>写法
-<ul>
-<li>函数名</li>
-<li>常量初始化方式</li>
-</ul>
-</li>
-<li>算法常量
-<ul>
-<li>IV</li>
-<li>K常量表</li>
-</ul>
-</li>
-<li>算法流程
-<ul>
-<li>分组数据变化的步函数</li>
-<li>非线性函数</li>
-<li>每次计算时初始化变量赋值方式</li>
-</ul>
-</li>
-</ul>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SHA256算法 - 标签 - </title>
+    <link>http://localhost:1313/tags/sha256%E7%AE%97%E6%B3%95/</link>
+    <description></description>
+    <generator>Hugo 0.144.2 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate></lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/sha256%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
 </rss>

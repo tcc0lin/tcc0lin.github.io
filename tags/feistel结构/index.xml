@@ -1,14 +1,20 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>Feistel结构 - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/feistel%E7%BB%93%E6%9E%84/</link>
-        <description>Feistel结构 - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/feistel%E7%BB%93%E6%9E%84/" rel="self" type="application/rss+xml" /><item>
-    <title>Feistel密码结构学习</title>
-    <link>https://tcc0lin.github.io/feistel%E5%AF%86%E7%A0%81%E7%BB%93%E6%9E%84%E5%AD%A6%E4%B9%A0/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/feistel%E5%AF%86%E7%A0%81%E7%BB%93%E6%9E%84%E5%AD%A6%E4%B9%A0/</guid>
-    <description><![CDATA[]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Feistel结构 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/feistel%E7%BB%93%E6%9E%84/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 09 May 2023 22:36:47 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/feistel%E7%BB%93%E6%9E%84/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Feistel密码结构学习</title>
+      <link>http://localhost:1313/posts/feistel%E5%AF%86%E7%A0%81%E7%BB%93%E6%9E%84%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/feistel%E5%AF%86%E7%A0%81%E7%BB%93%E6%9E%84%E5%AD%A6%E4%B9%A0/</guid>
+      <category domain="http://localhost:1313/categories/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">加密算法研究</category>
+      <description>Feistel密码结构学习</description>
+    </item>
+  </channel>
 </rss>

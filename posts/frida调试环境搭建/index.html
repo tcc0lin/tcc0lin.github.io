@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Frida调试环境搭建 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="一、背景 从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts&#43;npm，优势在于
+"><meta name="keywords" content='frida, 源码编译'>
+  <meta itemprop="name" content="Frida调试环境搭建">
+  <meta itemprop="description" content="一、背景 从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts&#43;npm，优势在于">
+  <meta itemprop="datePublished" content="2023-02-21T22:51:53+08:00">
+  <meta itemprop="dateModified" content="2023-02-21T22:51:53+08:00">
+  <meta itemprop="wordCount" content="591">
+  <meta itemprop="keywords" content="Frida,源码编译"><meta property="og:url" content="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Frida调试环境搭建">
+  <meta property="og:description" content="一、背景 从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts&#43;npm，优势在于">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-02-21T22:51:53+08:00">
+    <meta property="article:modified_time" content="2023-02-21T22:51:53+08:00">
+    <meta property="article:tag" content="Frida">
+    <meta property="article:tag" content="源码编译">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Frida调试环境搭建">
+  <meta name="twitter:description" content="一、背景 从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts&#43;npm，优势在于">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" title="Frida调试环境搭建 - 佛光普照" /><link rel="next" type="text/html" href="http://localhost:1313/posts/frida%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" title="Frida源码阅读" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/index.md" title="Frida调试环境搭建 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Frida调试环境搭建",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA\/"
+    },"genre": "posts","keywords": "frida, 源码编译","wordcount":  591 ,
+    "url": "http:\/\/localhost:1313\/posts\/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA\/","datePublished": "2023-02-21T22:51:53+08:00","dateModified": "2023-02-21T22:51:53+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Frida调试环境搭建</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Frida调试环境搭建</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/hook%E6%A1%86%E6%9E%B6/" class="post-category" title="分类 - Hook框架"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Hook框架</a></span></div><div class="post-meta-line"><span title="发布于 2023-02-21 22:51:53"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-02-21">2023-02-21</time></span>&nbsp;<span title="591 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 600 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 2 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#一背景">一、背景</a></li>
+    <li><a href="#二frida-ts项目配置">二、frida ts项目配置</a></li>
+    <li><a href="#三chrome调试环境配置">三、chrome调试环境配置</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h2 id="一背景" class="heading-element"><span>一、背景</span>
+  <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>从上手难度上来说frida可以说是开箱即用，几乎没有学习成本，对于大多数使用者来说，任何一个App都可以直接使用一个js脚本搞定。但是当面对繁多的App，如何将这种分析工具进行模块化拆分是需要好好思考思考的，直接使用js来做不太现实，而解决方案是ts+npm，优势在于</p>
+<ul>
+<li>静态类型系统：提供静态类型检查，编译时即可发现类型错误，提升代码健壮性和可维护性</li>
+<li>模块化管理：通过类型系统实现模块间的契约式开发，适用于大型项目管理</li>
+</ul>
+<h2 id="二frida-ts项目配置" class="heading-element"><span>二、frida ts项目配置</span>
+  <a href="#%e4%ba%8cfrida-ts%e9%a1%b9%e7%9b%ae%e9%85%8d%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>frida接入ts开发可以参考<a href="https://github.com/oleavr/frida-agent-example"target="_blank" rel="external nofollow noopener noreferrer">frida-agent-example</a>，使用方式也很简单，参考</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ git clone git://github.com/oleavr/frida-agent-example.git
+</span></span><span class="line"><span class="cl">$ <span class="nb">cd</span> frida-agent-example/
+</span></span><span class="line"><span class="cl">$ npm install
+</span></span><span class="line"><span class="cl">$ frida -U -f com.example.android --no-pause -l _agent.js</span></span></code></pre></td></tr></table>
+</div>
+</div><p>实时编译可以直接调用<code>npm run watch</code>，如下
+<img loading="lazy" src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190405@2x.7zqk9ymbhn.webp" alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190405@2x.7zqk9ymbhn.webp" srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190405@2x.7zqk9ymbhn.webp?size=small, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190405@2x.7zqk9ymbhn.webp?size=medium 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190405@2x.7zqk9ymbhn.webp?size=large 2x" data-title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190405@2x.7zqk9ymbhn.webp" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>
+原理可以看<code>package.json</code>配置文件</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;frida-agent-example&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;version&#34;</span><span class="p">:</span> <span class="s2">&#34;1.0.0&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;Example Frida agent written in TypeScript&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;private&#34;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;main&#34;</span><span class="p">:</span> <span class="s2">&#34;agent/index.ts&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;scripts&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;prepare&#34;</span><span class="p">:</span> <span class="s2">&#34;npm run build&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;build&#34;</span><span class="p">:</span> <span class="s2">&#34;frida-compile agent/index.ts -o _agent.js -c&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;watch&#34;</span><span class="p">:</span> <span class="s2">&#34;frida-compile agent/index.ts -o _agent.js -w&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">},</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;devDependencies&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;@types/frida-gum&#34;</span><span class="p">:</span> <span class="s2">&#34;^18.5.1&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;@types/node&#34;</span><span class="p">:</span> <span class="s2">&#34;^18.19.3&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;frida-compile&#34;</span><span class="p">:</span> <span class="s2">&#34;^16.4.1&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>调用的是<code>frida-compile agent/index.ts -o _agent.js -w</code>来编译</p>
+<p>修改index.ts代码可以动态编译
+<img loading="lazy" src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190714@2x.2ks1rj7649.webp" alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190714@2x.2ks1rj7649.webp" srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190714@2x.2ks1rj7649.webp?size=small, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190714@2x.2ks1rj7649.webp?size=medium 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190714@2x.2ks1rj7649.webp?size=large 2x" data-title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190714@2x.2ks1rj7649.webp" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<p>frida ts环境配置完成后需要主动暴露端口接入chrome调试，如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-ts" data-lang="ts"><span class="line"><span class="cl"><span class="nx">frida</span> <span class="o">-</span><span class="nx">U</span> <span class="o">-</span><span class="nx">f</span> <span class="nx">com</span><span class="p">.</span><span class="nx">tencent</span><span class="p">.</span><span class="nx">wework</span> <span class="o">-</span><span class="nx">l</span> <span class="nx">_agent</span><span class="p">.</span><span class="nx">js</span> <span class="o">--</span><span class="nx">debug</span> <span class="o">--</span><span class="nx">runtime</span><span class="o">=</span><span class="nx">v8</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><img loading="lazy" src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190512@2x.6wquz2qhm6.webp" alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190512@2x.6wquz2qhm6.webp" srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190512@2x.6wquz2qhm6.webp?size=small, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190512@2x.6wquz2qhm6.webp?size=medium 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190512@2x.6wquz2qhm6.webp?size=large 2x" data-title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190512@2x.6wquz2qhm6.webp" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>
+默认端口为9229</p>
+<h2 id="三chrome调试环境配置" class="heading-element"><span>三、chrome调试环境配置</span>
+  <a href="#%e4%b8%89chrome%e8%b0%83%e8%af%95%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>chrome打开标签<code>chrome://inspect</code>，点击<code>Open dedicated DevTools for Node</code>来新打开<code>DevTools</code>
+<img loading="lazy" src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190548@2x.9dd3dzxdip.webp" alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190548@2x.9dd3dzxdip.webp" srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190548@2x.9dd3dzxdip.webp?size=small, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190548@2x.9dd3dzxdip.webp?size=medium 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190548@2x.9dd3dzxdip.webp?size=large 2x" data-title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190548@2x.9dd3dzxdip.webp" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>
+进入<code>DevTools</code>后切换到Source可以看到该端口对应的文件
+<img loading="lazy" src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190620@2x.1ap4l7p6t0.webp" alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190620@2x.1ap4l7p6t0.webp" srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190620@2x.1ap4l7p6t0.webp?size=small, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190620@2x.1ap4l7p6t0.webp?size=medium 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190620@2x.1ap4l7p6t0.webp?size=large 2x" data-title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190620@2x.1ap4l7p6t0.webp" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>
+单步调试
+<img loading="lazy" src="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190811@2x.8vn1pevzy5.webp" alt="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190811@2x.8vn1pevzy5.webp" srcset="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190811@2x.8vn1pevzy5.webp?size=small, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190811@2x.8vn1pevzy5.webp?size=medium 1.5x, https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190811@2x.8vn1pevzy5.webp?size=large 2x" data-title="https://github.com/tcc0lin/picx-images-hosting/raw/master/WX20250221-190811@2x.8vn1pevzy5.webp" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+</div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-02-21 22:51:53">更新于 2023-02-21&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" data-title="Frida调试环境搭建" data-hashtags="frida,源码编译"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" data-hashtag="frida"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" data-title="Frida调试环境搭建"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/frida/" class="post-tag" title="标签 - Frida">Frida</a><a href="/tags/%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/" class="post-tag" title="标签 - 源码编译">源码编译</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/frida%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" class="post-nav-item" rel="prev" title="Frida源码阅读"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Frida源码阅读</a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

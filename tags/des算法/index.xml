@@ -1,14 +1,12 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>DES算法 - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/des%E7%AE%97%E6%B3%95/</link>
-        <description>DES算法 - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 09 May 2023 22:36:47 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/des%E7%AE%97%E6%B3%95/" rel="self" type="application/rss+xml" /><item>
-    <title>从FIPS 46-3中理解DES算法</title>
-    <link>https://tcc0lin.github.io/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</link>
-    <pubDate>Tue, 09 May 2023 22:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/</guid>
-    <description><![CDATA[<p>DES是一种对称密钥的块加密算法。”对称密钥”，是因为加密、解密用的密钥是一样的（这不同于RSA等非对称密钥体系）。“块加密”，是因为这种算法把明文划分为很多个等长的块(block)，对每个块进行加密，最后以某种手段拼在一起。“块加密”亦称“分组加密”。</p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>DES算法 - 标签 - </title>
+    <link>http://localhost:1313/tags/des%E7%AE%97%E6%B3%95/</link>
+    <description></description>
+    <generator>Hugo 0.144.2 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate></lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/des%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
 </rss>

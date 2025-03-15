@@ -1,20 +1,20 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>Linux内核 - 分类 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/categories/linux%E5%86%85%E6%A0%B8/</link>
-        <description>Linux内核 - 分类 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/linux%E5%86%85%E6%A0%B8/" rel="self" type="application/rss+xml" /><item>
-    <title>Linux Kprobe原理探究</title>
-    <link>https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</link>
-    <pubDate>Fri, 26 Apr 2024 21:19:53 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</guid>
-    <description><![CDATA[<p>之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括</p>
-<ul>
-<li>App访问、操作了哪些文件</li>
-<li>执行了哪些操作</li>
-<li>对于相关操作进行针对性的修改等等</li>
-</ul>
-<p>其中很棘手的问题在于如何应对App中越来越常见的内联系统调用，对于内联系统调用的监控我不希望通过ptrace这类进程注入的方式来实现，而是想寻求通过定制系统或者相关的方式来实现以达到无侵入App的目的</p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux内核 - 分类 - 佛光普照</title>
+    <link>http://localhost:1313/categories/linux%E5%86%85%E6%A0%B8/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Fri, 26 Apr 2024 21:19:53 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/linux%E5%86%85%E6%A0%B8/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Linux Kprobe原理探究</title>
+      <link>http://localhost:1313/posts/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</link>
+      <pubDate>Fri, 26 Apr 2024 21:19:53 +0800</pubDate>
+      <guid>http://localhost:1313/posts/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/</guid>
+      <category domain="http://localhost:1313/categories/linux%E5%86%85%E6%A0%B8/">Linux内核</category>
+      <description>&lt;p&gt;之前在分析其他安全厂商App的防护策略时，想要设计个风控分析沙盒来实现对于App行为的全面监控，包括&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;App访问、操作了哪些文件&lt;/li&gt;&#xA;&lt;li&gt;执行了哪些操作&lt;/li&gt;&#xA;&lt;li&gt;对于相关操作进行针对性的修改等等&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;其中很棘手的问题在于如何应对App中越来越常见的内联系统调用，对于内联系统调用的监控我不希望通过ptrace这类进程注入的方式来实现，而是想寻求通过定制系统或者相关的方式来实现以达到无侵入App的目的&lt;/p&gt;</description>
+    </item>
+  </channel>
 </rss>

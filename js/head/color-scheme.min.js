@@ -1,0 +1,1 @@
+(()=>{var t={defaultTheme:"light"};(function(){let a=window.localStorage;if(!a)return;let e=!1,m=a.getItem("theme");m?e=m==="dark":e=t.defaultTheme==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:t.defaultTheme==="dark",e&&(document.documentElement.dataset.theme="dark")})();})();

@@ -1,24 +1,28 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>Zygisk - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/zygisk/</link>
-        <description>Zygisk - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/zygisk/" rel="self" type="application/rss+xml" /><item>
-    <title>Zygisk-v27.0源码阅读</title>
-    <link>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
-    <pubDate>Wed, 06 Mar 2024 22:56:31 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
-    <description><![CDATA[<p>隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以<code>(zygisk_enabled)</code>作为关键搜索词切入</p>]]></description>
-</item><item>
-    <title>Zygisk源码阅读</title>
-    <link>https://tcc0lin.github.io/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
-    <pubDate>Sun, 11 Jun 2023 11:36:47 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
-    <description><![CDATA[<p>基于Magisk v25.0</p>
-<h3 id="一zygisk注入" class="headerLink">
-    <a href="#%e4%b8%80zygisk%e6%b3%a8%e5%85%a5" class="header-mark"></a>一、Zygisk注入</h3><h4 id="1-magic_mount挂载app_process" class="headerLink">
-    <a href="#1-magic_mount%e6%8c%82%e8%bd%bdapp_process" class="header-mark"></a>1. magic_mount挂载app_process</h4><p>magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的</p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Zygisk - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/zygisk/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 06 Mar 2024 22:56:31 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/zygisk/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Zygisk-v27.0源码阅读</title>
+      <link>http://localhost:1313/posts/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
+      <pubDate>Wed, 06 Mar 2024 22:56:31 +0800</pubDate>
+      <guid>http://localhost:1313/posts/zygisk-v27.0%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;p&gt;隔了很久再读Magisk源码中关于Zygisk的部分，上次翻源码还是v25.0，这次已经更新到了v27.0。粗略扫了眼，变化的地方还是挺多的，想搜索一下关键字也基本上搜索不到，懒得重新过一遍源码，既然是关于zygisk，那就以&lt;code&gt;(zygisk_enabled)&lt;/code&gt;作为关键搜索词切入&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Zygisk源码阅读</title>
+      <link>http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</link>
+      <pubDate>Sun, 11 Jun 2023 11:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/</guid>
+      <category domain="http://localhost:1313/categories/magisk/">Magisk</category>
+      <description>&lt;p&gt;基于Magisk v25.0&lt;/p&gt;&#xA;&lt;h3 id=&#34;一zygisk注入&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、Zygisk注入&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80zygisk%e6%b3%a8%e5%85%a5&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;h4 id=&#34;1-magic_mount挂载app_process&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;1. magic_mount挂载app_process&lt;/span&gt;&#xA;  &lt;a href=&#34;#1-magic_mount%e6%8c%82%e8%bd%bdapp_process&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;p&gt;magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的&lt;/p&gt;</description>
+    </item>
+  </channel>
 </rss>

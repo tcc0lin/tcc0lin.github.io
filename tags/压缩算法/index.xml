@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>压缩算法 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 06 Nov 2023 15:00:04 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>整数压缩算法理解</title>
+      <link>http://localhost:1313/posts/%E6%95%B4%E6%95%B0%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</link>
+      <pubDate>Mon, 06 Nov 2023 15:00:04 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%95%B4%E6%95%B0%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>整数压缩算法理解</description>
+    </item>
+    <item>
+      <title>Zlib压缩算法理解</title>
+      <link>http://localhost:1313/posts/zlib%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</link>
+      <pubDate>Mon, 06 Nov 2023 14:59:55 +0800</pubDate>
+      <guid>http://localhost:1313/posts/zlib%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E7%90%86%E8%A7%A3/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>Zlib压缩算法理解</description>
+    </item>
+  </channel>
+</rss>

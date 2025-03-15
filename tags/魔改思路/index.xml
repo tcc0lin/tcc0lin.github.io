@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>魔改思路 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/%E9%AD%94%E6%94%B9%E6%80%9D%E8%B7%AF/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 01 Aug 2023 18:30:58 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E9%AD%94%E6%94%B9%E6%80%9D%E8%B7%AF/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>StrongR Frida特征魔改</title>
+      <link>http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</link>
+      <pubDate>Tue, 01 Aug 2023 18:30:58 +0800</pubDate>
+      <guid>http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/</guid>
+      <category domain="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6/">Hook框架</category>
+      <description>&lt;h3 id=&#34;一背景&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、背景&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e8%83%8c%e6%99%af&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;参考项目&lt;a href=&#34;https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;strongR-frida&lt;/a&gt;对frida14.2.18进行魔改&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于Base64算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;编码表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于CRC32算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;CRC码表&lt;/li&gt;&#xA;&lt;li&gt;多项式的二进制&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;CRC码表生成方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于MD5算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;li&gt;常量初始化方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;IV&lt;/li&gt;&#xA;&lt;li&gt;转换变量&lt;/li&gt;&#xA;&lt;li&gt;T常量表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;非线性函数&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于RC4算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;S盒长度、值&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;数据交换&lt;/li&gt;&#xA;&lt;li&gt;流数据异或&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于SHA1算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha1%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha1%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;li&gt;常量初始化方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;IV&lt;/li&gt;&#xA;&lt;li&gt;K常量表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;分组数据变化的步函数&lt;/li&gt;&#xA;&lt;li&gt;非线性函数&lt;/li&gt;&#xA;&lt;li&gt;每次计算时初始化变量赋值方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于SHA256算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha256%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha256%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;li&gt;常量初始化方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;IV&lt;/li&gt;&#xA;&lt;li&gt;K常量表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;分组数据变化的步函数&lt;/li&gt;&#xA;&lt;li&gt;非线性函数&lt;/li&gt;&#xA;&lt;li&gt;每次计算时初始化变量赋值方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Draft - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/draft/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sat, 15 Mar 2025 22:24:25 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/draft/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Mmtls</title>
+      <link>http://localhost:1313/posts/e23c1e5/</link>
+      <pubDate>Sat, 15 Mar 2025 11:38:49 +0800</pubDate>
+      <guid>http://localhost:1313/posts/e23c1e5/</guid>
+      <category domain="http://localhost:1313/categories/draft/">Draft</category>
+      <description>Mmtls</description>
+    </item>
+    <item>
+      <title>Tls1.3</title>
+      <link>http://localhost:1313/posts/c387058/</link>
+      <pubDate>Sat, 15 Mar 2025 11:38:37 +0800</pubDate>
+      <guid>http://localhost:1313/posts/c387058/</guid>
+      <category domain="http://localhost:1313/categories/draft/">Draft</category>
+      <description>Tls1.3</description>
+    </item>
+    <item>
+      <title>Tls1.2</title>
+      <link>http://localhost:1313/posts/256250e/</link>
+      <pubDate>Sat, 15 Mar 2025 11:38:33 +0800</pubDate>
+      <guid>http://localhost:1313/posts/256250e/</guid>
+      <category domain="http://localhost:1313/categories/draft/">Draft</category>
+      <description>Tls1.2</description>
+    </item>
+  </channel>
+</rss>

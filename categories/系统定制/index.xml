@@ -1,107 +1,52 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>系统定制 - 分类 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/</link>
-        <description>系统定制 - 分类 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 24 Sep 2023 19:21:12 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/" rel="self" type="application/rss+xml" /><item>
-    <title>Android11AOSP编译流程</title>
-    <link>https://tcc0lin.github.io/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
-    <pubDate>Sun, 24 Sep 2023 19:21:12 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
-    <description><![CDATA[<h3 id="前言" class="headerLink">
-    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><h3 id="一编译环境搭建" class="headerLink">
-    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
-    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
-<li>设备：pixel2（walleye）</li>
-<li>源码：<a href="https://source.android.google.cn/docs/setup/about/build-numbers?hl=zh-cn" target="_blank" rel="noopener noreferrer">aosp源码</a>
-<ul>
-<li>build id：RP1A.200720.009</li>
-<li>tag：android-11.0.0_r1</li>
-<li>sdk version：Android11</li>
-</ul>
-</li>
-<li>驱动源码准备：<a href="https://developers.google.cn/android/drivers" target="_blank" rel="noopener noreferrer">驱动源码</a></li>
-</ul>
-<h4 id="2-工具准备" class="headerLink">
-    <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="header-mark"></a>2 工具准备</h4><ul>
-<li>编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘）</li>
-<li>三方库准备
-<div class="code-block highlight is-open show-line-numbers  tw-group tw-my-2">
-  <div class="
-    code-block-title 
-    
-    tw-flex 
-    tw-flex-row 
-    tw-justify-between 
-    tw-w-full tw-bg-bgColor-secondary
-    ">      
-    <button 
-      class="
-        tw-select-none 
-        tw-mx-2 
-        tw-block
-        group-[.is-open]:tw-rotate-90
-        tw-transition-[transform] 
-        tw-duration-500 
-        tw-ease-in-out
-        print:!tw-hidden"
-      disabled
-      aria-hidden="true"><svg class="icon"
-    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button>
-
-    <div class="code-block-title-bar tw-w-full">
-      <p class="tw-select-none !tw-my-1">shell</p>]]></description>
-</item><item>
-    <title>Super分区定制</title>
-    <link>https://tcc0lin.github.io/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/</link>
-    <pubDate>Mon, 31 Jul 2023 20:05:53 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/</guid>
-    <description><![CDATA[<h3 id="一编译环境搭建" class="headerLink">
-    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
-    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
-<li>设备：红米note11（MIUI12 Android11）</li>
-<li>原生super.img镜像文件，参考<a href="https://xiaomifirmwareupdater.com/miui/selenes/" target="_blank" rel="noopener noreferrer">下载网站</a></li>
-</ul>
-<h4 id="2-工具准备" class="headerLink">
-    <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="header-mark"></a>2 工具准备</h4><ul>
-<li>编译支撑系统：ubuntu14（经测试不受版本影响，正常来说ubuntu都可以安装所有的工具）</li>
-<li><a href="https://github.com/anestisb/android-simg2img" target="_blank" rel="noopener noreferrer">simg2img</a></li>
-<li><a href="https://github.com/LonelyFool/lpunpack_and_lpmake" target="_blank" rel="noopener noreferrer">lpunpack/lmake</a></li>
-<li>imjtool</li>
-</ul>
-<h3 id="二案例说明内置应用" class="headerLink">
-    <a href="#%e4%ba%8c%e6%a1%88%e4%be%8b%e8%af%b4%e6%98%8e%e5%86%85%e7%bd%ae%e5%ba%94%e7%94%a8" class="header-mark"></a>二、案例说明（内置应用）</h3><h4 id="1-镜像格式转化" class="headerLink">
-    <a href="#1-%e9%95%9c%e5%83%8f%e6%a0%bc%e5%bc%8f%e8%bd%ac%e5%8c%96" class="header-mark"></a>1 镜像格式转化</h4><p>正常image镜像都是Android sparse image格式的</p>]]></description>
-</item><item>
-    <title>基于内核的改机策略</title>
-    <link>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</link>
-    <pubDate>Mon, 10 Jul 2023 00:10:12 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</guid>
-    <description><![CDATA[<p>以红米Note11内核改机为例说明</p>
-<ul>
-<li>sys.c：内核版本</li>
-<li>statfs.c：文件信息</li>
-<li>stat.c：文件信息</li>
-<li>readdir.c：目录下的文件列表</li>
-<li>open.c：文件重定向</li>
-</ul>]]></description>
-</item><item>
-    <title>红米Note11内核编译流程</title>
-    <link>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
-    <pubDate>Fri, 30 Jun 2023 23:50:17 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
-    <description><![CDATA[<h3 id="前言" class="headerLink">
-    <a href="#%e5%89%8d%e8%a8%80" class="header-mark"></a>前言</h3><p>涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource" target="_blank" rel="noopener noreferrer">源码</a>，可以根据自身设备的型号来选择，下面简单描述下编译流程</p>
-<h3 id="一编译环境搭建" class="headerLink">
-    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><h4 id="1-物料准备" class="headerLink">
-    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
-<li>设备：红米note11（MIUI12 Android11）</li>
-<li>源码：<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource/tree/selene-r-oss" target="_blank" rel="noopener noreferrer">selene版本内核源码</a>
-<blockquote>
-  <p>需要注意的是note11(selenes)是国内的叫法，而国际版对应的是红米10(selene)</p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>系统定制 - 分类 - 佛光普照</title>
+    <link>http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 27 Mar 2024 18:51:18 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>基于Kernel Kprobe机制的改机架构实现</title>
+      <link>http://localhost:1313/posts/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/</link>
+      <pubDate>Wed, 27 Mar 2024 18:51:18 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E5%9F%BA%E4%BA%8Ekernel-kprobe%E6%9C%BA%E5%88%B6%E7%9A%84%E6%94%B9%E6%9C%BA%E6%9E%B6%E6%9E%84%E5%AE%9E%E7%8E%B0/</guid>
+      <category domain="http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/">系统定制</category>
+      <description>&lt;h3 id=&#34;一背景&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、背景&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e8%83%8c%e6%99%af&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;如上文&lt;a href=&#34;https://tcc0lin.github.io/linux-kprobe%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6/&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;Linux Kprobe原理探究&#xA;&lt;/a&gt;所提及的，Kprobe有多种玩法，在设备改机场景中可以通过对内核系统函数的篡改以完成改机的目的，本文就是基于Kernel Kprobe机制来搭建一套完整的改机架构&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Android11AOSP编译流程</title>
+      <link>http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
+      <pubDate>Sun, 24 Sep 2023 19:21:12 +0800</pubDate>
+      <guid>http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
+      <category domain="http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/">系统定制</category>
+      <description>&lt;h3 id=&#34;前言&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;前言&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e5%89%8d%e8%a8%80&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;h3 id=&#34;一编译环境搭建&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、编译环境搭建&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;h4 id=&#34;1-物料准备&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;1 物料准备&lt;/span&gt;&#xA;  &lt;a href=&#34;#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;ul&gt;&#xA;&lt;li&gt;设备：pixel2（walleye）&lt;/li&gt;&#xA;&lt;li&gt;源码：&lt;a href=&#34;https://source.android.google.cn/docs/setup/about/build-numbers?hl=zh-cn&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;aosp源码&lt;/a&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;build id：RP1A.200720.009&lt;/li&gt;&#xA;&lt;li&gt;tag：android-11.0.0_r1&lt;/li&gt;&#xA;&lt;li&gt;sdk version：Android11&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;驱动源码准备：&lt;a href=&#34;https://developers.google.cn/android/drivers&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;驱动源码&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h4 id=&#34;2-工具准备&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;2 工具准备&lt;/span&gt;&#xA;  &lt;a href=&#34;#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;ul&gt;&#xA;&lt;li&gt;编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘）&lt;/li&gt;&#xA;&lt;li&gt;三方库准备&#xA;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;&#xA;&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;&#xA;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1&#xA;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&#xA;&lt;td class=&#34;lntd&#34;&gt;&#xA;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;yum install -y gcc make libstdc++.i686 libstdc++-devel.i686 zlib-devel openssl-devel perl cpio expat-devel gettext-devel autoconf glibc.i686 glibc-devel.i686 zlib-devel.i686 libstdc++.i686 libX11-devel.i686 ncurses-devel.i686 ncurses-libs.i686 gperf flex gcc-c++ bison patch&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&#xA;&lt;/div&gt;&#xA;&lt;/div&gt;&lt;/li&gt;&#xA;&lt;li&gt;Java/Python环境准备&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;二编译流程&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;二、编译流程&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%ba%8c%e7%bc%96%e8%af%91%e6%b5%81%e7%a8%8b&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;ul&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;源码下载&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Super分区定制</title>
+      <link>http://localhost:1313/posts/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/</link>
+      <pubDate>Mon, 31 Jul 2023 20:05:53 +0800</pubDate>
+      <guid>http://localhost:1313/posts/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/</guid>
+      <category domain="http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/">系统定制</category>
+      <description>&lt;h3 id=&#34;一编译环境搭建&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、编译环境搭建&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;h4 id=&#34;1-物料准备&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;1 物料准备&lt;/span&gt;&#xA;  &lt;a href=&#34;#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;ul&gt;&#xA;&lt;li&gt;设备：红米note11（MIUI12 Android11）&lt;/li&gt;&#xA;&lt;li&gt;原生super.img镜像文件，参考&lt;a href=&#34;https://xiaomifirmwareupdater.com/miui/selenes/&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;下载网站&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h4 id=&#34;2-工具准备&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;2 工具准备&lt;/span&gt;&#xA;  &lt;a href=&#34;#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;ul&gt;&#xA;&lt;li&gt;编译支撑系统：ubuntu14（经测试不受版本影响，正常来说ubuntu都可以安装所有的工具）&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://github.com/anestisb/android-simg2img&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;simg2img&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://github.com/LonelyFool/lpunpack_and_lpmake&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;lpunpack/lmake&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;imjtool&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;二案例说明内置应用&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;二、案例说明（内置应用）&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%ba%8c%e6%a1%88%e4%be%8b%e8%af%b4%e6%98%8e%e5%86%85%e7%bd%ae%e5%ba%94%e7%94%a8&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;h4 id=&#34;1-镜像格式转化&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;1 镜像格式转化&lt;/span&gt;&#xA;  &lt;a href=&#34;#1-%e9%95%9c%e5%83%8f%e6%a0%bc%e5%bc%8f%e8%bd%ac%e5%8c%96&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h4&gt;&lt;p&gt;正常image镜像都是Android sparse image格式的&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>基于内核的改机策略</title>
+      <link>http://localhost:1313/posts/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</link>
+      <pubDate>Mon, 10 Jul 2023 00:10:12 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/</guid>
+      <category domain="http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/">系统定制</category>
+      <description>&lt;p&gt;以红米Note11内核改机为例说明&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;sys.c：内核版本&lt;/li&gt;&#xA;&lt;li&gt;statfs.c：文件信息&lt;/li&gt;&#xA;&lt;li&gt;stat.c：文件信息&lt;/li&gt;&#xA;&lt;li&gt;readdir.c：目录下的文件列表&lt;/li&gt;&#xA;&lt;li&gt;open.c：文件重定向&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>红米Note11内核编译流程</title>
+      <link>http://localhost:1313/posts/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</link>
+      <pubDate>Fri, 30 Jun 2023 23:50:17 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/</guid>
+      <category domain="http://localhost:1313/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/">系统定制</category>
+      <description>&lt;h3 id=&#34;前言&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;前言&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e5%89%8d%e8%a8%80&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;涉及到需要隐藏设备特征，所以需要编译内核来抹除暴露出的特征。小米内核有现成的&lt;a href=&#34;https://github.com/MiCode/Xiaomi_Kernel_OpenSource&#34;target=&#34;_blank&#34; rel=&#34;external nofollow noopener noreferrer&#34;&gt;源码&lt;/a&gt;，可以根据自身设备的型号来选择，下面简单描述下编译流程&lt;/p&gt;</description>
+    </item>
+  </channel>
 </rss>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Android11AOSP编译流程 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="前言 一、编译环境搭建 1 物料准备 设备：pixel2（walleye） 源码：aosp源码 build id：RP1A.200720.009 tag：android-11.0.0_r1 sdk version：Android11 驱动源码准备：驱动源码 2 工具准备 编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘） 三方库准备 1 yum install -y gcc make libstdc&#43;&#43;.i686 libstdc&#43;&#43;-devel.i686 zlib-devel openssl-devel perl cpio expat-devel gettext-devel autoconf glibc.i686 glibc-devel.i686 zlib-devel.i686 libstdc&#43;&#43;.i686 libX11-devel.i686 ncurses-devel.i686 ncurses-libs.i686 gperf flex gcc-c&#43;&#43; bison patch Java/Python环境准备 二、编译流程 源码下载
+"><meta name="keywords" content='AOSP编译'>
+  <meta itemprop="name" content="Android11AOSP编译流程">
+  <meta itemprop="description" content="前言 一、编译环境搭建 1 物料准备 设备：pixel2（walleye） 源码：aosp源码 build id：RP1A.200720.009 tag：android-11.0.0_r1 sdk version：Android11 驱动源码准备：驱动源码 2 工具准备 编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘） 三方库准备 1 yum install -y gcc make libstdc&#43;&#43;.i686 libstdc&#43;&#43;-devel.i686 zlib-devel openssl-devel perl cpio expat-devel gettext-devel autoconf glibc.i686 glibc-devel.i686 zlib-devel.i686 libstdc&#43;&#43;.i686 libX11-devel.i686 ncurses-devel.i686 ncurses-libs.i686 gperf flex gcc-c&#43;&#43; bison patch Java/Python环境准备 二、编译流程 源码下载">
+  <meta itemprop="datePublished" content="2023-09-24T19:21:12+08:00">
+  <meta itemprop="dateModified" content="2023-09-24T19:21:12+08:00">
+  <meta itemprop="wordCount" content="339">
+  <meta itemprop="keywords" content="AOSP编译"><meta property="og:url" content="http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Android11AOSP编译流程">
+  <meta property="og:description" content="前言 一、编译环境搭建 1 物料准备 设备：pixel2（walleye） 源码：aosp源码 build id：RP1A.200720.009 tag：android-11.0.0_r1 sdk version：Android11 驱动源码准备：驱动源码 2 工具准备 编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘） 三方库准备 1 yum install -y gcc make libstdc&#43;&#43;.i686 libstdc&#43;&#43;-devel.i686 zlib-devel openssl-devel perl cpio expat-devel gettext-devel autoconf glibc.i686 glibc-devel.i686 zlib-devel.i686 libstdc&#43;&#43;.i686 libX11-devel.i686 ncurses-devel.i686 ncurses-libs.i686 gperf flex gcc-c&#43;&#43; bison patch Java/Python环境准备 二、编译流程 源码下载">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-09-24T19:21:12+08:00">
+    <meta property="article:modified_time" content="2023-09-24T19:21:12+08:00">
+    <meta property="article:tag" content="AOSP编译">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Android11AOSP编译流程">
+  <meta name="twitter:description" content="前言 一、编译环境搭建 1 物料准备 设备：pixel2（walleye） 源码：aosp源码 build id：RP1A.200720.009 tag：android-11.0.0_r1 sdk version：Android11 驱动源码准备：驱动源码 2 工具准备 编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘） 三方库准备 1 yum install -y gcc make libstdc&#43;&#43;.i686 libstdc&#43;&#43;-devel.i686 zlib-devel openssl-devel perl cpio expat-devel gettext-devel autoconf glibc.i686 glibc-devel.i686 zlib-devel.i686 libstdc&#43;&#43;.i686 libX11-devel.i686 ncurses-devel.i686 ncurses-libs.i686 gperf flex gcc-c&#43;&#43; bison patch Java/Python环境准备 二、编译流程 源码下载">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" title="Android11AOSP编译流程 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/unidbg%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/" title="Unidbg特征检测汇总" /><link rel="next" type="text/html" href="http://localhost:1313/posts/%E5%9F%BA%E4%BA%8Echow%E6%96%B9%E6%A1%88%E7%9A%84%E7%99%BD%E7%9B%92aes%E7%90%86%E8%A7%A3/" title="基于Chow方案的白盒AES理解" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/index.md" title="Android11AOSP编译流程 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Android11AOSP编译流程",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B\/"
+    },"genre": "posts","keywords": "AOSP编译","wordcount":  339 ,
+    "url": "http:\/\/localhost:1313\/posts\/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B\/","datePublished": "2023-09-24T19:21:12+08:00","dateModified": "2023-09-24T19:21:12+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Android11AOSP编译流程</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Android11AOSP编译流程</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%B3%BB%E7%BB%9F%E5%AE%9A%E5%88%B6/" class="post-category" title="分类 - 系统定制"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 系统定制</a></span></div><div class="post-meta-line"><span title="发布于 2023-09-24 19:21:12"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-09-24">2023-09-24</time></span>&nbsp;<span title="339 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 400 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 1 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#一编译环境搭建">一、编译环境搭建</a>
+          <ul>
+            <li><a href="#1-物料准备">1 物料准备</a></li>
+            <li><a href="#2-工具准备">2 工具准备</a></li>
+          </ul>
+        </li>
+        <li><a href="#二编译流程">二、编译流程</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="前言" class="heading-element"><span>前言</span>
+  <a href="#%e5%89%8d%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h3 id="一编译环境搭建" class="heading-element"><span>一、编译环境搭建</span>
+  <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="1-物料准备" class="heading-element"><span>1 物料准备</span>
+  <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ul>
+<li>设备：pixel2（walleye）</li>
+<li>源码：<a href="https://source.android.google.cn/docs/setup/about/build-numbers?hl=zh-cn"target="_blank" rel="external nofollow noopener noreferrer">aosp源码</a>
+<ul>
+<li>build id：RP1A.200720.009</li>
+<li>tag：android-11.0.0_r1</li>
+<li>sdk version：Android11</li>
+</ul>
+</li>
+<li>驱动源码准备：<a href="https://developers.google.cn/android/drivers"target="_blank" rel="external nofollow noopener noreferrer">驱动源码</a></li>
+</ul>
+<h4 id="2-工具准备" class="heading-element"><span>2 工具准备</span>
+  <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ul>
+<li>编译支撑系统：centos7，使用公司的云容器（16核32G、600G磁盘）</li>
+<li>三方库准备
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">yum install -y gcc make libstdc++.i686 libstdc++-devel.i686 zlib-devel openssl-devel perl cpio expat-devel gettext-devel autoconf glibc.i686 glibc-devel.i686 zlib-devel.i686 libstdc++.i686 libX11-devel.i686 ncurses-devel.i686 ncurses-libs.i686 gperf flex gcc-c++ bison patch</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>Java/Python环境准备</li>
+</ul>
+<h3 id="二编译流程" class="heading-element"><span>二、编译流程</span>
+  <a href="#%e4%ba%8c%e7%bc%96%e8%af%91%e6%b5%81%e7%a8%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p>源码下载</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">// repo工具下载
+</span></span><span class="line"><span class="cl">curl https://mirrors.tuna.tsinghua.edu.cn/git/git-repo &gt; repo
+</span></span><span class="line"><span class="cl">chmod a+x repo
+</span></span><span class="line"><span class="cl">// 指定版本AOSP源码拉取
+</span></span><span class="line"><span class="cl">./repo init -u https://mirrors.tuna.tsinghua.edu.cn/git/AOSP/platform/manifest -b android-11.0.0_r48
+</span></span><span class="line"><span class="cl">。/repo sync
+</span></span><span class="line"><span class="cl">// 驱动解压放在源码根目录下，执行驱动脚本，会自动填充到vendor目录
+</span></span><span class="line"><span class="cl">./extract-google_devices-blueline.sh
+</span></span><span class="line"><span class="cl">./extract-qcom-blueline.sh</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>编译环境配置</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">source</span> build/envsetup.sh
+</span></span><span class="line"><span class="cl">// 选择对应设备
+</span></span><span class="line"><span class="cl">lunch</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>执行编译</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">// 根据系统性能选择线程数
+</span></span><span class="line"><span class="cl">make -j <span class="m">4</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+</div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/" title="Frida源码编译说明">Frida源码编译说明</a></li><li>
+          <a href="/posts/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" title="红米Note11内核编译流程">红米Note11内核编译流程</a></li><li>
+          <a href="/posts/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/" title="Super分区定制">Super分区定制</a></li><li>
+          <a href="/posts/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/" title="探讨新的riru加载方式">探讨新的riru加载方式</a></li><li>
+          <a href="/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%824/" title="重读Magisk内部实现细节4">重读Magisk内部实现细节4</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-09-24 19:21:12">更新于 2023-09-24&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="Android11AOSP编译流程" data-hashtags="AOSP编译"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-hashtag="AOSP编译"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/android11aosp%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" data-title="Android11AOSP编译流程"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/aosp%E7%BC%96%E8%AF%91/" class="post-tag" title="标签 - AOSP编译">AOSP编译</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/%E5%9F%BA%E4%BA%8Echow%E6%96%B9%E6%A1%88%E7%9A%84%E7%99%BD%E7%9B%92aes%E7%90%86%E8%A7%A3/" class="post-nav-item" rel="prev" title="基于Chow方案的白盒AES理解"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>基于Chow方案的白盒AES理解</a><a href="/posts/unidbg%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/" class="post-nav-item" rel="next" title="Unidbg特征检测汇总">Unidbg特征检测汇总<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

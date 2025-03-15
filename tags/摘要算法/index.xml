@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>摘要算法 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/%E6%91%98%E8%A6%81%E7%AE%97%E6%B3%95/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 09 May 2023 22:36:47 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E6%91%98%E8%A6%81%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>从RFC1321中理解MD5算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一前置知识点&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、前置知识点&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>从RFC2040中理解RC5算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一rc5算法概述&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、RC5算法概述&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80rc5%e7%ae%97%e6%b3%95%e6%a6%82%e8%bf%b0&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;作为同样是由Rivest推出的算法，RC5算法与RC4算法是完全不同的，一个明显的特征是RC5采用的是基于Feistel对称结构的分组加密算法&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>从RFC3174中理解SHA1算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一前置知识点&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、前置知识点&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;总体上来说，SHA1算法和MD5算法很类似（因为它们都属于是针对于信息摘要的哈希算法），大体的算法流程也是基本相同，可以回忆下MD5算法的五个步骤，可以说SHA1是升级版本的MD5。不同点从直观上看，SHA1返回的信息长度是160位（20个字节），而MD5则是128位（16个字节），因此相较于MD5算法来说会更加安全一些（不过也仅仅是一些而已）&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>从RFC4648中理解Base64算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一前置知识点&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、前置知识点&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;Base64算法是一种编码算法，它是采用常见的64个字符来表示做数据映射的表，分别是A-Z、a-z、+、/。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>从RFC6229中理解RC4算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Erfc6229%E4%B8%AD%E7%90%86%E8%A7%A3rc4%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Erfc6229%E4%B8%AD%E7%90%86%E8%A7%A3rc4%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一rc4概述&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、RC4概述&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80rc4%e6%a6%82%e8%bf%b0&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;RC4是在1987年提出，和DES算法一样。是一种对称加密算法，也就是说使用的密钥为单钥（或称为私钥）。但不同于DES算法的是。RC4不是对明文进行分组处理，而是通过字节流的方式依次加密明文中的每个字节，同样的，解密的时候也是依次对密文中的每个字节进行解密。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>从RFC6234中理解SHA2-256算法</title>
+      <link>http://localhost:1313/posts/%E4%BB%8Erfc6234%E4%B8%AD%E7%90%86%E8%A7%A3sha2-256%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E4%BB%8Erfc6234%E4%B8%AD%E7%90%86%E8%A7%A3sha2-256%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一前置知识点&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、前置知识点&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;p&gt;SHA2-256算法是SHA第二代的算法，256指的是它的算法结果会产生256位数据，也就是32字节、64位长度的16进制字符。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>理解CRC32算法</title>
+      <link>http://localhost:1313/posts/%E7%90%86%E8%A7%A3crc32%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E7%90%86%E8%A7%A3crc32%E7%AE%97%E6%B3%95/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;h3 id=&#34;一crc算法概述&#34; class=&#34;heading-element&#34;&gt;&lt;span&gt;一、CRC算法概述&lt;/span&gt;&#xA;  &lt;a href=&#34;#%e4%b8%80crc%e7%ae%97%e6%b3%95%e6%a6%82%e8%bf%b0&#34; class=&#34;heading-mark&#34;&gt;&#xA;    &lt;svg class=&#34;octicon octicon-link&#34; viewBox=&#34;0 0 16 16&#34; version=&#34;1.1&#34; width=&#34;16&#34; height=&#34;16&#34; aria-hidden=&#34;true&#34;&gt;&lt;path d=&#34;m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z&#34;&gt;&lt;/path&gt;&lt;/svg&gt;&#xA;  &lt;/a&gt;&#xA;&lt;/h3&gt;&lt;blockquote&gt;&#xA;&lt;p&gt;循环冗余校验（Cyclic Redundancy Check， CRC）是一种根据网络数据包或计算机文件等数据产生简短固定位数校验码的一种信道编码技术，主要用来检测或校验数据传输或者保存后可能出现的错误。它是利用除法及余数的原理来作错误侦测的。 &amp;ndash;–维基百科&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于Base64算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;编码表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于CRC32算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;CRC码表&lt;/li&gt;&#xA;&lt;li&gt;多项式的二进制&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;CRC码表生成方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于MD5算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;li&gt;常量初始化方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;IV&lt;/li&gt;&#xA;&lt;li&gt;转换变量&lt;/li&gt;&#xA;&lt;li&gt;T常量表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;非线性函数&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于RC4算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;S盒长度、值&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;数据交换&lt;/li&gt;&#xA;&lt;li&gt;流数据异或&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于SHA1算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha1%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha1%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;li&gt;常量初始化方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;IV&lt;/li&gt;&#xA;&lt;li&gt;K常量表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;分组数据变化的步函数&lt;/li&gt;&#xA;&lt;li&gt;非线性函数&lt;/li&gt;&#xA;&lt;li&gt;每次计算时初始化变量赋值方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>探讨关于SHA256算法的魔改方式</title>
+      <link>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha256%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Tue, 09 May 2023 22:36:47 +0800</pubDate>
+      <guid>http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Esha256%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/">算法研究</category>
+      <description>&lt;ul&gt;&#xA;&lt;li&gt;写法&#xA;&lt;ul&gt;&#xA;&lt;li&gt;函数名&lt;/li&gt;&#xA;&lt;li&gt;常量初始化方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法常量&#xA;&lt;ul&gt;&#xA;&lt;li&gt;IV&lt;/li&gt;&#xA;&lt;li&gt;K常量表&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;算法流程&#xA;&lt;ul&gt;&#xA;&lt;li&gt;分组数据变化的步函数&lt;/li&gt;&#xA;&lt;li&gt;非线性函数&lt;/li&gt;&#xA;&lt;li&gt;每次计算时初始化变量赋值方式&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>

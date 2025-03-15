@@ -1,22 +1,12 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>Frida源码编译 - 标签 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/tags/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/</link>
-        <description>Frida源码编译 - 标签 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Sun, 20 Aug 2023 22:27:03 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/tags/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/" rel="self" type="application/rss+xml" /><item>
-    <title>Frida源码编译说明</title>
-    <link>https://tcc0lin.github.io/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/</link>
-    <pubDate>Sun, 20 Aug 2023 22:27:03 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E/</guid>
-    <description><![CDATA[<h3 id="一编译环境搭建" class="headerLink">
-    <a href="#%e4%b8%80%e7%bc%96%e8%af%91%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" class="header-mark"></a>一、编译环境搭建</h3><p>这次编译的目标版本是14.2.18</p>
-<h4 id="1-物料准备" class="headerLink">
-    <a href="#1-%e7%89%a9%e6%96%99%e5%87%86%e5%a4%87" class="header-mark"></a>1 物料准备</h4><ul>
-<li>设备：红米note11（MIUI12 Android11）</li>
-<li>frida源码：https://github.com/frida/frida</li>
-</ul>
-<h4 id="2-工具准备" class="headerLink">
-    <a href="#2-%e5%b7%a5%e5%85%b7%e5%87%86%e5%a4%87" class="header-mark"></a>2 工具准备</h4><p>参照<a href="https://frida.re/docs/building/#gnulinux" target="_blank" rel="noopener noreferrer">官方编译指南</a></p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Frida源码编译 - 标签 - </title>
+    <link>http://localhost:1313/tags/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/</link>
+    <description></description>
+    <generator>Hugo 0.144.2 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate></lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/frida%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
 </rss>

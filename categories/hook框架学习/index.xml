@@ -1,29 +1,36 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>Hook框架学习 - 分类 - tcc0lin&#39;s security blog</title>
-        <link>https://tcc0lin.github.io/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/</link>
-        <description>Hook框架学习 - 分类 - tcc0lin&#39;s security blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</lastBuildDate><atom:link href="https://tcc0lin.github.io/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/" rel="self" type="application/rss+xml" /><item>
-    <title>LSPlant源码学习</title>
-    <link>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
-    <pubDate>Thu, 07 Mar 2024 23:09:44 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
-    <description><![CDATA[<p>LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架</p>
-<p>从官方README上看，对于LSPlant的使用分为几种</p>]]></description>
-</item><item>
-    <title>Dobby 短指令hook方式</title>
-    <link>https://tcc0lin.github.io/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</link>
-    <pubDate>Wed, 21 Feb 2024 19:25:42 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</guid>
-    <description><![CDATA[<p>从上一篇Dobby的文章可以了解到Dobby对于inline hook的实现是通过替换origin method的前三行指令（前12个字节）来跳转到对应的trampoline上，那对于指令数少于三行的函数它是怎么做到inline hook的呢？从它的案例中可以发现</p>]]></description>
-</item><item>
-    <title>Dobby框架源码学习</title>
-    <link>https://tcc0lin.github.io/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
-    <pubDate>Wed, 21 Feb 2024 14:54:39 &#43;0800</pubDate><author>
-        <name>tcc0lin</name>
-    </author><guid>https://tcc0lin.github.io/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
-    <description><![CDATA[<p>Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了解，但是还是没有从源码上入手分析，这次想完整的梳理下Dobby的实现流程，也就有了这次的文章。</p>]]></description>
-</item></channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hook框架学习 - 分类 - 佛光普照</title>
+    <link>http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Thu, 07 Mar 2024 23:09:44 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>LSPlant源码学习</title>
+      <link>http://localhost:1313/posts/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Thu, 07 Mar 2024 23:09:44 +0800</pubDate>
+      <guid>http://localhost:1313/posts/lsplant%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
+      <category domain="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/">Hook框架学习</category>
+      <description>&lt;p&gt;LSPlant是LSPosed官方推出的新的ART hook框架，用来替代LSPosed之前使用的YAHFA框架&lt;/p&gt;&#xA;&lt;p&gt;从官方README上看，对于LSPlant的使用分为几种&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Dobby 短指令hook方式</title>
+      <link>http://localhost:1313/posts/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</link>
+      <pubDate>Wed, 21 Feb 2024 19:25:42 +0800</pubDate>
+      <guid>http://localhost:1313/posts/dobby-%E7%9F%AD%E6%8C%87%E4%BB%A4hook%E6%96%B9%E5%BC%8F/</guid>
+      <category domain="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/">Hook框架学习</category>
+      <description>&lt;p&gt;从上一篇Dobby的文章可以了解到Dobby对于inline hook的实现是通过替换origin method的前三行指令（前12个字节）来跳转到对应的trampoline上，那对于指令数少于三行的函数它是怎么做到inline hook的呢？从它的案例中可以发现&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Dobby框架源码学习</title>
+      <link>http://localhost:1313/posts/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Wed, 21 Feb 2024 14:54:39 +0800</pubDate>
+      <guid>http://localhost:1313/posts/dobby%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
+      <category domain="http://localhost:1313/categories/hook%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/">Hook框架学习</category>
+      <description>&lt;p&gt;Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了解，但是还是没有从源码上入手分析，这次想完整的梳理下Dobby的实现流程，也就有了这次的文章。&lt;/p&gt;</description>
+    </item>
+  </channel>
 </rss>

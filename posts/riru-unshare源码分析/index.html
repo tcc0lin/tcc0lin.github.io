@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Riru Unshare源码分析 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="一、前言 在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zygote共同使用同一个namespace，如果对这类进程进行unmount的话，会导致所有app都无法正正常访问到su，对于这种情况，可以使用riru-unshare模块来处理使指定的独立进程不与zygote共享namespace
+"><meta name="keywords" content='Magisk Hide隐藏'>
+  <meta itemprop="name" content="Riru Unshare源码分析">
+  <meta itemprop="description" content="一、前言 在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zygote共同使用同一个namespace，如果对这类进程进行unmount的话，会导致所有app都无法正正常访问到su，对于这种情况，可以使用riru-unshare模块来处理使指定的独立进程不与zygote共享namespace">
+  <meta itemprop="datePublished" content="2023-07-04T23:54:48+08:00">
+  <meta itemprop="dateModified" content="2023-07-04T23:54:48+08:00">
+  <meta itemprop="wordCount" content="2105">
+  <meta itemprop="keywords" content="Magisk Hide隐藏"><meta property="og:url" content="http://localhost:1313/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Riru Unshare源码分析">
+  <meta property="og:description" content="一、前言 在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zygote共同使用同一个namespace，如果对这类进程进行unmount的话，会导致所有app都无法正正常访问到su，对于这种情况，可以使用riru-unshare模块来处理使指定的独立进程不与zygote共享namespace">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-07-04T23:54:48+08:00">
+    <meta property="article:modified_time" content="2023-07-04T23:54:48+08:00">
+    <meta property="article:tag" content="Magisk Hide隐藏">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Riru Unshare源码分析">
+  <meta name="twitter:description" content="一、前言 在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zygote共同使用同一个namespace，如果对这类进程进行unmount的话，会导致所有app都无法正正常访问到su，对于这种情况，可以使用riru-unshare模块来处理使指定的独立进程不与zygote共享namespace">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" title="Riru Unshare源码分析 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" title="红米Note11内核编译流程" /><link rel="next" type="text/html" href="http://localhost:1313/posts/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/" title="基于内核的改机策略" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.md" title="Riru Unshare源码分析 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Riru Unshare源码分析",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90\/"
+    },"genre": "posts","keywords": "Magisk Hide隐藏","wordcount":  2105 ,
+    "url": "http:\/\/localhost:1313\/posts\/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90\/","datePublished": "2023-07-04T23:54:48+08:00","dateModified": "2023-07-04T23:54:48+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Riru Unshare源码分析</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Riru Unshare源码分析</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/magisk%E7%94%9F%E6%80%81/" class="post-category" title="分类 - Magisk生态"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Magisk生态</a></span></div><div class="post-meta-line"><span title="发布于 2023-07-04 23:54:48"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-07-04">2023-07-04</time></span>&nbsp;<span title="2105 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 2200 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 5 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一前言">一、前言</a></li>
+        <li><a href="#二源码分析">二、源码分析</a>
+          <ul>
+            <li><a href="#1-forkandspecializepre">1 forkAndSpecializePre</a></li>
+            <li><a href="#2-forkandspecializepost">2 forkAndSpecializePost</a></li>
+            <li><a href="#3-specializeappprocesspre">3 specializeAppProcessPre</a></li>
+            <li><a href="#4-specializeappprocesspost">4 specializeAppProcessPost</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="一前言" class="heading-element"><span>一、前言</span>
+  <a href="#%e4%b8%80%e5%89%8d%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在之前的Magisk检测方式的文章中，提到过isolated process的概念，MagiskHide无法处理这种进程，因为它和zygote共同使用同一个namespace，如果对这类进程进行unmount的话，会导致所有app都无法正正常访问到su，对于这种情况，可以使用riru-unshare模块来处理使指定的独立进程不与zygote共享namespace</p>
+<h3 id="二源码分析" class="heading-element"><span>二、源码分析</span>
+  <a href="#%e4%ba%8c%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>riru-unshare是一个riru模块，看源码就从从main.cpp入手</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#ifndef RIRU_MODULE_LEGACY_INIT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="n">RiruVersionedModuleInfo</span> <span class="o">*</span><span class="nf">init</span><span class="p">(</span><span class="n">Riru</span> <span class="o">*</span><span class="n">riru</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">core_max_api_version</span> <span class="o">=</span> <span class="n">riru</span><span class="o">-&gt;</span><span class="n">riruApiVersion</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">riru_api_version</span> <span class="o">=</span> <span class="n">core_max_api_version</span> <span class="o">&lt;=</span> <span class="n">RIRU_MODULE_API_VERSION</span> <span class="o">?</span> <span class="nl">core_max_api_version</span> <span class="p">:</span> <span class="n">RIRU_MODULE_API_VERSION</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">module</span><span class="p">.</span><span class="n">moduleApiVersion</span> <span class="o">=</span> <span class="n">riru_api_version</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">riru_magisk_module_path</span> <span class="o">=</span> <span class="nf">strdup</span><span class="p">(</span><span class="n">riru</span><span class="o">-&gt;</span><span class="n">magiskModulePath</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">riru_api_version</span> <span class="o">&gt;=</span> <span class="mi">25</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">riru_allow_unload</span> <span class="o">=</span> <span class="n">riru</span><span class="o">-&gt;</span><span class="n">allowUnload</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">&amp;</span><span class="n">module</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#else
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="n">RiruVersionedModuleInfo</span> <span class="o">*</span><span class="nf">init</span><span class="p">(</span><span class="n">Riru</span> <span class="o">*</span><span class="n">riru</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="kt">int</span> <span class="n">step</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="mi">1</span><span class="o">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">core_max_api_version</span> <span class="o">=</span> <span class="n">riru</span><span class="o">-&gt;</span><span class="n">riruApiVersion</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">riru_api_version</span> <span class="o">=</span> <span class="n">core_max_api_version</span> <span class="o">&lt;=</span> <span class="n">RIRU_MODULE_API_VERSION</span> <span class="o">?</span> <span class="nl">core_max_api_version</span> <span class="p">:</span> <span class="n">RIRU_MODULE_API_VERSION</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">riru_api_version</span> <span class="o">&lt;</span> <span class="mi">25</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">module</span><span class="p">.</span><span class="n">moduleInfo</span><span class="p">.</span><span class="n">unused</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">shouldSkipUid</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">riru_allow_unload</span> <span class="o">=</span> <span class="n">riru</span><span class="o">-&gt;</span><span class="n">allowUnload</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">riru_api_version</span> <span class="o">&gt;=</span> <span class="mi">24</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">module</span><span class="p">.</span><span class="n">moduleApiVersion</span> <span class="o">=</span> <span class="n">riru_api_version</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">riru_magisk_module_path</span> <span class="o">=</span> <span class="nf">strdup</span><span class="p">(</span><span class="n">riru</span><span class="o">-&gt;</span><span class="n">magiskModulePath</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="o">&amp;</span><span class="n">module</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="p">(</span><span class="n">RiruVersionedModuleInfo</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">riru_api_version</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="mi">2</span><span class="o">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="p">(</span><span class="n">RiruVersionedModuleInfo</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">module</span><span class="p">.</span><span class="n">moduleInfo</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">default</span><span class="o">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>配置需要替换的函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="k">auto</span> <span class="n">module</span> <span class="o">=</span> <span class="n">RiruVersionedModuleInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="n">moduleApiVersion</span> <span class="o">=</span> <span class="n">RIRU_MODULE_API_VERSION</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="n">moduleInfo</span><span class="o">=</span> <span class="n">RiruModuleInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">supportHide</span> <span class="o">=</span> <span class="nb">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">RIRU_MODULE_VERSION</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">versionName</span> <span class="o">=</span> <span class="n">RIRU_MODULE_VERSION_NAME</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">onModuleLoaded</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">forkAndSpecializePre</span> <span class="o">=</span> <span class="n">forkAndSpecializePre</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">forkAndSpecializePost</span> <span class="o">=</span> <span class="n">forkAndSpecializePost</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">forkSystemServerPre</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">forkSystemServerPost</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">specializeAppProcessPre</span> <span class="o">=</span> <span class="n">specializeAppProcessPre</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">specializeAppProcessPost</span> <span class="o">=</span> <span class="n">specializeAppProcessPost</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>主要是四个函数forkAndSpecializePre、forkAndSpecializePost、specializeAppProcessPre和specializeAppProcessPost</p>
+<p>在zygote fork产生新进程前后做处理</p>
+<h4 id="1-forkandspecializepre" class="heading-element"><span>1 forkAndSpecializePre</span>
+  <a href="#1-forkandspecializepre" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在forck出一个新的子进程前被调用，处理工作如设置UID、GID、环境变量等等，选择在forkAndSpecializePre阶段做doUnshare处理也是防止进程正常启动后无法再改变namespace</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">forkAndSpecializePre</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">uid</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">gid</span><span class="p">,</span> <span class="n">jintArray</span> <span class="o">*</span><span class="n">gids</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">runtimeFlags</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobjectArray</span> <span class="o">*</span><span class="n">rlimits</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">mountExternal</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">seInfo</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">niceName</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jintArray</span> <span class="o">*</span><span class="n">fdsToClose</span><span class="p">,</span> <span class="n">jintArray</span> <span class="o">*</span><span class="n">fdsToIgnore</span><span class="p">,</span> <span class="n">jboolean</span> <span class="o">*</span><span class="n">is_child_zygote</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jstring</span> <span class="o">*</span><span class="n">instructionSet</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">appDataDir</span><span class="p">,</span> <span class="n">jboolean</span> <span class="o">*</span><span class="n">isTopApp</span><span class="p">,</span> <span class="n">jobjectArray</span> <span class="o">*</span><span class="n">pkgDataInfoList</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobjectArray</span> <span class="o">*</span><span class="n">whitelistedDataInfoList</span><span class="p">,</span> <span class="n">jboolean</span> <span class="o">*</span><span class="n">bindMountAppDataDirs</span><span class="p">,</span> <span class="n">jboolean</span> <span class="o">*</span><span class="n">bindMountAppStorageDirs</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//应用启动前调用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">doUnshare</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">mountExternal</span><span class="p">,</span> <span class="n">niceName</span><span class="p">,</span> <span class="o">*</span><span class="n">is_child_zygote</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">doUnshare</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">uid</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">mountExternal</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">niceName</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">is_child_zygote</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//uid判断
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="nf">shouldSkipUid</span><span class="p">(</span><span class="o">*</span><span class="n">uid</span><span class="p">))</span> <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 改变mount状态
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">mountExternal</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="o">*</span><span class="n">mountExternal</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ScopedUtfChars</span> <span class="nf">name</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">*</span><span class="n">niceName</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">is_app_zygote</span> <span class="o">=</span> <span class="n">is_child_zygote</span> <span class="o">&amp;&amp;</span> <span class="nf">is_app</span><span class="p">(</span><span class="o">*</span><span class="n">uid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">nice_name_</span> <span class="o">=</span> <span class="n">niceName</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">LOGI</span><span class="p">(</span><span class="s">&#34;unshare uid=%d name=%s app_zygote=%s&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">uid</span><span class="p">,</span> <span class="n">name</span><span class="p">.</span><span class="nf">c_str</span><span class="p">(),</span> <span class="n">is_app_zygote</span><span class="o">?</span><span class="s">&#34;true&#34;</span><span class="o">:</span><span class="s">&#34;false&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">shouldSkipUid</span><span class="p">(</span><span class="kt">int</span> <span class="n">uid</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">appid</span> <span class="o">=</span> <span class="n">uid</span> <span class="o">%</span> <span class="n">AID_USER_OFFSET</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">appid</span> <span class="o">&gt;=</span> <span class="n">AID_APP_START</span> <span class="o">&amp;&amp;</span> <span class="n">appid</span> <span class="o">&lt;=</span> <span class="n">AID_APP_END</span><span class="p">)</span> <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">appid</span> <span class="o">&gt;=</span> <span class="n">AID_ISOLATED_START</span> <span class="o">&amp;&amp;</span> <span class="n">appid</span> <span class="o">&lt;=</span> <span class="n">AID_ISOLATED_END</span><span class="p">)</span> <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">bool</span> <span class="nf">is_app</span><span class="p">(</span><span class="kt">int</span> <span class="n">uid</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">uid</span><span class="o">%</span><span class="mi">100000</span> <span class="o">&gt;=</span> <span class="mi">10000</span> <span class="o">&amp;&amp;</span> <span class="n">uid</span><span class="o">%</span><span class="mi">100000</span> <span class="o">&lt;=</span> <span class="mi">19999</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>关键在于mountExternal这个参数的修改，那这个参数的作用是什么呢？从zygote源码中看看</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">Process</span><span class="p">.</span><span class="na">ProcessStartResult</span><span class="w"> </span><span class="nf">startViaZygote</span><span class="p">(</span><span class="nd">@NonNull</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">processClass</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">niceName</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">uid</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">gid</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="o">[]</span><span class="w"> </span><span class="n">gids</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">int</span><span class="w"> </span><span class="n">runtimeFlags</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mountExternal</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">int</span><span class="w"> </span><span class="n">targetSdkVersion</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">seInfo</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@NonNull</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">abi</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">instructionSet</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">appDataDir</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">invokeWith</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">boolean</span><span class="w"> </span><span class="n">startChildZygote</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">packageName</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">int</span><span class="w"> </span><span class="n">zygotePolicyFlags</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">boolean</span><span class="w"> </span><span class="n">isTopApp</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="kt">long</span><span class="o">[]</span><span class="w"> </span><span class="n">disabledCompatChanges</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Pair</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                              </span><span class="n">pkgDataInfoMap</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Pair</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                              </span><span class="n">allowlistedDataInfoList</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">boolean</span><span class="w"> </span><span class="n">bindMountAppsData</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kt">boolean</span><span class="w"> </span><span class="n">bindMountAppStorageDirs</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="nd">@Nullable</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">extraArgs</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                                                      </span><span class="kd">throws</span><span class="w"> </span><span class="n">ZygoteStartFailedEx</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">argsForZygote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// --runtime-args, --setuid=, --setgid=,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// and --setgroups= must go first</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--runtime-args&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--setuid=&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">uid</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--setgid=&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">gid</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--runtime-flags=&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">runtimeFlags</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mountExternal</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Zygote</span><span class="p">.</span><span class="na">MOUNT_EXTERNAL_DEFAULT</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--mount-external-default&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mountExternal</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Zygote</span><span class="p">.</span><span class="na">MOUNT_EXTERNAL_INSTALLER</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--mount-external-installer&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mountExternal</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Zygote</span><span class="p">.</span><span class="na">MOUNT_EXTERNAL_PASS_THROUGH</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--mount-external-pass-through&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mountExternal</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Zygote</span><span class="p">.</span><span class="na">MOUNT_EXTERNAL_ANDROID_WRITABLE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">argsForZygote</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&#34;--mount-external-android-writable&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在传给zygote时处理了mountExternal参数，当mountExternal值为1的时候对应Zygote.MOUNT_EXTERNAL_DEFAULT</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">com_android_internal_os_Zygote_nativeSpecializeAppProcess</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jint</span> <span class="n">uid</span><span class="p">,</span> <span class="n">jint</span> <span class="n">gid</span><span class="p">,</span> <span class="n">jintArray</span> <span class="n">gids</span><span class="p">,</span> <span class="n">jint</span> <span class="n">runtime_flags</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobjectArray</span> <span class="n">rlimits</span><span class="p">,</span> <span class="n">jint</span> <span class="n">mount_external</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">se_info</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">nice_name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jboolean</span> <span class="n">is_child_zygote</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">instruction_set</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">app_data_dir</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jboolean</span> <span class="n">is_top_app</span><span class="p">,</span> <span class="n">jobjectArray</span> <span class="n">pkg_data_info_list</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobjectArray</span> <span class="n">allowlisted_data_info_list</span><span class="p">,</span> <span class="n">jboolean</span> <span class="n">mount_data_dirs</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jboolean</span> <span class="n">mount_storage_dirs</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jlong</span> <span class="n">capabilities</span> <span class="o">=</span> <span class="nf">CalculateCapabilities</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">gids</span><span class="p">,</span> <span class="n">is_child_zygote</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//公共fork进程的方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">SpecializeCommon</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">gids</span><span class="p">,</span> <span class="n">runtime_flags</span><span class="p">,</span> <span class="n">rlimits</span><span class="p">,</span> <span class="n">capabilities</span><span class="p">,</span> <span class="n">capabilities</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">mount_external</span><span class="p">,</span> <span class="n">se_info</span><span class="p">,</span> <span class="n">nice_name</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="n">is_child_zygote</span> <span class="o">==</span> <span class="n">JNI_TRUE</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">instruction_set</span><span class="p">,</span> <span class="n">app_data_dir</span><span class="p">,</span> <span class="n">is_top_app</span> <span class="o">==</span> <span class="n">JNI_TRUE</span><span class="p">,</span> <span class="n">pkg_data_info_list</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">allowlisted_data_info_list</span><span class="p">,</span> <span class="n">mount_data_dirs</span> <span class="o">==</span> <span class="n">JNI_TRUE</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">mount_storage_dirs</span> <span class="o">==</span> <span class="n">JNI_TRUE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">SpecializeCommon</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span> <span class="kt">uid_t</span> <span class="n">uid</span><span class="p">,</span> <span class="kt">gid_t</span> <span class="n">gid</span><span class="p">,</span> <span class="n">jintArray</span> <span class="n">gids</span><span class="p">,</span> <span class="n">jint</span> <span class="n">runtime_flags</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="n">jobjectArray</span> <span class="n">rlimits</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">permitted_capabilities</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="n">jlong</span> <span class="n">effective_capabilities</span><span class="p">,</span> <span class="n">jint</span> <span class="n">mount_external</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="n">jstring</span> <span class="n">managed_se_info</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">managed_nice_name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="kt">bool</span> <span class="n">is_system_server</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">is_child_zygote</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="n">jstring</span> <span class="n">managed_instruction_set</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">managed_app_data_dir</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="kt">bool</span> <span class="n">is_top_app</span><span class="p">,</span> <span class="n">jobjectArray</span> <span class="n">pkg_data_info_list</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="n">jobjectArray</span> <span class="n">allowlisted_data_info_list</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">mount_data_dirs</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                             <span class="kt">bool</span> <span class="n">mount_storage_dirs</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">process_name</span> <span class="o">=</span> <span class="n">is_system_server</span> <span class="o">?</span> <span class="s">&#34;system_server&#34;</span> <span class="o">:</span> <span class="s">&#34;zygote&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">fail_fn</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="nf">bind</span><span class="p">(</span><span class="n">ZygoteFailure</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">managed_nice_name</span><span class="p">,</span> <span class="n">_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">extract_fn</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="nf">bind</span><span class="p">(</span><span class="n">ExtractJString</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">managed_nice_name</span><span class="p">,</span> <span class="n">_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">se_info</span> <span class="o">=</span> <span class="nf">extract_fn</span><span class="p">(</span><span class="n">managed_se_info</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">nice_name</span> <span class="o">=</span> <span class="nf">extract_fn</span><span class="p">(</span><span class="n">managed_nice_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">instruction_set</span> <span class="o">=</span> <span class="nf">extract_fn</span><span class="p">(</span><span class="n">managed_instruction_set</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">app_data_dir</span> <span class="o">=</span> <span class="nf">extract_fn</span><span class="p">(</span><span class="n">managed_app_data_dir</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Keep capabilities across UID change, unless we&#39;re staying root.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">uid</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">EnableKeepCapabilities</span><span class="p">(</span><span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">SetInheritable</span><span class="p">(</span><span class="n">permitted_capabilities</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">DropCapabilitiesBoundingSet</span><span class="p">(</span><span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">need_pre_initialize_native_bridge</span> <span class="o">=</span> <span class="o">!</span><span class="n">is_system_server</span> <span class="o">&amp;&amp;</span> <span class="n">instruction_set</span><span class="p">.</span><span class="nf">has_value</span><span class="p">()</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">android</span><span class="o">::</span><span class="nf">NativeBridgeAvailable</span><span class="p">()</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Native bridge may be already initialized if this
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">// is an app forked from app-zygote.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="o">!</span><span class="n">android</span><span class="o">::</span><span class="nf">NativeBridgeInitialized</span><span class="p">()</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">android</span><span class="o">::</span><span class="nf">NeedsNativeBridge</span><span class="p">(</span><span class="n">instruction_set</span><span class="p">.</span><span class="nf">value</span><span class="p">().</span><span class="nf">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//根据mount_external处理namespace
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">MountEmulatedStorage</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">mount_external</span><span class="p">,</span> <span class="n">need_pre_initialize_native_bridge</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="p">......</span>                             
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Create a private mount namespace and bind mount appropriate emulated
+</span></span></span><span class="line"><span class="cl"><span class="c1">// storage for the given user.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">MountEmulatedStorage</span><span class="p">(</span><span class="kt">uid_t</span> <span class="n">uid</span><span class="p">,</span> <span class="n">jint</span> <span class="n">mount_mode</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">bool</span> <span class="n">force_mount_namespace</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">fail_fn_t</span> <span class="n">fail_fn</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// See storage config details at http://source.android.com/tech/storage/
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">ATRACE_CALL</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">mount_mode</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">mount_mode</span> <span class="o">&gt;=</span> <span class="n">MOUNT_EXTERNAL_COUNT</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fail_fn</span><span class="p">(</span><span class="nf">CREATE_ERROR</span><span class="p">(</span><span class="s">&#34;Unknown mount_mode: %d&#34;</span><span class="p">,</span> <span class="n">mount_mode</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">//当传参为0时，不创建额外的namespace
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">mount_mode</span> <span class="o">==</span> <span class="n">MOUNT_EXTERNAL_NONE</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">force_mount_namespace</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Valid default of no storage visible
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Create a second private mount namespace for our process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">ensureInAppMountNamespace</span><span class="p">(</span><span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Handle force_mount_namespace with MOUNT_EXTERNAL_NONE.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">mount_mode</span> <span class="o">==</span> <span class="n">MOUNT_EXTERNAL_NONE</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="kt">userid_t</span> <span class="n">user_id</span> <span class="o">=</span> <span class="nf">multiuser_get_user_id</span><span class="p">(</span><span class="n">uid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">user_source</span> <span class="o">=</span> <span class="nf">StringPrintf</span><span class="p">(</span><span class="s">&#34;/mnt/user/%d&#34;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// Shell is neither AID_ROOT nor AID_EVERYBODY. Since it equally needs &#39;execute&#39; access to
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// /mnt/user/0 to &#39;adb shell ls /sdcard&#39; for instance, we set the uid bit of /mnt/user/0 to
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// AID_SHELL. This gives shell access along with apps running as group everybody (user 0 apps)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// These bits should be consistent with what is set in vold in
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// Utils#MountUserFuse on FUSE volume mount
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">PrepareDir</span><span class="p">(</span><span class="n">user_source</span><span class="p">,</span> <span class="mo">0710</span><span class="p">,</span> <span class="n">user_id</span> <span class="o">?</span> <span class="nl">AID_ROOT</span> <span class="p">:</span> <span class="n">AID_SHELL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">             <span class="nf">multiuser_get_uid</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">AID_EVERYBODY</span><span class="p">),</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="n">isAppDataIsolationEnabled</span> <span class="o">=</span> <span class="nf">GetBoolProperty</span><span class="p">(</span><span class="n">kVoldAppDataIsolation</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">mount_mode</span> <span class="o">==</span> <span class="n">MOUNT_EXTERNAL_PASS_THROUGH</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">pass_through_source</span> <span class="o">=</span> <span class="nf">StringPrintf</span><span class="p">(</span><span class="s">&#34;/mnt/pass_through/%d&#34;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">PrepareDir</span><span class="p">(</span><span class="n">pass_through_source</span><span class="p">,</span> <span class="mo">0710</span><span class="p">,</span> <span class="n">AID_ROOT</span><span class="p">,</span> <span class="n">AID_MEDIA_RW</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">BindMount</span><span class="p">(</span><span class="n">pass_through_source</span><span class="p">,</span> <span class="s">&#34;/storage&#34;</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">mount_mode</span> <span class="o">==</span> <span class="n">MOUNT_EXTERNAL_INSTALLER</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">installer_source</span> <span class="o">=</span> <span class="nf">StringPrintf</span><span class="p">(</span><span class="s">&#34;/mnt/installer/%d&#34;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">BindMount</span><span class="p">(</span><span class="n">installer_source</span><span class="p">,</span> <span class="s">&#34;/storage&#34;</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">isAppDataIsolationEnabled</span> <span class="o">&amp;&amp;</span> <span class="n">mount_mode</span> <span class="o">==</span> <span class="n">MOUNT_EXTERNAL_ANDROID_WRITABLE</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">writable_source</span> <span class="o">=</span> <span class="nf">StringPrintf</span><span class="p">(</span><span class="s">&#34;/mnt/androidwritable/%d&#34;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">BindMount</span><span class="p">(</span><span class="n">writable_source</span><span class="p">,</span> <span class="s">&#34;/storage&#34;</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">BindMount</span><span class="p">(</span><span class="n">user_source</span><span class="p">,</span> <span class="s">&#34;/storage&#34;</span><span class="p">,</span> <span class="n">fail_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>理解好mountExternal的使用之后，再结合unshare的机制来看，就是当有进程想和zygote共享namespace时，强行为该进程创建新的namespace，这样就能够对这个进程进行unmount了</p>
+<h4 id="2-forkandspecializepost" class="heading-element"><span>2 forkAndSpecializePost</span>
+  <a href="#2-forkandspecializepost" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">forkAndSpecializePost</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">jint</span> <span class="n">res</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">is_app_zygote</span> <span class="o">&amp;&amp;</span> <span class="n">nice_name_</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">SetProcessName</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">*</span><span class="n">nice_name_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">clear_state</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">riru_set_unload_allowed</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">SetProcessName</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span> <span class="n">jstring</span> <span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jclass</span> <span class="n">Process</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="nf">FindClass</span><span class="p">(</span><span class="s">&#34;android/os/Process&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jmethodID</span> <span class="n">setArgV0</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="nf">GetStaticMethodID</span><span class="p">(</span><span class="n">Process</span><span class="p">,</span> <span class="s">&#34;setArgV0&#34;</span><span class="p">,</span> <span class="s">&#34;(Ljava/lang/String;)V&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">env</span><span class="o">-&gt;</span><span class="nf">ExceptionCheck</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">env</span><span class="o">-&gt;</span><span class="nf">ExceptionClear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">LOGW</span><span class="p">(</span><span class="s">&#34;Process.setArgV0(String) not found&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">env</span><span class="o">-&gt;</span><span class="nf">CallStaticVoidMethod</span><span class="p">(</span><span class="n">Process</span><span class="p">,</span> <span class="n">setArgV0</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">env</span><span class="o">-&gt;</span><span class="nf">ExceptionCheck</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">env</span><span class="o">-&gt;</span><span class="nf">ExceptionClear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">LOGW</span><span class="p">(</span><span class="s">&#34;Process.setArgV0(String) threw exception&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">env</span><span class="o">-&gt;</span><span class="nf">DeleteLocalRef</span><span class="p">(</span><span class="n">Process</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">clear_state</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nice_name_</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">is_app_zygote</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="3-specializeappprocesspre" class="heading-element"><span>3 specializeAppProcessPre</span>
+  <a href="#3-specializeappprocesspre" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">specializeAppProcessPre</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">uid</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">gid</span><span class="p">,</span> <span class="n">jintArray</span> <span class="o">*</span><span class="n">gids</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">runtimeFlags</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jobjectArray</span> <span class="o">*</span><span class="n">rlimits</span><span class="p">,</span> <span class="n">jint</span> <span class="o">*</span><span class="n">mountExternal</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">seInfo</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">niceName</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jboolean</span> <span class="o">*</span><span class="n">startChildZygote</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">instructionSet</span><span class="p">,</span> <span class="n">jstring</span> <span class="o">*</span><span class="n">appDataDir</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jboolean</span> <span class="o">*</span><span class="n">isTopApp</span><span class="p">,</span> <span class="n">jobjectArray</span> <span class="o">*</span><span class="n">pkgDataInfoList</span><span class="p">,</span> <span class="n">jobjectArray</span> <span class="o">*</span><span class="n">whitelistedDataInfoList</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jboolean</span> <span class="o">*</span><span class="n">bindMountAppDataDirs</span><span class="p">,</span> <span class="n">jboolean</span> <span class="o">*</span><span class="n">bindMountAppStorageDirs</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">doUnshare</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">mountExternal</span><span class="p">,</span> <span class="n">niceName</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="4-specializeappprocesspost" class="heading-element"><span>4 specializeAppProcessPost</span>
+  <a href="#4-specializeappprocesspost" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">specializeAppProcessPost</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">clear_state</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">riru_set_unload_allowed</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-07-04 23:54:48">更新于 2023-07-04&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" data-title="Riru Unshare源码分析" data-hashtags="Magisk Hide隐藏"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" data-hashtag="Magisk Hide隐藏"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" data-title="Riru Unshare源码分析"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/magisk-hide%E9%9A%90%E8%97%8F/" class="post-tag" title="标签 - Magisk Hide隐藏">Magisk Hide隐藏</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E7%9A%84%E6%94%B9%E6%9C%BA%E7%AD%96%E7%95%A5/" class="post-nav-item" rel="prev" title="基于内核的改机策略"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>基于内核的改机策略</a><a href="/posts/%E7%BA%A2%E7%B1%B3note11%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B/" class="post-nav-item" rel="next" title="红米Note11内核编译流程">红米Note11内核编译流程<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

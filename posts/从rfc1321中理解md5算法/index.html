@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>从RFC1321中理解MD5算法 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="一、前置知识点 MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）
+"><meta name="keywords" content='摘要算法, 源码分析'>
+  <meta itemprop="name" content="从RFC1321中理解MD5算法">
+  <meta itemprop="description" content="一、前置知识点 MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）">
+  <meta itemprop="datePublished" content="2023-05-09T22:36:47+08:00">
+  <meta itemprop="dateModified" content="2023-05-09T22:36:47+08:00">
+  <meta itemprop="wordCount" content="2592">
+  <meta itemprop="keywords" content="摘要算法,源码分析"><meta property="og:url" content="http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="从RFC1321中理解MD5算法">
+  <meta property="og:description" content="一、前置知识点 MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-05-09T22:36:47+08:00">
+    <meta property="article:modified_time" content="2023-05-09T22:36:47+08:00">
+    <meta property="article:tag" content="摘要算法">
+    <meta property="article:tag" content="源码分析">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="从RFC1321中理解MD5算法">
+  <meta name="twitter:description" content="一、前置知识点 MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/" title="从RFC1321中理解MD5算法 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/" title="从RFC2040中理解RC5算法" /><link rel="next" type="text/html" href="http://localhost:1313/posts/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/" title="从FIPS 46-3中理解DES算法" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/index.md" title="从RFC1321中理解MD5算法 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "从RFC1321中理解MD5算法",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95\/"
+    },"genre": "posts","keywords": "摘要算法, 源码分析","wordcount":  2592 ,
+    "url": "http:\/\/localhost:1313\/posts\/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95\/","datePublished": "2023-05-09T22:36:47+08:00","dateModified": "2023-05-09T22:36:47+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">从RFC1321中理解MD5算法</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>从RFC1321中理解MD5算法</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/" class="post-category" title="分类 - 算法研究"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 算法研究</a></span></div><div class="post-meta-line"><span title="发布于 2023-05-09 22:36:47"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-05-09">2023-05-09</time></span>&nbsp;<span title="2592 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 2600 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 6 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一前置知识点">一、前置知识点</a></li>
+        <li><a href="#二算法流程">二、算法流程</a>
+          <ul>
+            <li><a href="#1-补位">1 补位</a></li>
+            <li><a href="#2-记录信息长度">2 记录信息长度</a></li>
+            <li><a href="#3-初始化变量">3 初始化变量</a></li>
+            <li><a href="#4-处理分组数据">4 处理分组数据</a></li>
+            <li><a href="#5-输出结果">5 输出结果</a></li>
+          </ul>
+        </li>
+        <li><a href="#总结">总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="一前置知识点" class="heading-element"><span>一、前置知识点</span>
+  <a href="#%e4%b8%80%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86%e7%82%b9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>MD5算法的输入是任意长度的信息，而输出是固定的长度为128位的信息，也就是固定大小为16字节的数组（byte=8bit）</p>
+<h3 id="二算法流程" class="heading-element"><span>二、算法流程</span>
+  <a href="#%e4%ba%8c%e7%ae%97%e6%b3%95%e6%b5%81%e7%a8%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>根据上面所说，MD5算法的输入是任意长度的信息，长度可以是0，也可以不是8的倍数，针对任意长度的输入，就需要通过下面的五个步骤来计算出它的MD5值</p>
+<h4 id="1-补位" class="heading-element"><span>1 补位</span>
+  <a href="#1-%e8%a1%a5%e4%bd%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>输入可以是不定长的信息，但是实际上转化到算法逻辑中时又需要根据定长的信息来计算，因此，首先需要做的就是补位操作，方法如下：
+将二进制数据对512进行取模，如果有余数不等于448，则将余数补足到448的长度，补足的规则是先补1，后面全补0，相当于N*512+448的长度，N为一个非负整数（也包括0）</p>
+<p>例如</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># 以长度20解释
+</span></span><span class="line"><span class="cl">1001001001   #长度为10
+</span></span><span class="line"><span class="cl">10010010011000000000   #先补1后补0</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="2-记录信息长度" class="heading-element"><span>2 记录信息长度</span>
+  <a href="#2-%e8%ae%b0%e5%bd%95%e4%bf%a1%e6%81%af%e9%95%bf%e5%ba%a6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>上一步将最后的余数补充到448，距离512还相差64，这64位二进制就是用来记录信息的长度的，当然，如果信息长度超过64位，则取低64位。经过以上这两步的处理，整个输入信息的长度已经被扩充成N*512+448+64=(N+1)*512，即长度恰好是512的整数倍。这样做的原因是为满足后面处理中对信息长度的要求</p>
+<h4 id="3-初始化变量" class="heading-element"><span>3 初始化变量</span>
+  <a href="#3-%e5%88%9d%e5%a7%8b%e5%8c%96%e5%8f%98%e9%87%8f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这一步引入MD5算法中第一个关键点&mdash;初始常量（可以叫幻数、魔数或者IV），这些参数以小端字节序来表示，会参与到后续的计算，也会直接影响最终的计算结果。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">word A: 01 23 45 67
+</span></span><span class="line"><span class="cl">word B: 89 ab cd ef
+</span></span><span class="line"><span class="cl">word C: fe dc ba 98
+</span></span><span class="line"><span class="cl">word D: 76 54 32 10</span></span></code></pre></td></tr></table>
+</div>
+</div><p>每一个变量给出的数值是高字节存于内存低地址，低字节存于内存高地址，即小端字节序。在程序中变量A、B、C、D的值分别为0x67452301，0xEFCDAB89，0x98BADCFE，0x10325476</p>
+<h4 id="4-处理分组数据" class="heading-element"><span>4 处理分组数据</span>
+  <a href="#4-%e5%a4%84%e7%90%86%e5%88%86%e7%bb%84%e6%95%b0%e6%8d%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在前两步我们将数据处理成了N*512的分组形式，下面再对每个分组进行二次分组成16份，也就是16*32=512，每个子分组是32bit的数据</p>
+<p>每个分组的计算流程都是一样的，简单来说如下：默认初始变量有a、b、c、d四个变量，首先以第三步的四个变量分别对其赋值，也就是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">A = a
+</span></span><span class="line"><span class="cl">B = b
+</span></span><span class="line"><span class="cl">C = c
+</span></span><span class="line"><span class="cl">D = d</span></span></code></pre></td></tr></table>
+</div>
+</div><p>之后开始四轮的循环计算，每轮有16次操作，分别对应一个非线性函数以及子分组、常量，每次操作都会计算出a、b、c、d其中一个变量的新值作替换，这样经过四轮计算之后，a、b、c、d的值也就更新了一遍，后续的其他分组也是如此操作</p>
+<p>下面具体讲下其中的逻辑：</p>
+<p>首先是MD5算法中第二个关键点&mdash;非线性函数，分别是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">F</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">)</span> <span class="o">=</span> <span class="n">XY</span> <span class="n">v</span> <span class="nf">not</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="n">Z</span>
+</span></span><span class="line"><span class="cl"><span class="nf">G</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">)</span> <span class="o">=</span> <span class="n">XZ</span> <span class="n">v</span> <span class="n">Y</span> <span class="nf">not</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">H</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">)</span> <span class="o">=</span> <span class="n">X</span> <span class="n">xor</span> <span class="n">Y</span> <span class="n">xor</span> <span class="n">Z</span>
+</span></span><span class="line"><span class="cl"><span class="nf">I</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">)</span> <span class="o">=</span> <span class="n">Y</span> <span class="nf">xor</span> <span class="p">(</span><span class="n">X</span> <span class="n">v</span> <span class="nf">not</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// c++实现 F, G, H and I are basic MD5 functions.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="n">MD5</span><span class="o">::</span><span class="n">uint4</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">F</span><span class="p">(</span><span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">y</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="o">~</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">z</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">MD5</span><span class="o">::</span><span class="n">uint4</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">G</span><span class="p">(</span><span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">y</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">z</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">y</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">z</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">MD5</span><span class="o">::</span><span class="n">uint4</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">H</span><span class="p">(</span><span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">y</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">x</span> <span class="o">^</span> <span class="n">y</span> <span class="o">^</span> <span class="n">z</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">MD5</span><span class="o">::</span><span class="n">uint4</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">I</span><span class="p">(</span><span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">y</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">y</span> <span class="o">^</span> <span class="p">(</span><span class="n">x</span> <span class="o">|</span> <span class="o">~</span><span class="n">z</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>每轮中都会使用其中一个函数来进行计算，因此函数的逻辑也直接决定最终的结果，具体使用到的地方如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// rotate_left rotates x left n bits.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="n">MD5</span><span class="o">::</span><span class="n">uint4</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">rotate_left</span><span class="p">(</span><span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">n</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">32</span> <span class="o">-</span> <span class="n">n</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4.
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Rotation is separate from addition to prevent recomputation.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="kt">void</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">FF</span><span class="p">(</span><span class="n">uint4</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">b</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">c</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">d</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">s</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">ac</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">a</span> <span class="o">=</span> <span class="nf">rotate_left</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="nf">F</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ac</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="kt">void</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">GG</span><span class="p">(</span><span class="n">uint4</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">b</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">c</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">d</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">s</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">ac</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">a</span> <span class="o">=</span> <span class="nf">rotate_left</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="nf">G</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ac</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="kt">void</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">HH</span><span class="p">(</span><span class="n">uint4</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">b</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">c</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">d</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">s</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">ac</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">a</span> <span class="o">=</span> <span class="nf">rotate_left</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="nf">H</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ac</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="kt">void</span> <span class="n">MD5</span><span class="o">::</span><span class="nf">II</span><span class="p">(</span><span class="n">uint4</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">b</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">c</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">d</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">x</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">s</span><span class="p">,</span> <span class="n">uint4</span> <span class="n">ac</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">a</span> <span class="o">=</span> <span class="nf">rotate_left</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="nf">I</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ac</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>四个函数格式相似，不同的只是引用到刚才所说的非线性函数</p>
+<p>讲到主逻辑之前还需要提到MD5算法中第三个关键点&mdash;T常量表</p>
+<p>它的计算方式也比较简单，之前说到计算会有4*16=64次，因此也就需要64个常量，公式如</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">4294967296*abs(sin(i)) </span></span></code></pre></td></tr></table>
+</div>
+</div><p>其中i是取值从1到64，而4294967296=2的32次方，最后计算可得出T常量表如</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">T</span><span class="p">[</span><span class="mi">64</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xd76aa478</span><span class="p">,</span> <span class="mh">0xe8c7b756</span><span class="p">,</span> <span class="mh">0x242070db</span><span class="p">,</span> <span class="mh">0xc1bdceee</span><span class="p">,</span> <span class="mh">0xf57c0faf</span><span class="p">,</span> <span class="mh">0x4787c62a</span><span class="p">,</span> <span class="mh">0xa8304613</span><span class="p">,</span> <span class="mh">0xfd469501</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x698098d8</span><span class="p">,</span> <span class="mh">0x8b44f7af</span><span class="p">,</span> <span class="mh">0xffff5bb1</span><span class="p">,</span> <span class="mh">0x895cd7be</span><span class="p">,</span> <span class="mh">0x6b901122</span><span class="p">,</span> <span class="mh">0xfd987193</span><span class="p">,</span> <span class="mh">0xa679438e</span><span class="p">,</span> <span class="mh">0x49b40821</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xf61e2562</span><span class="p">,</span> <span class="mh">0xc040b340</span><span class="p">,</span> <span class="mh">0x265e5a51</span><span class="p">,</span> <span class="mh">0xe9b6c7aa</span><span class="p">,</span> <span class="mh">0xd62f105d</span><span class="p">,</span> <span class="mh">0x02441453</span><span class="p">,</span> <span class="mh">0xd8a1e681</span><span class="p">,</span> <span class="mh">0xe7d3fbc8</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x21e1cde6</span><span class="p">,</span> <span class="mh">0xc33707d6</span><span class="p">,</span> <span class="mh">0xf4d50d87</span><span class="p">,</span> <span class="mh">0x455a14ed</span><span class="p">,</span> <span class="mh">0xa9e3e905</span><span class="p">,</span> <span class="mh">0xfcefa3f8</span><span class="p">,</span> <span class="mh">0x676f02d9</span><span class="p">,</span> <span class="mh">0x8d2a4c8a</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xfffa3942</span><span class="p">,</span> <span class="mh">0x8771f681</span><span class="p">,</span> <span class="mh">0x6d9d6122</span><span class="p">,</span> <span class="mh">0xfde5380c</span><span class="p">,</span> <span class="mh">0xa4beea44</span><span class="p">,</span> <span class="mh">0x4bdecfa9</span><span class="p">,</span> <span class="mh">0xf6bb4b60</span><span class="p">,</span> <span class="mh">0xbebfbc70</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x289b7ec6</span><span class="p">,</span> <span class="mh">0xeaa127fa</span><span class="p">,</span> <span class="mh">0xd4ef3085</span><span class="p">,</span> <span class="mh">0x04881d05</span><span class="p">,</span> <span class="mh">0xd9d4d039</span><span class="p">,</span> <span class="mh">0xe6db99e5</span><span class="p">,</span> <span class="mh">0x1fa27cf8</span><span class="p">,</span> <span class="mh">0xc4ac5665</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xf4292244</span><span class="p">,</span> <span class="mh">0x432aff97</span><span class="p">,</span> <span class="mh">0xab9423a7</span><span class="p">,</span> <span class="mh">0xfc93a039</span><span class="p">,</span> <span class="mh">0x655b59c3</span><span class="p">,</span> <span class="mh">0x8f0ccc92</span><span class="p">,</span> <span class="mh">0xffeff47d</span><span class="p">,</span> <span class="mh">0x85845dd1</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x6fa87e4f</span><span class="p">,</span> <span class="mh">0xfe2ce6e0</span><span class="p">,</span> <span class="mh">0xa3014314</span><span class="p">,</span> <span class="mh">0x4e0811a1</span><span class="p">,</span> <span class="mh">0xf7537e82</span><span class="p">,</span> <span class="mh">0xbd3af235</span><span class="p">,</span> <span class="mh">0x2ad7d2bb</span><span class="p">,</span> <span class="mh">0xeb86d391</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>还有第四个关键点&mdash;转换常量</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">S1</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">22</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">S2</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span>  <span class="mi">14</span><span class="p">,</span> <span class="mi">20</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">S3</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">23</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">S4</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">21</span><span class="p">};</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>参与到非线性函数中循环左移的操作
+主逻辑</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cm">/* Round 1 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="cm">/* 1 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="cm">/* 2 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span> <span class="cm">/* 3 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span> <span class="cm">/* 4 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">]);</span> <span class="cm">/* 5 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">5</span><span class="p">]);</span> <span class="cm">/* 6 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">6</span><span class="p">]);</span> <span class="cm">/* 7 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">7</span><span class="p">]);</span> <span class="cm">/* 8 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">8</span><span class="p">]);</span> <span class="cm">/* 9 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">9</span><span class="p">]);</span> <span class="cm">/* 10 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">10</span><span class="p">]);</span> <span class="cm">/* 11 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">11</span><span class="p">]);</span> <span class="cm">/* 12 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">12</span><span class="p">]);</span> <span class="cm">/* 13 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">13</span><span class="p">]);</span> <span class="cm">/* 14 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">14</span><span class="p">]);</span> <span class="cm">/* 15 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">FF</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span> <span class="n">S1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">15</span><span class="p">]);</span> <span class="cm">/* 16 */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* Round 2 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">16</span><span class="p">]);</span> <span class="cm">/* 17 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">17</span><span class="p">]);</span> <span class="cm">/* 18 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">18</span><span class="p">]);</span> <span class="cm">/* 19 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">19</span><span class="p">]);</span> <span class="cm">/* 20 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">20</span><span class="p">]);</span> <span class="cm">/* 21 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">21</span><span class="p">]);</span> <span class="cm">/* 22 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">22</span><span class="p">]);</span> <span class="cm">/* 23 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">23</span><span class="p">]);</span> <span class="cm">/* 24 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">24</span><span class="p">]);</span> <span class="cm">/* 25 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">25</span><span class="p">]);</span> <span class="cm">/* 26 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">26</span><span class="p">]);</span> <span class="cm">/* 27 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">27</span><span class="p">]);</span> <span class="cm">/* 28 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">28</span><span class="p">]);</span> <span class="cm">/* 29 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">29</span><span class="p">]);</span> <span class="cm">/* 30 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">30</span><span class="p">]);</span> <span class="cm">/* 31 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">GG</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">S2</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">31</span><span class="p">]);</span> <span class="cm">/* 32 */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* Round 3 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">32</span><span class="p">]);</span> <span class="cm">/* 33 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">33</span><span class="p">]);</span> <span class="cm">/* 34 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">34</span><span class="p">]);</span> <span class="cm">/* 35 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">35</span><span class="p">]);</span> <span class="cm">/* 36 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">36</span><span class="p">]);</span> <span class="cm">/* 37 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">37</span><span class="p">]);</span> <span class="cm">/* 38 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">38</span><span class="p">]);</span> <span class="cm">/* 39 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">39</span><span class="p">]);</span> <span class="cm">/* 40 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">40</span><span class="p">]);</span> <span class="cm">/* 41 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">41</span><span class="p">]);</span> <span class="cm">/* 42 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">42</span><span class="p">]);</span> <span class="cm">/* 43 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">43</span><span class="p">]);</span> <span class="cm">/* 44 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">44</span><span class="p">]);</span> <span class="cm">/* 45 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">45</span><span class="p">]);</span> <span class="cm">/* 46 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">46</span><span class="p">]);</span> <span class="cm">/* 47 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">HH</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">S3</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">47</span><span class="p">]);</span> <span class="cm">/* 48 */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* Round 4 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">48</span><span class="p">]);</span> <span class="cm">/* 49 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">49</span><span class="p">]);</span> <span class="cm">/* 50 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">50</span><span class="p">]);</span> <span class="cm">/* 51 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">51</span><span class="p">]);</span> <span class="cm">/* 52 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">52</span><span class="p">]);</span> <span class="cm">/* 53 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">53</span><span class="p">]);</span> <span class="cm">/* 54 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">54</span><span class="p">]);</span> <span class="cm">/* 55 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">55</span><span class="p">]);</span> <span class="cm">/* 56 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">56</span><span class="p">]);</span> <span class="cm">/* 57 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">57</span><span class="p">]);</span> <span class="cm">/* 58 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">58</span><span class="p">]);</span> <span class="cm">/* 59 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">59</span><span class="p">]);</span> <span class="cm">/* 60 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">60</span><span class="p">]);</span> <span class="cm">/* 61 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">61</span><span class="p">]);</span> <span class="cm">/* 62 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">62</span><span class="p">]);</span> <span class="cm">/* 63 */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">II</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">S4</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="mi">63</span><span class="p">]);</span> <span class="cm">/* 64 */</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>最终只需要将得到的a、b、c、d重新赋值再作为初始变量传递给下一分组计算即可</p>
+<h4 id="5-输出结果" class="heading-element"><span>5 输出结果</span>
+  <a href="#5-%e8%be%93%e5%87%ba%e7%bb%93%e6%9e%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在经过分组计算后能够得到A、B、C、D，从低位字节A开始，高位字节D结束</p>
+<h3 id="总结" class="heading-element"><span>总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>综合上面所讲到的MD5算法原理，可以看出MD5还是比较简单易懂的，与最终结果相关的正如上面所讲到的有四个关键点，理解它们的含义以及作用在后续我们对MD5算法进行魔改的时候是很有帮助的</p>
+</div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/%E4%BB%8Erfc3174%E4%B8%AD%E7%90%86%E8%A7%A3sha1%E7%AE%97%E6%B3%95/" title="从RFC3174中理解SHA1算法">从RFC3174中理解SHA1算法</a></li><li>
+          <a href="/posts/%E4%BB%8Erfc6234%E4%B8%AD%E7%90%86%E8%A7%A3sha2-256%E7%AE%97%E6%B3%95/" title="从RFC6234中理解SHA2-256算法">从RFC6234中理解SHA2-256算法</a></li><li>
+          <a href="/posts/%E4%BB%8Erfc4648%E4%B8%AD%E7%90%86%E8%A7%A3base64%E7%AE%97%E6%B3%95/" title="从RFC4648中理解Base64算法">从RFC4648中理解Base64算法</a></li><li>
+          <a href="/posts/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/" title="从RFC2040中理解RC5算法">从RFC2040中理解RC5算法</a></li><li>
+          <a href="/posts/%E4%BB%8Erfc6229%E4%B8%AD%E7%90%86%E8%A7%A3rc4%E7%AE%97%E6%B3%95/" title="从RFC6229中理解RC4算法">从RFC6229中理解RC4算法</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-05-09 22:36:47">更新于 2023-05-09&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/" data-title="从RFC1321中理解MD5算法" data-hashtags="摘要算法,源码分析"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/" data-hashtag="摘要算法"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/" data-title="从RFC1321中理解MD5算法"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/%E6%91%98%E8%A6%81%E7%AE%97%E6%B3%95/" class="post-tag" title="标签 - 摘要算法">摘要算法</a><a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-tag" title="标签 - 源码分析">源码分析</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/" class="post-nav-item" rel="prev" title="从FIPS 46-3中理解DES算法"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>从FIPS 46-3中理解DES算法</a><a href="/posts/%E4%BB%8Erfc2040%E4%B8%AD%E7%90%86%E8%A7%A3rc5%E7%AE%97%E6%B3%95/" class="post-nav-item" rel="next" title="从RFC2040中理解RC5算法">从RFC2040中理解RC5算法<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>StrongR Frida特征魔改 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="一、背景 参考项目strongR-frida对frida14.2.18进行魔改
+"><meta name="keywords" content='frida, 魔改思路'>
+  <meta itemprop="name" content="StrongR Frida特征魔改">
+  <meta itemprop="description" content="一、背景 参考项目strongR-frida对frida14.2.18进行魔改">
+  <meta itemprop="datePublished" content="2023-08-01T18:30:58+08:00">
+  <meta itemprop="dateModified" content="2023-08-01T18:30:58+08:00">
+  <meta itemprop="wordCount" content="816">
+  <meta itemprop="keywords" content="Frida,魔改思路"><meta property="og:url" content="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="StrongR Frida特征魔改">
+  <meta property="og:description" content="一、背景 参考项目strongR-frida对frida14.2.18进行魔改">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-08-01T18:30:58+08:00">
+    <meta property="article:modified_time" content="2023-08-01T18:30:58+08:00">
+    <meta property="article:tag" content="Frida">
+    <meta property="article:tag" content="魔改思路">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="StrongR Frida特征魔改">
+  <meta name="twitter:description" content="一、背景 参考项目strongR-frida对frida14.2.18进行魔改">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" title="StrongR Frida特征魔改 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/" title="Super分区定制" /><link rel="next" type="text/html" href="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" title="Maps特征检测对抗" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/index.md" title="StrongR Frida特征魔改 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "StrongR Frida特征魔改",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9\/"
+    },"genre": "posts","keywords": "frida, 魔改思路","wordcount":  816 ,
+    "url": "http:\/\/localhost:1313\/posts\/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9\/","datePublished": "2023-08-01T18:30:58+08:00","dateModified": "2023-08-01T18:30:58+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">StrongR Frida特征魔改</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>StrongR Frida特征魔改</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/hook%E6%A1%86%E6%9E%B6/" class="post-category" title="分类 - Hook框架"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Hook框架</a></span></div><div class="post-meta-line"><span title="发布于 2023-08-01 18:30:58"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-08-01">2023-08-01</time></span>&nbsp;<span title="816 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 900 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 2 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一背景">一、背景</a></li>
+        <li><a href="#二魔改点">二、魔改点</a>
+          <ul>
+            <li><a href="#1-0001-strongr-frida-string_frida_rpcpatch">1 0001-strongR-frida-string_frida_rpc.patch</a>
+              <ul>
+                <li><a href="#原理">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#2-0002-strongr-frida-io_re_frida_serverpatch">2 0002-strongR-frida-io_re_frida_server.patch</a>
+              <ul>
+                <li><a href="#原理-1">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#3-0003-strongr-frida-pipe_linjectorpatch">3 0003-strongR-frida-pipe_linjector.patch</a>
+              <ul>
+                <li><a href="#原理-2">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#4-0004-strongr-frida-io_frida_agent_sopatch">4 0004-strongR-frida-io_frida_agent_so.patch</a>
+              <ul>
+                <li><a href="#原理-3">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#5-0005-strongr-frida-symbol_frida_agent_mainpatch">5 0005-strongR-frida-symbol_frida_agent_main.patch</a>
+              <ul>
+                <li><a href="#原理-4">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#6-0006-strongr-frida-thread_gum_js_looppatch">6 0006-strongR-frida-thread_gum_js_loop.patch</a>
+              <ul>
+                <li><a href="#原理-5">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#7-0007-strongr-frida-thread_gmainpatch">7 0007-strongR-frida-thread_gmain.patch</a>
+              <ul>
+                <li><a href="#原理-6">原理</a></li>
+              </ul>
+            </li>
+            <li><a href="#8-0008-strongr-frida-protocol_unexpected_commandpatch">8 0008-strongR-frida-protocol_unexpected_command.patch</a>
+              <ul>
+                <li><a href="#原理-7">原理</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="一背景" class="heading-element"><span>一、背景</span>
+  <a href="#%e4%b8%80%e8%83%8c%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>参考项目<a href="https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core"target="_blank" rel="external nofollow noopener noreferrer">strongR-frida</a>对frida14.2.18进行魔改</p>
+<h3 id="二魔改点" class="heading-element"><span>二、魔改点</span>
+  <a href="#%e4%ba%8c%e9%ad%94%e6%94%b9%e7%82%b9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><a href="https://github.com/hluwa/Patchs/tree/master/strongR-frida/frida-core"target="_blank" rel="external nofollow noopener noreferrer">patch文件</a>总共有八个，分别是对八个主要特征进行魔改，下面逐个分析下</p>
+<h4 id="1-0001-strongr-frida-string_frida_rpcpatch" class="heading-element"><span>1 0001-strongR-frida-string_frida_rpc.patch</span>
+  <a href="#1-0001-strongr-frida-string_frida_rpcpatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>针对frida-core/lib/interfaces/session.vala文件，修改了frida:rpc字符串，使用了base64 decode来隐去字符串的特征</p>
+<p>具体修改如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// .add_string_value (&#34;frida:rpc&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">.</span><span class="nx">add_string_value</span> <span class="p">((</span><span class="nx">string</span><span class="p">)</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Base64</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s2">&#34;ZnJpZGE6cnBj=&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// if (raw_message.index_of (&#34;\&#34;frida:rpc\&#34;&#34;) == -1)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="nx">raw_message</span><span class="p">.</span><span class="nx">index_of</span> <span class="p">((</span><span class="nx">string</span><span class="p">)</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Base64</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s2">&#34;ImZyaWRhOnJwYyI=&#34;</span><span class="p">))</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// if (type == null || type != &#34;frida:rpc&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="nx">type</span> <span class="o">!=</span> <span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Base64</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s2">&#34;ZnJpZGE6cnBj=&#34;</span><span class="p">))</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>应对内存特征的扫描，App会对关键代码的可读代码段进行扫描，而<code>frida:rpc</code>是很明显的字符串特征，因此对字符串做了一层base来隐藏</p>
+<h4 id="2-0002-strongr-frida-io_re_frida_serverpatch" class="heading-element"><span>2 0002-strongR-frida-io_re_frida_server.patch</span>
+  <a href="#2-0002-strongr-frida-io_re_frida_serverpatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// private const string DEFAULT_DIRECTORY = &#34;re.frida.server&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">private</span> <span class="kr">static</span> <span class="nx">string</span> <span class="nx">DEFAULT_DIRECTORY</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">private</span> <span class="kr">static</span> <span class="kr">int</span> <span class="nx">main</span> <span class="p">(</span><span class="nx">string</span><span class="p">[]</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">DEFAULT_DIRECTORY</span> <span class="o">=</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Uuid</span><span class="p">.</span><span class="nx">string_random</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Environment</span><span class="p">.</span><span class="nx">init</span> <span class="p">();</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-1" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>re.frida.server是frida在启动时会创建的目录，里面有包括frida-agent等关键so，这些会在App的maps里面被检测到</p>
+<h4 id="3-0003-strongr-frida-pipe_linjectorpatch" class="heading-element"><span>3 0003-strongR-frida-pipe_linjector.patch</span>
+  <a href="#3-0003-strongr-frida-pipe_linjectorpatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// self-&gt;fifo_path = g_strdup_printf (&#34;%s/linjector-%u&#34;, self-&gt;temp_path, self-&gt;id);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">self</span><span class="o">-&gt;</span><span class="n">fifo_path</span> <span class="o">=</span> <span class="nf">g_strdup_printf</span> <span class="p">(</span><span class="s">&#34;%s/%p%u&#34;</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">temp_path</span><span class="p">,</span> <span class="n">self</span> <span class="p">,</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">id</span><span class="p">);</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-2" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>linjector是linux上提供注入能力的工具，当frida注入进程时，可以在App的/proc/self/fd看到某个fd的软链是指向frida目录的linjector的</p>
+<h4 id="4-0004-strongr-frida-io_frida_agent_sopatch" class="heading-element"><span>4 0004-strongR-frida-io_frida_agent_so.patch</span>
+  <a href="#4-0004-strongr-frida-io_frida_agent_sopatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// agent = new AgentDescriptor (PathTemplate (&#34;frida-agent-&lt;arch&gt;.so&#34;),
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">random_prefix</span> <span class="o">=</span> <span class="nx">GLib</span><span class="p">.</span><span class="nx">Uuid</span><span class="p">.</span><span class="nx">string_random</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="nx">agent</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AgentDescriptor</span> <span class="p">(</span><span class="nx">PathTemplate</span> <span class="p">(</span><span class="nx">random_prefix</span> <span class="o">+</span> <span class="s2">&#34;-&lt;arch&gt;.so&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// new AgentResource (&#34;frida-agent-arm.so&#34;, new Bytes.static (emulated_arm.data), tempdir),
+</span></span></span><span class="line"><span class="cl"><span class="c1">// new AgentResource (&#34;frida-agent-arm64.so&#34;, new Bytes.static (emulated_arm64.data), tempdir),
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">new</span> <span class="nx">AgentResource</span> <span class="p">(</span><span class="nx">random_prefix</span> <span class="o">+</span> <span class="s2">&#34;-arm.so&#34;</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Bytes</span><span class="p">.</span><span class="kr">static</span> <span class="p">(</span><span class="nx">emulated_arm</span><span class="p">.</span><span class="nx">data</span><span class="p">),</span> <span class="nx">tempdir</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="k">new</span> <span class="nx">AgentResource</span> <span class="p">(</span><span class="nx">random_prefix</span> <span class="o">+</span> <span class="s2">&#34;-arm64.so&#34;</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Bytes</span><span class="p">.</span><span class="kr">static</span> <span class="p">(</span><span class="nx">emulated_arm64</span><span class="p">.</span><span class="nx">data</span><span class="p">),</span> <span class="nx">tempdir</span><span class="p">),</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-3" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-3" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>和第二个是相同的，都是在maps中存在的特征</p>
+<h4 id="5-0005-strongr-frida-symbol_frida_agent_mainpatch" class="heading-element"><span>5 0005-strongR-frida-symbol_frida_agent_main.patch</span>
+  <a href="#5-0005-strongr-frida-symbol_frida_agent_mainpatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>针对frida-agent特征进行隐藏</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// frida-core/src/agent-container.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var main_func_found = container.module.symbol (&#34;frida_agent_main&#34;, out main_func_symbol);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">main_func_found</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">module</span><span class="p">.</span><span class="nx">symbol</span> <span class="p">(</span><span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">out</span> <span class="nx">main_func_symbol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/darwin/darwin-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// unowned string entrypoint = &#34;frida_agent_main&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">unowned</span> <span class="nx">string</span> <span class="nx">entrypoint</span> <span class="o">=</span> <span class="s2">&#34;main&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/tests/test-injector.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// yield injector.inject_library_file (process.id, path, &#34;frida_agent_main&#34;, data);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">yield</span> <span class="nx">injector</span><span class="p">.</span><span class="nx">inject_library_file</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/tests/test-agent.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var main_func_found = module.symbol (&#34;frida_agent_main&#34;, out main_func_symbol);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">main_func_found</span> <span class="o">=</span> <span class="nx">module</span><span class="p">.</span><span class="nx">symbol</span> <span class="p">(</span><span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">out</span> <span class="nx">main_func_symbol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/linux/linux-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// string entrypoint = &#34;frida_agent_main&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">string</span> <span class="nx">entrypoint</span> <span class="o">=</span> <span class="s2">&#34;main&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/windows/windows-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var id = yield winjector.inject_library_resource (pid, agent, &#34;frida_agent_main&#34;, t.remote_address, cancellable);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">winjector</span><span class="p">.</span><span class="nx">inject_library_resource</span> <span class="p">(</span><span class="nx">pid</span><span class="p">,</span> <span class="nx">agent</span><span class="p">,</span> <span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">remote_address</span><span class="p">,</span> <span class="nx">cancellable</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// frida-core/src/qnx/qnx-host-session.vala
+</span></span></span><span class="line"><span class="cl"><span class="c1">// var id = yield qinjector.inject_library_resource (pid, agent_desc, &#34;frida_agent_main&#34;, t.remote_address,
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 				cancellable);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">qinjector</span><span class="p">.</span><span class="nx">inject_library_resource</span> <span class="p">(</span><span class="nx">pid</span><span class="p">,</span> <span class="nx">agent_desc</span><span class="p">,</span> <span class="s2">&#34;main&#34;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">remote_address</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">cancellable</span><span class="p">);</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-4" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-4" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><p>定位所有frida_agent_main进行隐藏</p>
+<h4 id="6-0006-strongr-frida-thread_gum_js_looppatch" class="heading-element"><span>6 0006-strongR-frida-thread_gum_js_loop.patch</span>
+  <a href="#6-0006-strongr-frida-thread_gum_js_looppatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>无</p>
+<h5 id="原理-5" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><h4 id="7-0007-strongr-frida-thread_gmainpatch" class="heading-element"><span>7 0007-strongR-frida-thread_gmain.patch</span>
+  <a href="#7-0007-strongr-frida-thread_gmainpatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>无</p>
+<h5 id="原理-6" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5><h4 id="8-0008-strongr-frida-protocol_unexpected_commandpatch" class="heading-element"><span>8 0008-strongR-frida-protocol_unexpected_command.patch</span>
+  <a href="#8-0008-strongr-frida-protocol_unexpected_commandpatch" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="k">case</span> <span class="s2">&#34;OPEN&#34;</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="s2">&#34;CLSE&#34;</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="s2">&#34;WRTE&#34;</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// throw new Error.PROTOCOL (&#34;Unexpected command&#34;);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">break</span><span class="p">;</span> <span class="c1">//throw new Error.PROTOCOL (&#34;Unexpected command&#34;);
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="原理-7" class="heading-element"><span>原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h5></div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" title="Frida调试环境搭建">Frida调试环境搭建</a></li><li>
+          <a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ebase64%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/" title="探讨关于Base64算法的魔改方式">探讨关于Base64算法的魔改方式</a></li><li>
+          <a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/" title="探讨关于CRC32算法的魔改方式">探讨关于CRC32算法的魔改方式</a></li><li>
+          <a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/" title="探讨关于MD5算法的魔改方式">探讨关于MD5算法的魔改方式</a></li><li>
+          <a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Erc4%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/" title="探讨关于RC4算法的魔改方式">探讨关于RC4算法的魔改方式</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-08-01 18:30:58">更新于 2023-08-01&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frida特征魔改" data-hashtags="frida,魔改思路"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-hashtag="frida"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" data-title="StrongR Frida特征魔改"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/frida/" class="post-tag" title="标签 - Frida">Frida</a><a href="/tags/%E9%AD%94%E6%94%B9%E6%80%9D%E8%B7%AF/" class="post-tag" title="标签 - 魔改思路">魔改思路</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" class="post-nav-item" rel="prev" title="Maps特征检测对抗"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Maps特征检测对抗</a><a href="/posts/super%E5%88%86%E5%8C%BA%E5%AE%9A%E5%88%B6/" class="post-nav-item" rel="next" title="Super分区定制">Super分区定制<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

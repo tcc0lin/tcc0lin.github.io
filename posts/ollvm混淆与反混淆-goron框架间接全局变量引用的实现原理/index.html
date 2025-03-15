@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Ollvm混淆与反混淆: Goron框架间接全局变量引用的实现原理 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="与间接函数调用同理，可参考
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 // llvm/lib/Transforms/Obfuscation/IndirectGlobalVariable.cpp bool runOnFunction(Function &amp;Fn) override { if (!toObfuscate(flag, &amp;Fn, &#34;indgv&#34;)) { return false; } if (Options &amp;&amp; Options-&gt;skipFunction(Fn.getName())) { return false; } LLVMContext &amp;Ctx = Fn.getContext(); GVNumbering.clear(); GlobalVariables.clear(); LowerConstantExpr(Fn); NumberGlobalVariable(Fn); if (GlobalVariables.empty()) { return false; } uint32_t V = RandomEngine.get_uint32_t() &amp; ~3; ConstantInt *EncKey = ConstantInt::get(Type::getInt32Ty(Ctx), V, false); const IPObfuscationContext::IPOInfo *SecretInfo = nullptr; if (IPO) { SecretInfo = IPO-&gt;getIPOInfo(&amp;Fn); } Value *MySecret; if (SecretInfo) { MySecret = SecretInfo-&gt;SecretLI; } else { MySecret = ConstantInt::get(Type::getInt32Ty(Ctx), 0, true); } ConstantInt *Zero = ConstantInt::get(Type::getInt32Ty(Ctx), 0); GlobalVariable *GVars = getIndirectGlobalVariables(Fn, EncKey); for (inst_iterator I = inst_begin(Fn), E = inst_end(Fn); I != E; &#43;&#43;I) { Instruction *Inst = &amp;*I; if (PHINode *PHI = dyn_cast&lt;PHINode&gt;(Inst)) { for (unsigned int i = 0; i &lt; PHI-&gt;getNumIncomingValues(); &#43;&#43;i) { Value *val = PHI-&gt;getIncomingValue(i); if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(val)) { if (GVNumbering.count(GV) == 0) { continue; } Instruction *IP = PHI-&gt;getIncomingBlock(i)-&gt;getTerminator(); IRBuilder&lt;&gt; IRB(IP); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } else { for (User::op_iterator op = Inst-&gt;op_begin(); op != Inst-&gt;op_end(); &#43;&#43;op) { if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(*op)) { if (GVNumbering.count(GV) == 0) { continue; } IRBuilder&lt;&gt; IRB(Inst); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } } return true; } }; "><meta name="keywords" content='goron框架'>
+  <meta itemprop="name" content="Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理">
+  <meta itemprop="description" content="与间接函数调用同理，可参考
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 // llvm/lib/Transforms/Obfuscation/IndirectGlobalVariable.cpp bool runOnFunction(Function &amp;Fn) override { if (!toObfuscate(flag, &amp;Fn, &#34;indgv&#34;)) { return false; } if (Options &amp;&amp; Options-&gt;skipFunction(Fn.getName())) { return false; } LLVMContext &amp;Ctx = Fn.getContext(); GVNumbering.clear(); GlobalVariables.clear(); LowerConstantExpr(Fn); NumberGlobalVariable(Fn); if (GlobalVariables.empty()) { return false; } uint32_t V = RandomEngine.get_uint32_t() &amp; ~3; ConstantInt *EncKey = ConstantInt::get(Type::getInt32Ty(Ctx), V, false); const IPObfuscationContext::IPOInfo *SecretInfo = nullptr; if (IPO) { SecretInfo = IPO-&gt;getIPOInfo(&amp;Fn); } Value *MySecret; if (SecretInfo) { MySecret = SecretInfo-&gt;SecretLI; } else { MySecret = ConstantInt::get(Type::getInt32Ty(Ctx), 0, true); } ConstantInt *Zero = ConstantInt::get(Type::getInt32Ty(Ctx), 0); GlobalVariable *GVars = getIndirectGlobalVariables(Fn, EncKey); for (inst_iterator I = inst_begin(Fn), E = inst_end(Fn); I != E; &#43;&#43;I) { Instruction *Inst = &amp;*I; if (PHINode *PHI = dyn_cast&lt;PHINode&gt;(Inst)) { for (unsigned int i = 0; i &lt; PHI-&gt;getNumIncomingValues(); &#43;&#43;i) { Value *val = PHI-&gt;getIncomingValue(i); if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(val)) { if (GVNumbering.count(GV) == 0) { continue; } Instruction *IP = PHI-&gt;getIncomingBlock(i)-&gt;getTerminator(); IRBuilder&lt;&gt; IRB(IP); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } else { for (User::op_iterator op = Inst-&gt;op_begin(); op != Inst-&gt;op_end(); &#43;&#43;op) { if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(*op)) { if (GVNumbering.count(GV) == 0) { continue; } IRBuilder&lt;&gt; IRB(Inst); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } } return true; } };">
+  <meta itemprop="datePublished" content="2023-03-30T11:48:49+08:00">
+  <meta itemprop="dateModified" content="2023-03-30T11:48:49+08:00">
+  <meta itemprop="wordCount" content="399">
+  <meta itemprop="keywords" content="Goron框架"><meta property="og:url" content="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理">
+  <meta property="og:description" content="与间接函数调用同理，可参考
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 // llvm/lib/Transforms/Obfuscation/IndirectGlobalVariable.cpp bool runOnFunction(Function &amp;Fn) override { if (!toObfuscate(flag, &amp;Fn, &#34;indgv&#34;)) { return false; } if (Options &amp;&amp; Options-&gt;skipFunction(Fn.getName())) { return false; } LLVMContext &amp;Ctx = Fn.getContext(); GVNumbering.clear(); GlobalVariables.clear(); LowerConstantExpr(Fn); NumberGlobalVariable(Fn); if (GlobalVariables.empty()) { return false; } uint32_t V = RandomEngine.get_uint32_t() &amp; ~3; ConstantInt *EncKey = ConstantInt::get(Type::getInt32Ty(Ctx), V, false); const IPObfuscationContext::IPOInfo *SecretInfo = nullptr; if (IPO) { SecretInfo = IPO-&gt;getIPOInfo(&amp;Fn); } Value *MySecret; if (SecretInfo) { MySecret = SecretInfo-&gt;SecretLI; } else { MySecret = ConstantInt::get(Type::getInt32Ty(Ctx), 0, true); } ConstantInt *Zero = ConstantInt::get(Type::getInt32Ty(Ctx), 0); GlobalVariable *GVars = getIndirectGlobalVariables(Fn, EncKey); for (inst_iterator I = inst_begin(Fn), E = inst_end(Fn); I != E; &#43;&#43;I) { Instruction *Inst = &amp;*I; if (PHINode *PHI = dyn_cast&lt;PHINode&gt;(Inst)) { for (unsigned int i = 0; i &lt; PHI-&gt;getNumIncomingValues(); &#43;&#43;i) { Value *val = PHI-&gt;getIncomingValue(i); if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(val)) { if (GVNumbering.count(GV) == 0) { continue; } Instruction *IP = PHI-&gt;getIncomingBlock(i)-&gt;getTerminator(); IRBuilder&lt;&gt; IRB(IP); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } else { for (User::op_iterator op = Inst-&gt;op_begin(); op != Inst-&gt;op_end(); &#43;&#43;op) { if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(*op)) { if (GVNumbering.count(GV) == 0) { continue; } IRBuilder&lt;&gt; IRB(Inst); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } } return true; } };">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-03-30T11:48:49+08:00">
+    <meta property="article:modified_time" content="2023-03-30T11:48:49+08:00">
+    <meta property="article:tag" content="Goron框架">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理">
+  <meta name="twitter:description" content="与间接函数调用同理，可参考
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 // llvm/lib/Transforms/Obfuscation/IndirectGlobalVariable.cpp bool runOnFunction(Function &amp;Fn) override { if (!toObfuscate(flag, &amp;Fn, &#34;indgv&#34;)) { return false; } if (Options &amp;&amp; Options-&gt;skipFunction(Fn.getName())) { return false; } LLVMContext &amp;Ctx = Fn.getContext(); GVNumbering.clear(); GlobalVariables.clear(); LowerConstantExpr(Fn); NumberGlobalVariable(Fn); if (GlobalVariables.empty()) { return false; } uint32_t V = RandomEngine.get_uint32_t() &amp; ~3; ConstantInt *EncKey = ConstantInt::get(Type::getInt32Ty(Ctx), V, false); const IPObfuscationContext::IPOInfo *SecretInfo = nullptr; if (IPO) { SecretInfo = IPO-&gt;getIPOInfo(&amp;Fn); } Value *MySecret; if (SecretInfo) { MySecret = SecretInfo-&gt;SecretLI; } else { MySecret = ConstantInt::get(Type::getInt32Ty(Ctx), 0, true); } ConstantInt *Zero = ConstantInt::get(Type::getInt32Ty(Ctx), 0); GlobalVariable *GVars = getIndirectGlobalVariables(Fn, EncKey); for (inst_iterator I = inst_begin(Fn), E = inst_end(Fn); I != E; &#43;&#43;I) { Instruction *Inst = &amp;*I; if (PHINode *PHI = dyn_cast&lt;PHINode&gt;(Inst)) { for (unsigned int i = 0; i &lt; PHI-&gt;getNumIncomingValues(); &#43;&#43;i) { Value *val = PHI-&gt;getIncomingValue(i); if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(val)) { if (GVNumbering.count(GV) == 0) { continue; } Instruction *IP = PHI-&gt;getIncomingBlock(i)-&gt;getTerminator(); IRBuilder&lt;&gt; IRB(IP); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } else { for (User::op_iterator op = Inst-&gt;op_begin(); op != Inst-&gt;op_end(); &#43;&#43;op) { if (GlobalVariable *GV = dyn_cast&lt;GlobalVariable&gt;(*op)) { if (GVNumbering.count(GV) == 0) { continue; } IRBuilder&lt;&gt; IRB(Inst); Value *Idx = ConstantInt::get(Type::getInt32Ty(Ctx), GVNumbering[GV]); Value *GEP = IRB.CreateGEP(GVars, {Zero, Idx}); LoadInst *EncGVAddr = IRB.CreateLoad(GEP, GV-&gt;getName()); Constant *X; if (SecretInfo) { X = ConstantExpr::getSub(SecretInfo-&gt;SecretCI, EncKey); } else { X = ConstantExpr::getSub(Zero, EncKey); } Value *Secret = IRB.CreateSub(X, MySecret); Value *GVAddr = IRB.CreateGEP(EncGVAddr, Secret); GVAddr = IRB.CreateBitCast(GVAddr, GV-&gt;getType()); GVAddr-&gt;setName(&#34;IndGV&#34;); Inst-&gt;replaceUsesOfWith(GV, GVAddr); } } } } return true; } };">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" title="Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" title="Ollvm混淆与反混淆: goron框架间接函数调用的实现原理" /><link rel="next" type="text/html" href="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" title="Ollvm混淆与反混淆: goron框架字符串加密的实现原理" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.md" title="Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Ollvm混淆与反混淆: goron框架间接全局变量引用的实现原理",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/"
+    },"genre": "posts","keywords": "goron框架","wordcount":  399 ,
+    "url": "http:\/\/localhost:1313\/posts\/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86\/","datePublished": "2023-03-30T11:48:49+08:00","dateModified": "2023-03-30T11:48:49+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Ollvm混淆与反混淆: Goron框架间接全局变量引用的实现原理</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Ollvm混淆与反混淆: Goron框架间接全局变量引用的实现原理</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/" class="post-category" title="分类 - Ollvm混淆与反混淆"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Ollvm混淆与反混淆</a></span></div><div class="post-meta-line"><span title="发布于 2023-03-30 11:48:49"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-03-30">2023-03-30</time></span>&nbsp;<span title="399 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 400 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 1 分钟</span>&nbsp;</div>
+    </div><div class="content" id="content"><p>与间接函数调用同理，可参考</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// llvm/lib/Transforms/Obfuscation/IndirectGlobalVariable.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">runOnFunction</span><span class="p">(</span><span class="n">Function</span> <span class="o">&amp;</span><span class="n">Fn</span><span class="p">)</span> <span class="k">override</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">toObfuscate</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">Fn</span><span class="p">,</span> <span class="s">&#34;indgv&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">Options</span> <span class="o">&amp;&amp;</span> <span class="n">Options</span><span class="o">-&gt;</span><span class="n">skipFunction</span><span class="p">(</span><span class="n">Fn</span><span class="p">.</span><span class="n">getName</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">LLVMContext</span> <span class="o">&amp;</span><span class="n">Ctx</span> <span class="o">=</span> <span class="n">Fn</span><span class="p">.</span><span class="n">getContext</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">GVNumbering</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">GlobalVariables</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">LowerConstantExpr</span><span class="p">(</span><span class="n">Fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">NumberGlobalVariable</span><span class="p">(</span><span class="n">Fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">GlobalVariables</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">V</span> <span class="o">=</span> <span class="n">RandomEngine</span><span class="p">.</span><span class="n">get_uint32_t</span><span class="p">()</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mi">3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ConstantInt</span> <span class="o">*</span><span class="n">EncKey</span> <span class="o">=</span> <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">Ctx</span><span class="p">),</span> <span class="n">V</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="n">IPObfuscationContext</span><span class="o">::</span><span class="n">IPOInfo</span> <span class="o">*</span><span class="n">SecretInfo</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">IPO</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">SecretInfo</span> <span class="o">=</span> <span class="n">IPO</span><span class="o">-&gt;</span><span class="n">getIPOInfo</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">Value</span> <span class="o">*</span><span class="n">MySecret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">SecretInfo</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">MySecret</span> <span class="o">=</span> <span class="n">SecretInfo</span><span class="o">-&gt;</span><span class="n">SecretLI</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">MySecret</span> <span class="o">=</span> <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">Ctx</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">ConstantInt</span> <span class="o">*</span><span class="n">Zero</span> <span class="o">=</span> <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">Ctx</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">GlobalVariable</span> <span class="o">*</span><span class="n">GVars</span> <span class="o">=</span> <span class="n">getIndirectGlobalVariables</span><span class="p">(</span><span class="n">Fn</span><span class="p">,</span> <span class="n">EncKey</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="n">inst_iterator</span> <span class="n">I</span> <span class="o">=</span> <span class="n">inst_begin</span><span class="p">(</span><span class="n">Fn</span><span class="p">),</span> <span class="n">E</span> <span class="o">=</span> <span class="n">inst_end</span><span class="p">(</span><span class="n">Fn</span><span class="p">);</span> <span class="n">I</span> <span class="o">!=</span> <span class="n">E</span><span class="p">;</span> <span class="o">++</span><span class="n">I</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">Instruction</span> <span class="o">*</span><span class="n">Inst</span> <span class="o">=</span> <span class="o">&amp;*</span><span class="n">I</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="k">if</span> <span class="p">(</span><span class="n">PHINode</span> <span class="o">*</span><span class="n">PHI</span> <span class="o">=</span> <span class="n">dyn_cast</span><span class="o">&lt;</span><span class="n">PHINode</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Inst</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">PHI</span><span class="o">-&gt;</span><span class="n">getNumIncomingValues</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">Value</span> <span class="o">*</span><span class="n">val</span> <span class="o">=</span> <span class="n">PHI</span><span class="o">-&gt;</span><span class="n">getIncomingValue</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span><span class="n">GlobalVariable</span> <span class="o">*</span><span class="n">GV</span> <span class="o">=</span> <span class="n">dyn_cast</span><span class="o">&lt;</span><span class="n">GlobalVariable</span><span class="o">&gt;</span><span class="p">(</span><span class="n">val</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">GVNumbering</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">GV</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">Instruction</span> <span class="o">*</span><span class="n">IP</span> <span class="o">=</span> <span class="n">PHI</span><span class="o">-&gt;</span><span class="n">getIncomingBlock</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">getTerminator</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">IRBuilder</span><span class="o">&lt;&gt;</span> <span class="n">IRB</span><span class="p">(</span><span class="n">IP</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">Idx</span> <span class="o">=</span> <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">Ctx</span><span class="p">),</span> <span class="n">GVNumbering</span><span class="p">[</span><span class="n">GV</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">GEP</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateGEP</span><span class="p">(</span><span class="n">GVars</span><span class="p">,</span> <span class="p">{</span><span class="n">Zero</span><span class="p">,</span> <span class="n">Idx</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LoadInst</span> <span class="o">*</span><span class="n">EncGVAddr</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateLoad</span><span class="p">(</span><span class="n">GEP</span><span class="p">,</span> <span class="n">GV</span><span class="o">-&gt;</span><span class="n">getName</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Constant</span> <span class="o">*</span><span class="n">X</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">SecretInfo</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">SecretInfo</span><span class="o">-&gt;</span><span class="n">SecretCI</span><span class="p">,</span> <span class="n">EncKey</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">Zero</span><span class="p">,</span> <span class="n">EncKey</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">Secret</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateSub</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">MySecret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">GVAddr</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateGEP</span><span class="p">(</span><span class="n">EncGVAddr</span><span class="p">,</span> <span class="n">Secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">GVAddr</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateBitCast</span><span class="p">(</span><span class="n">GVAddr</span><span class="p">,</span> <span class="n">GV</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="n">GVAddr</span><span class="o">-&gt;</span><span class="n">setName</span><span class="p">(</span><span class="s">&#34;IndGV&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Inst</span><span class="o">-&gt;</span><span class="n">replaceUsesOfWith</span><span class="p">(</span><span class="n">GV</span><span class="p">,</span> <span class="n">GVAddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="n">User</span><span class="o">::</span><span class="n">op_iterator</span> <span class="n">op</span> <span class="o">=</span> <span class="n">Inst</span><span class="o">-&gt;</span><span class="n">op_begin</span><span class="p">();</span> <span class="n">op</span> <span class="o">!=</span> <span class="n">Inst</span><span class="o">-&gt;</span><span class="n">op_end</span><span class="p">();</span> <span class="o">++</span><span class="n">op</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span><span class="n">GlobalVariable</span> <span class="o">*</span><span class="n">GV</span> <span class="o">=</span> <span class="n">dyn_cast</span><span class="o">&lt;</span><span class="n">GlobalVariable</span><span class="o">&gt;</span><span class="p">(</span><span class="o">*</span><span class="n">op</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">GVNumbering</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">GV</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">IRBuilder</span><span class="o">&lt;&gt;</span> <span class="n">IRB</span><span class="p">(</span><span class="n">Inst</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">Idx</span> <span class="o">=</span> <span class="n">ConstantInt</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getInt32Ty</span><span class="p">(</span><span class="n">Ctx</span><span class="p">),</span> <span class="n">GVNumbering</span><span class="p">[</span><span class="n">GV</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">GEP</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateGEP</span><span class="p">(</span><span class="n">GVars</span><span class="p">,</span> <span class="p">{</span><span class="n">Zero</span><span class="p">,</span> <span class="n">Idx</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">            <span class="n">LoadInst</span> <span class="o">*</span><span class="n">EncGVAddr</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateLoad</span><span class="p">(</span><span class="n">GEP</span><span class="p">,</span> <span class="n">GV</span><span class="o">-&gt;</span><span class="n">getName</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Constant</span> <span class="o">*</span><span class="n">X</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">SecretInfo</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">SecretInfo</span><span class="o">-&gt;</span><span class="n">SecretCI</span><span class="p">,</span> <span class="n">EncKey</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="n">X</span> <span class="o">=</span> <span class="n">ConstantExpr</span><span class="o">::</span><span class="n">getSub</span><span class="p">(</span><span class="n">Zero</span><span class="p">,</span> <span class="n">EncKey</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">Secret</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateSub</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">MySecret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Value</span> <span class="o">*</span><span class="n">GVAddr</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateGEP</span><span class="p">(</span><span class="n">EncGVAddr</span><span class="p">,</span> <span class="n">Secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">GVAddr</span> <span class="o">=</span> <span class="n">IRB</span><span class="p">.</span><span class="n">CreateBitCast</span><span class="p">(</span><span class="n">GVAddr</span><span class="p">,</span> <span class="n">GV</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">            <span class="n">GVAddr</span><span class="o">-&gt;</span><span class="n">setName</span><span class="p">(</span><span class="s">&#34;IndGV&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">Inst</span><span class="o">-&gt;</span><span class="n">replaceUsesOfWith</span><span class="p">(</span><span class="n">GV</span><span class="p">,</span> <span class="n">GVAddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="p">};</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" title="Ollvm混淆与反混淆: Goron框架间接函数调用的实现原理">Ollvm混淆与反混淆: Goron框架间接函数调用的实现原理</a></li><li>
+          <a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" title="Ollvm混淆与反混淆: Goron框架间接跳转的实现原理">Ollvm混淆与反混淆: Goron框架间接跳转的实现原理</a></li><li>
+          <a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/" title="Ollvm混淆与反混淆: Goron编译使用">Ollvm混淆与反混淆: Goron编译使用</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-03-30 11:48:49">更新于 2023-03-30&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: Goron框架间接全局变量引用的实现原理" data-hashtags="goron框架"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-hashtag="goron框架"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E5%BC%95%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-title="Ollvm混淆与反混淆: Goron框架间接全局变量引用的实现原理"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/goron%E6%A1%86%E6%9E%B6/" class="post-tag" title="标签 - Goron框架">Goron框架</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8A%A0%E5%AF%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="post-nav-item" rel="prev" title="Ollvm混淆与反混淆: Goron框架字符串加密的实现原理"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Ollvm混淆与反混淆: Goron框架字符串加密的实现原理</a><a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="post-nav-item" rel="next" title="Ollvm混淆与反混淆: Goron框架间接函数调用的实现原理">Ollvm混淆与反混淆: Goron框架间接函数调用的实现原理<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

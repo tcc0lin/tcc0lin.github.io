@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Zygisk源码阅读 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="基于Magisk v25.0
+一、Zygisk注入 1. magic_mount挂载app_process magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的
+"><meta name="keywords" content='源码分析, zygisk'>
+  <meta itemprop="name" content="Zygisk源码阅读">
+  <meta itemprop="description" content="基于Magisk v25.0
+一、Zygisk注入 1. magic_mount挂载app_process magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的">
+  <meta itemprop="datePublished" content="2023-06-11T11:36:47+08:00">
+  <meta itemprop="dateModified" content="2023-06-11T11:36:47+08:00">
+  <meta itemprop="wordCount" content="5298">
+  <meta itemprop="keywords" content="源码分析,Zygisk"><meta property="og:url" content="http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Zygisk源码阅读">
+  <meta property="og:description" content="基于Magisk v25.0
+一、Zygisk注入 1. magic_mount挂载app_process magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-06-11T11:36:47+08:00">
+    <meta property="article:modified_time" content="2023-06-11T11:36:47+08:00">
+    <meta property="article:tag" content="源码分析">
+    <meta property="article:tag" content="Zygisk">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Zygisk源码阅读">
+  <meta name="twitter:description" content="基于Magisk v25.0
+一、Zygisk注入 1. magic_mount挂载app_process magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" title="Zygisk源码阅读 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/" title="重读Magisk内部实现细节2" /><link rel="next" type="text/html" href="http://localhost:1313/posts/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" title="Magisk检测方式" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/index.md" title="Zygisk源码阅读 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Zygisk源码阅读",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/"
+    },"genre": "posts","keywords": "源码分析, zygisk","wordcount":  5298 ,
+    "url": "http:\/\/localhost:1313\/posts\/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB\/","datePublished": "2023-06-11T11:36:47+08:00","dateModified": "2023-06-11T11:36:47+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Zygisk源码阅读</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Zygisk源码阅读</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/magisk/" class="post-category" title="分类 - Magisk"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Magisk</a></span></div><div class="post-meta-line"><span title="发布于 2023-06-11 11:36:47"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-06-11">2023-06-11</time></span>&nbsp;<span title="5298 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 5300 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 11 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一zygisk注入">一、Zygisk注入</a>
+          <ul>
+            <li><a href="#1-magic_mount挂载app_process">1. magic_mount挂载app_process</a></li>
+            <li><a href="#2-app_process_main">2. app_process_main</a></li>
+          </ul>
+        </li>
+        <li><a href="#二zygisk加载">二、Zygisk加载</a>
+          <ul>
+            <li><a href="#21-一阶段">2.1 一阶段</a></li>
+            <li><a href="#22-二阶段">2.2 二阶段</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><p>基于Magisk v25.0</p>
+<h3 id="一zygisk注入" class="heading-element"><span>一、Zygisk注入</span>
+  <a href="#%e4%b8%80zygisk%e6%b3%a8%e5%85%a5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="1-magic_mount挂载app_process" class="heading-element"><span>1. magic_mount挂载app_process</span>
+  <a href="#1-magic_mount%e6%8c%82%e8%bd%bdapp_process" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>magic_mount的原理是挂载tmpfs作为目录，并bind_mount原有的和修改后的文件，而zygisk的处理逻辑也在这个函数当中，整个过程是在magiskd这个系统守护进程中处理的</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native/jni/core/module.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">magic_mount</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// bind_mount的过程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Mount on top of modules to enable zygisk
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">zygisk_enabled</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">string</span> <span class="n">zygisk_bin</span> <span class="o">=</span> <span class="n">MAGISKTMP</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="n">ZYGISKBIN</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// zygisk_bin对应的是/dev/xxxx/zygisk
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">mkdir</span><span class="p">(</span><span class="n">zygisk_bin</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">mount_zygisk</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">mount_zygisk</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// native/jni/core/module.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">app_process_32</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">app_process_64</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#define mount_zygisk(bit)                                                               \
+</span></span></span><span class="line"><span class="cl"><span class="cp">if (access(&#34;/system/bin/app_process&#34; #bit, F_OK) == 0) {                                \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    app_process_##bit = xopen(&#34;/system/bin/app_process&#34; #bit, O_RDONLY | O_CLOEXEC);    \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    string zbin = zygisk_bin + &#34;/app_process&#34; #bit;                                     \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    string dbin = zygisk_bin + &#34;/magisk&#34; #bit;                                          \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    string mbin = MAGISKTMP + &#34;/magisk&#34; #bit;                                           \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    int src = xopen(mbin.data(), O_RDONLY | O_CLOEXEC);                                 \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    int out = xopen(zbin.data(), O_CREAT | O_WRONLY | O_CLOEXEC, 0);                    \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    xsendfile(out, src, nullptr, INT_MAX);                                              \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    close(out);                                                                         \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    out = xopen(dbin.data(), O_CREAT | O_WRONLY | O_CLOEXEC, 0);                        \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    lseek(src, 0, SEEK_SET);                                                            \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    xsendfile(out, src, nullptr, INT_MAX);                                              \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    close(out);                                                                         \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    close(src);                                                                         \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    clone_attr(&#34;/system/bin/app_process&#34; #bit, zbin.data());                            \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    clone_attr(&#34;/system/bin/app_process&#34; #bit, dbin.data());                            \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    bind_mount(zbin.data(), &#34;/system/bin/app_process&#34; #bit);                            \
+</span></span></span><span class="line"><span class="cl"><span class="cp">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>从mount_zygisk的过程中可以看出做了三件事</p>
+<ol>
+<li>打开原先的app_process(32|64)文件，fd保存到app_process_(32|64)中</li>
+<li>把magisk自己的可执行文件magisk(32|64)(mbin)复制到zygisk目录下的app_process(32|64)(zbin)，此处用了sendfile直接在内核中复制文件
+<blockquote>
+<p>sendfile函数在两个文件描写叙述符之间直接传递数据(完全在内核中操作，传送)，从而避免了内核缓冲区数据和用户缓冲区数据之间的拷贝，操作效率非常高，被称之为零拷贝</p></blockquote>
+</li>
+<li>把zygisk目录下app_process(实际上是magisk文件)通过bind_mount的方式挂载到到原先的/system/bin/app_process(32|64)上</li>
+</ol>
+<p>那么这样一来，/system/bin下的app_process就变成了magisk文件，而原先的app_process的fd被magiskd持有。执行app_process的时候就是执行了magisk</p>
+<h4 id="2-app_process_main" class="heading-element"><span>2. app_process_main</span>
+  <a href="#2-app_process_main" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>首先magisk可执行文件的入口main在native/jni/core/applets.cpp里面，app_process实际上可以看作是它的一个applet（类似su、resetprop这些，不过被隐藏了，因为这是个内部功能）</p>
+<p>main启动会判断自己的文件名(argv0)，如果是app_process就会调用app_process_main，如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native\jni\core\applets.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">enable_selinux</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cmdline_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init_argv0</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">string_view</span> <span class="n">base</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// app_process is actually not an applet
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">str_starts</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s">&#34;app_process&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">app_process_main</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">umask</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">base</span> <span class="o">==</span> <span class="s">&#34;magisk&#34;</span> <span class="o">||</span> <span class="n">base</span> <span class="o">==</span> <span class="s">&#34;magisk32&#34;</span> <span class="o">||</span> <span class="n">base</span> <span class="o">==</span> <span class="s">&#34;magisk64&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="sc">&#39;-&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Calling applet via magisk [applet] args
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="o">--</span><span class="n">argc</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="o">++</span><span class="n">argv</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">magisk_main</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">call_applet</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// native/jni/zygisk/main.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Entrypoint for app_process overlay
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">app_process_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">android_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">zygote</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">fp</span> <span class="o">=</span> <span class="n">open_file</span><span class="p">(</span><span class="s">&#34;/proc/self/attr/current&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fscanf</span><span class="p">(</span><span class="n">fp</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="s">&#34;%s&#34;</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">zygote</span> <span class="o">=</span> <span class="p">(</span><span class="n">buf</span> <span class="o">==</span> <span class="s">&#34;u:r:zygote:s0&#34;</span><span class="n">sv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">zygote</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="kt">int</span> <span class="n">socket</span> <span class="o">=</span> <span class="n">connect_daemon</span><span class="p">();</span> <span class="n">socket</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">write_int</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="n">ZYGISK_REQUEST</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">write_int</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="n">ZYGISK_SETUP</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">read_int</span><span class="p">(</span><span class="n">socket</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="kt">int</span> <span class="n">app_proc_fd</span> <span class="o">=</span> <span class="n">recv_fd</span><span class="p">(</span><span class="n">socket</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">app_proc_fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">string</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">read_string</span><span class="p">(</span><span class="n">socket</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(__LP64__)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>            <span class="n">string</span> <span class="n">lib</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="n">ZYGISKBIN</span> <span class="s">&#34;/zygisk.app_process64.1.so&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#else
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>            <span class="n">string</span> <span class="n">lib</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="n">ZYGISKBIN</span> <span class="s">&#34;/zygisk.app_process32.1.so&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>            <span class="k">if</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">ld</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kt">char</span> <span class="n">env</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="n">sprintf</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;%s:%s&#34;</span><span class="p">,</span> <span class="n">ld</span><span class="p">,</span> <span class="n">lib</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">                <span class="n">setenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">setenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">,</span> <span class="n">lib</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">setenv</span><span class="p">(</span><span class="n">INJECT_ENV_1</span><span class="p">,</span> <span class="s">&#34;1&#34;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">setenv</span><span class="p">(</span><span class="s">&#34;MAGISKTMP&#34;</span><span class="p">,</span> <span class="n">tmp</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">close</span><span class="p">(</span><span class="n">socket</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">snprintf</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="s">&#34;/proc/self/fd/%d&#34;</span><span class="p">,</span> <span class="n">app_proc_fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">fcntl</span><span class="p">(</span><span class="n">app_proc_fd</span><span class="p">,</span> <span class="n">F_SETFD</span><span class="p">,</span> <span class="n">FD_CLOEXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">execve</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">environ</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">close</span><span class="p">(</span><span class="n">socket</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// If encountering any errors, unmount and execute the original app_process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">xreadlink</span><span class="p">(</span><span class="s">&#34;/proc/self/exe&#34;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">xumount2</span><span class="p">(</span><span class="s">&#34;/proc/self/exe&#34;</span><span class="p">,</span> <span class="n">MNT_DETACH</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">execve</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">environ</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>逻辑中会区分是否是zygote的情况，这里我们只关注zygote</p>
+<p>首先连接到magiskd，然后发送ZYGISK_SETUP，会得到一个fd和一个字符串，观察对应的处理</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native/jni/zygisk/entry.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">zygisk_handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">client</span><span class="p">,</span> <span class="k">const</span> <span class="n">sock_cred</span> <span class="o">*</span><span class="n">cred</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">code</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nl">ZYGISK_SETUP</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">setup_files</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">cred</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">setup_files</span><span class="p">(</span><span class="kt">int</span> <span class="n">client</span><span class="p">,</span> <span class="k">const</span> <span class="n">sock_cred</span> <span class="o">*</span><span class="n">cred</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">LOGD</span><span class="p">(</span><span class="s">&#34;zygisk: setup files for pid=[%d]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">cred</span><span class="o">-&gt;</span><span class="n">pid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> 
+</span></span><span class="line"><span class="cl">    <span class="c1">// 请求者的可执行程序路径 (/proc/pid/exec) ，一般是/system/bin/app_process[32|64]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">get_exe</span><span class="p">(</span><span class="n">cred</span><span class="o">-&gt;</span><span class="n">pid</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">write_int</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">is_64_bit</span> <span class="o">=</span> <span class="n">str_ends</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s">&#34;64&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">write_int</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 发送持有的真正的 app_process文件fd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">send_fd</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">is_64_bit</span> <span class="o">?</span> <span class="nl">app_process_64</span> <span class="p">:</span> <span class="n">app_process_32</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">string</span> <span class="n">path</span> <span class="o">=</span> <span class="n">MAGISKTMP</span> <span class="o">+</span> <span class="s">&#34;/&#34;</span> <span class="n">ZYGISKBIN</span> <span class="s">&#34;/zygisk.&#34;</span> <span class="o">+</span> <span class="n">basename</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 复制buf路径的文件到MAGISKTMP/zygisk/zygisk.app_process[32|64].1.so
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">cp_afc</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s">&#34;.1.so&#34;</span><span class="p">).</span><span class="n">data</span><span class="p">());</span> 
+</span></span><span class="line"><span class="cl">    <span class="n">cp_afc</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s">&#34;.2.so&#34;</span><span class="p">).</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 发送MAGISKTMP路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">write_string</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">MAGISKTMP</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>从代码中可以看到</p>
+<ul>
+<li>fd对应的是原始app_process文件的fd，可以用来exec</li>
+<li>string对应的是magisktmp路径</li>
+</ul>
+<p>其中还有一个操作是将/system/bin/app_process文件复制到MAGISKTMP/zygisk/zygisk.app_process[32|64].1.so上</p>
+<p>回到app_process_main，后面做了几件事</p>
+<ol>
+<li>把MAGISKTMP/zygisk/zygisk.app_process(32|64).1.so、MAGISKTMP/zygisk/zygisk.app_process(32|64).2.so写入环境变量LD_PRELOAD里
+<blockquote>
+<p>LD_PRELOAD是Linux系统中的一个环境变量，它可以影响程序的运行时的链接（Runtimelinker），它允许你定义在程序运行前优先加载的动态链接库，这样，在程序运行时会优先使用动态库中的符号而不是系统默认的符号</p></blockquote>
+</li>
+<li>设置INJECT_ENV_1、MAGISKTMP_ENV到系统变量中</li>
+<li>fcntl(app_proc_fd, F_SETFD, FD_CLOEXEC)表示当执行exec时关闭fd，这里的app_proc_fd是原始的fd</li>
+<li>fexecve开始执行原生的app_process，此时LD_PRELOAD已经被替换</li>
+</ol>
+<p>目前为止，可以看到zygisk的注入思路，通过类似hook的方式hook app_process，用LD_PRELOAD的方式完成自身注入，而不是像riru那样通过修改native_bridge或者xposed直接修改app_process</p>
+<p>再细看下LD_PRELOAD的执行逻辑</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span><span class="lnt">93
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// linker_main.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="nf">ElfW</span><span class="p">(</span><span class="n">Addr</span><span class="p">)</span> <span class="n">linker_main</span><span class="p">(</span><span class="n">KernelArgumentBlock</span><span class="o">&amp;</span> <span class="n">args</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">exe_to_load</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ProtectedDataGuard</span> <span class="n">guard</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// These should have been sanitized by __libc_init_AT_SECURE, but the test
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// doesn&#39;t cost us anything.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">ldpath_env</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">ldpreload_env</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">getauxval</span><span class="p">(</span><span class="n">AT_SECURE</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ldpath_env</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s">&#34;LD_LIBRARY_PATH&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">ldpath_env</span> <span class="o">!=</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">INFO</span><span class="p">(</span><span class="s">&#34;[ LD_LIBRARY_PATH set to </span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s"> ]&#34;</span><span class="p">,</span> <span class="n">ldpath_env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ldpreload_env</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">ldpreload_env</span> <span class="o">!=</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">INFO</span><span class="p">(</span><span class="s">&#34;[ LD_PRELOAD set to </span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s"> ]&#34;</span><span class="p">,</span> <span class="n">ldpreload_env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Use LD_LIBRARY_PATH and LD_PRELOAD (but only if we aren&#39;t setuid/setgid).
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">parse_LD_LIBRARY_PATH</span><span class="p">(</span><span class="n">ldpath_env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">parse_LD_PRELOAD</span><span class="p">(</span><span class="n">ldpreload_env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">android_namespace_t</span><span class="o">*&gt;</span> <span class="n">namespaces</span> <span class="o">=</span> <span class="n">init_default_namespaces</span><span class="p">(</span><span class="n">exe_info</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">si</span><span class="o">-&gt;</span><span class="n">prelink_image</span><span class="p">())</span> <span class="n">__linker_cannot_link</span><span class="p">(</span><span class="n">g_argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// add somain to global group
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">si</span><span class="o">-&gt;</span><span class="n">set_dt_flags_1</span><span class="p">(</span><span class="n">si</span><span class="o">-&gt;</span><span class="n">get_dt_flags_1</span><span class="p">()</span> <span class="o">|</span> <span class="n">DF_1_GLOBAL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ... and add it to all other linked namespaces
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="nl">linked_ns</span> <span class="p">:</span> <span class="n">namespaces</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">linked_ns</span> <span class="o">!=</span> <span class="o">&amp;</span><span class="n">g_default_namespace</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">linked_ns</span><span class="o">-&gt;</span><span class="n">add_soinfo</span><span class="p">(</span><span class="n">somain</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="n">somain</span><span class="o">-&gt;</span><span class="n">add_secondary_namespace</span><span class="p">(</span><span class="n">linked_ns</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">linker_setup_exe_static_tls</span><span class="p">(</span><span class="n">g_argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// Load ld_preloads and dependencies.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">char</span><span class="o">*&gt;</span> <span class="n">needed_library_name_list</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">size_t</span> <span class="n">ld_preloads_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="nl">ld_preload_name</span> <span class="p">:</span> <span class="n">g_ld_preload_names</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">needed_library_name_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">ld_preload_name</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="o">++</span><span class="n">ld_preloads_count</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">......</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">needed_libraries_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">      <span class="o">!</span><span class="n">find_libraries</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_default_namespace</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">si</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">needed_library_names</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">needed_libraries_count</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="o">&amp;</span><span class="n">g_ld_preloads</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">ld_preloads_count</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">RTLD_GLOBAL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="k">nullptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="nb">true</span> <span class="cm">/* add_as_children */</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="nb">true</span> <span class="cm">/* search_linked_namespaces */</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="o">&amp;</span><span class="n">namespaces</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">__linker_cannot_link</span><span class="p">(</span><span class="n">g_argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">needed_libraries_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">si</span><span class="o">-&gt;</span><span class="n">link_image</span><span class="p">(</span><span class="n">SymbolLookupList</span><span class="p">(</span><span class="n">si</span><span class="p">),</span> <span class="n">si</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">__linker_cannot_link</span><span class="p">(</span><span class="n">g_argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">si</span><span class="o">-&gt;</span><span class="n">increment_ref_count</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">linker_finalize_static_tls</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">__libc_init_main_thread_final</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">get_cfi_shadow</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">InitialLinkDone</span><span class="p">(</span><span class="n">solist</span><span class="p">))</span> <span class="n">__linker_cannot_link</span><span class="p">(</span><span class="n">g_argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">si</span><span class="o">-&gt;</span><span class="n">call_pre_init_constructors</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">si</span><span class="o">-&gt;</span><span class="n">call_constructors</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">......</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">entry</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">parse_LD_PRELOAD</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">g_ld_preload_names</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">path</span> <span class="o">!=</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// We have historically supported &#39;:&#39; as well as &#39; &#39; in LD_PRELOAD.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">g_ld_preload_names</span> <span class="o">=</span> <span class="n">android</span><span class="o">::</span><span class="n">base</span><span class="o">::</span><span class="n">Split</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#34; :&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_ld_preload_names</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">remove_if</span><span class="p">(</span><span class="n">g_ld_preload_names</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">g_ld_preload_names</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                                            <span class="p">[](</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">s</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span> <span class="p">}),</span>
+</span></span><span class="line"><span class="cl">                             <span class="n">g_ld_preload_names</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>linker_main这里关于LD_PRELOAD做了三件事</p>
+<ol>
+<li>获取了环境变量中的值ldpreload_env = getenv(&ldquo;LD_PRELOAD&rdquo;);</li>
+<li>parse_LD_PRELOAD(ldpreload_env);解析LD_PRELOAD的值写入全局变量g_ld_preload_names</li>
+<li>遍历g_ld_preload_names添加至needed_library_name_list</li>
+<li>so加载流程：find_library、call_pre_init_constructors、call_constructors调用DT_INIT、DT_INIT_ARRAY段的函数</li>
+</ol>
+<h3 id="二zygisk加载" class="heading-element"><span>二、Zygisk加载</span>
+  <a href="#%e4%ba%8czygisk%e5%8a%a0%e8%bd%bd" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native/jni/zygisk/entry.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="n">zygisk_init</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">getenv</span><span class="p">(</span><span class="n">INJECT_ENV_2</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Return function pointer to first stage
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">snprintf</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="s">&#34;%p&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">second_stage_entry</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">setenv</span><span class="p">(</span><span class="n">SECOND_STAGE_PTR</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">getenv</span><span class="p">(</span><span class="n">INJECT_ENV_1</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">first_stage_entry</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里根据系统变量决定不同阶段处理方式</p>
+<h4 id="21-一阶段" class="heading-element"><span>2.1 一阶段</span>
+  <a href="#21-%e4%b8%80%e9%98%b6%e6%ae%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>正常加载时会加载第一阶段，这是在写入LD_PRELOAD时完成环境变量设置</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">first_stage_entry</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">android_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ZLOGD</span><span class="p">(</span><span class="s">&#34;inject 1st stage</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">ld</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="n">strlcpy</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">getenv</span><span class="p">(</span><span class="s">&#34;MAGISKTMP&#34;</span><span class="p">),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">tmp</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">c</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">ld</span><span class="p">,</span> <span class="sc">&#39;:&#39;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="o">*</span><span class="n">c</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">setenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">,</span> <span class="n">ld</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>  <span class="c1">// Restore original LD_PRELOAD
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">path</span> <span class="o">=</span> <span class="n">strdup</span><span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">unsetenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">path</span> <span class="o">=</span> <span class="n">strdup</span><span class="p">(</span><span class="n">ld</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unsetenv</span><span class="p">(</span><span class="n">INJECT_ENV_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unsetenv</span><span class="p">(</span><span class="s">&#34;MAGISKTMP&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sanitize_environ</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">num</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;.&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Update path to 2nd stage lib
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="o">*</span><span class="n">num</span> <span class="o">=</span> <span class="sc">&#39;2&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Load second stage
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">setenv</span><span class="p">(</span><span class="n">INJECT_ENV_2</span><span class="p">,</span> <span class="s">&#34;1&#34;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="n">dlopen</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">RTLD_LAZY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">remap_all</span><span class="p">(</span><span class="n">path</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Revert path to 1st stage lib
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="o">*</span><span class="n">num</span> <span class="o">=</span> <span class="sc">&#39;1&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Run second stage entry
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">char</span> <span class="o">*</span><span class="n">env</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="n">SECOND_STAGE_PTR</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">decltype</span><span class="p">(</span><span class="o">&amp;</span><span class="n">second_stage_entry</span><span class="p">)</span> <span class="n">second_stage</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sscanf</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;%p&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">second_stage</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">second_stage</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">path</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>一阶段的作用，环境清理（重置env）、获取LD_PRELOAD路径并dlopen、开启二阶段，这种方式和riru很类似，native_bridge加载的libriruloader.so只是一个loader的作用，负责load libriru.so后被处理</p>
+<p>dlopen的path对应的是zygisk.app_process.[32|64].2.so，加载完成后调用remap_all</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">remap_all</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="n">map_info</span><span class="o">&gt;</span> <span class="n">maps</span> <span class="o">=</span> <span class="n">find_maps</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="n">map_info</span> <span class="o">&amp;</span><span class="nl">info</span> <span class="p">:</span> <span class="n">maps</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">        <span class="c1">// 遍历 maps 中指定文件名的映射信息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="kt">void</span> <span class="o">*</span><span class="n">addr</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">size_t</span> <span class="n">size</span> <span class="o">=</span> <span class="n">info</span><span class="p">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">info</span><span class="p">.</span><span class="n">start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 映射和目标同样大小的可写内存
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="kt">void</span> <span class="o">*</span><span class="n">copy</span> <span class="o">=</span> <span class="n">xmmap</span><span class="p">(</span><span class="k">nullptr</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">PROT_WRITE</span><span class="p">,</span> <span class="n">MAP_ANONYMOUS</span> <span class="o">|</span> <span class="n">MAP_PRIVATE</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">((</span><span class="n">info</span><span class="p">.</span><span class="n">perms</span> <span class="o">&amp;</span> <span class="n">PROT_READ</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// 如果目标不可读，让其可读
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">mprotect</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">PROT_READ</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 复制目标的内存到新的映射
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">memcpy</span><span class="p">(</span><span class="n">copy</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">        <span class="c1">// 用新的匿名映射覆盖到原先目标的位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">mremap</span><span class="p">(</span><span class="n">copy</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">MREMAP_MAYMOVE</span> <span class="o">|</span> <span class="n">MREMAP_FIXED</span><span class="p">,</span> <span class="n">addr</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">        <span class="c1">// 恢复权限使其和目标一致
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">mprotect</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">info</span><span class="p">.</span><span class="n">perms</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>maps文件处理，把path对应的映射全部重新处理成匿名，目的应该是为了隐藏</p>
+<h4 id="22-二阶段" class="heading-element"><span>2.2 二阶段</span>
+  <a href="#22-%e4%ba%8c%e9%98%b6%e6%ae%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">second_stage_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">tmp</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self_handle</span> <span class="o">=</span> <span class="n">handle</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">MAGISKTMP</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unsetenv</span><span class="p">(</span><span class="n">INJECT_ENV_2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unsetenv</span><span class="p">(</span><span class="n">SECOND_STAGE_PTR</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">zygisk_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ZLOGD</span><span class="p">(</span><span class="s">&#34;inject 2nd stage</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hook_functions</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// First stage will be unloaded before the first fork
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">first_stage_path</span> <span class="o">=</span> <span class="n">path</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>核心函数hook_functions</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native\jni\zygisk\hook.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define XHOOK_REGISTER_SYM(PATH_REGEX, SYM, NAME) \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    hook_register(PATH_REGEX, SYM, (void*) new_##NAME, (void **) &amp;old_##NAME)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define XHOOK_REGISTER(PATH_REGEX, NAME) \
+</span></span></span><span class="line"><span class="cl"><span class="cp">    XHOOK_REGISTER_SYM(PATH_REGEX, #NAME, NAME)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define ANDROID_RUNTIME &#34;.*/libandroid_runtime.so$&#34;
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define APP_PROCESS     &#34;^/system/bin/app_process.*&#34;
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">hook_functions</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if MAGISK_DEBUG
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="c1">// xhook_enable_debug(1);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">xhook_enable_sigsegv_protection</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="n">default_new</span><span class="p">(</span><span class="n">xhook_list</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">default_new</span><span class="p">(</span><span class="n">jni_hook_list</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">default_new</span><span class="p">(</span><span class="n">jni_method_map</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">XHOOK_REGISTER</span><span class="p">(</span><span class="n">ANDROID_RUNTIME</span><span class="p">,</span> <span class="n">fork</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">XHOOK_REGISTER</span><span class="p">(</span><span class="n">ANDROID_RUNTIME</span><span class="p">,</span> <span class="n">unshare</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">XHOOK_REGISTER</span><span class="p">(</span><span class="n">ANDROID_RUNTIME</span><span class="p">,</span> <span class="n">jniRegisterNativeMethods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">XHOOK_REGISTER</span><span class="p">(</span><span class="n">ANDROID_RUNTIME</span><span class="p">,</span> <span class="n">selinux_android_setcontext</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">XHOOK_REGISTER_SYM</span><span class="p">(</span><span class="n">ANDROID_RUNTIME</span><span class="p">,</span> <span class="s">&#34;__android_log_close&#34;</span><span class="p">,</span> <span class="n">android_log_close</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hook_refresh</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Remove unhooked methods
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">xhook_list</span><span class="o">-&gt;</span><span class="n">erase</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">std</span><span class="o">::</span><span class="n">remove_if</span><span class="p">(</span><span class="n">xhook_list</span><span class="o">-&gt;</span><span class="n">begin</span><span class="p">(),</span> <span class="n">xhook_list</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">            <span class="p">[](</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">t</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">;}),</span>
+</span></span><span class="line"><span class="cl">            <span class="n">xhook_list</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">old_jniRegisterNativeMethods</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGD</span><span class="p">(</span><span class="s">&#34;jniRegisterNativeMethods not hooked, using fallback</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// android::AndroidRuntime::setArgv0(const char*, bool)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">XHOOK_REGISTER_SYM</span><span class="p">(</span><span class="n">APP_PROCESS</span><span class="p">,</span> <span class="s">&#34;_ZN7android14AndroidRuntime8setArgv0EPKcb&#34;</span><span class="p">,</span> <span class="n">setArgv0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hook_refresh</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// We still need old_jniRegisterNativeMethods as other code uses it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// android::AndroidRuntime::registerNativeMethods(_JNIEnv*, const char*, const JNINativeMethod*, int)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">constexpr</span> <span class="kt">char</span> <span class="n">sig</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;_ZN7android14AndroidRuntime21registerNativeMethodsEP7_JNIEnvPKcPK15JNINativeMethodi&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">*</span><span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">old_jniRegisterNativeMethods</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_DEFAULT</span><span class="p">,</span> <span class="n">sig</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们知道，Zygisk和Riru最大的不同在于它有一个「排除列表」，被排除的进程一定不会注入，而如果像Riru那样直接在zygote进程中加载所有模块显然是做不到的，一旦Zygote加载了模块，它想干什么就不是Zygisk能管的了。但是又要让模块有修改forkAndSpecialize参数的能力，而这个方法调用fork前是在zygote进程中执行的，因此好像必须在zygote中执行模块的代码。这么看来Zygisk一定用了一些巧妙的手段处理</p>
+<p>注意到Zygisk hook了很多关键的函数，我们先看看fork</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Skip actual fork and return cached result if applicable
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Also unload first stage zygisk if necessary
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">DCL_HOOK_FUNC</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="n">fork</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unload_first_stage</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="n">g_ctx</span> <span class="o">&amp;&amp;</span> <span class="n">g_ctx</span><span class="o">-&gt;</span><span class="n">pid</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="n">g_ctx</span><span class="o">-&gt;</span><span class="nl">pid</span> <span class="p">:</span> <span class="n">old_fork</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#define DCL_HOOK_FUNC(ret, func, ...) \
+</span></span></span><span class="line"><span class="cl"><span class="cp">ret (*old_##func)(__VA_ARGS__);       \
+</span></span></span><span class="line"><span class="cl"><span class="cp">ret new_##func(__VA_ARGS__)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果g_ctx存在且pid大于0返回pid，否则则调用原始fork，那这是什么含义呢？</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Current context
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">HookContext</span> <span class="o">*</span><span class="n">g_ctx</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这是一个HookContext类型的全局变量</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// native\jni\zygisk\hook.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">HookContext</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">AppSpecializeArgsImpl</span> <span class="o">*</span><span class="n">args</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ServerSpecializeArgsImpl</span> <span class="o">*</span><span class="n">server_args</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">void</span> <span class="o">*</span><span class="n">raw_args</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">process</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">pid</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">bitset</span><span class="o">&lt;</span><span class="n">FLAG_MAX</span><span class="o">&gt;</span> <span class="n">flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">AppInfo</span> <span class="n">info</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="n">ZygiskModule</span><span class="o">&gt;</span> <span class="n">modules</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">HookContext</span><span class="p">()</span> <span class="o">:</span> <span class="n">pid</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">info</span><span class="p">{}</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="kt">void</span> <span class="nf">close_fds</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">unload_zygisk</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">DCL_PRE_POST</span><span class="p">(</span><span class="n">fork</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="n">run_modules_pre</span><span class="p">(</span><span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">fds</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">run_modules_post</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DCL_PRE_POST</span><span class="p">(</span><span class="n">nativeForkAndSpecialize</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DCL_PRE_POST</span><span class="p">(</span><span class="n">nativeSpecializeAppProcess</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DCL_PRE_POST</span><span class="p">(</span><span class="n">nativeForkSystemServer</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#define DCL_PRE_POST(name) \
+</span></span></span><span class="line"><span class="cl"><span class="cp">void name##_pre();         \
+</span></span></span><span class="line"><span class="cl"><span class="cp">void name##_post();</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>DCL_PRE_POST声明了fork的两个函数</p>
+<ul>
+<li>fork_pre</li>
+<li>fork_post</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// Do our own fork before loading any 3rd party code
+</span></span></span><span class="line"><span class="cl"><span class="c1">// First block SIGCHLD, unblock after original fork is done
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">fork_pre</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_ctx</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="n">SIGCHLD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// this-&gt;pid, 即 g_ctx-&gt;pid
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">pid</span> <span class="o">=</span> <span class="n">old_fork</span><span class="p">();</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>可见，fork_pre中修改了全局变量g_ctx为this，屏蔽SIGCHLD信号，并主动调用了原先的fork函数。注释中说，这是要在加载第三方代码（模块）前先进行fork，看看fork_pre的调用场景</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">nativeForkSystemServer_pre</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">fork_pre</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">flags</span><span class="p">[</span><span class="n">SERVER_SPECIALIZE</span><span class="p">]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGV</span><span class="p">(</span><span class="s">&#34;pre  forkSystemServer</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">run_modules_pre</span><span class="p">(</span><span class="n">remote_get_info</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="s">&#34;system_server&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">info</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">close_fds</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">android_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">nativeForkAndSpecialize_pre</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">fork_pre</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">flags</span><span class="p">[</span><span class="n">FORK_AND_SPECIALIZE</span><span class="p">]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">nativeSpecializeAppProcess_pre</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>梳理下流程，根据Android应用启动流程，zygote在接收到启动新进程的socket通信请求后会调用nativeForkAndSpecialize从而调用fork启动新进程，而被hook之后先调用了nativeForkAndSpecialize_pre，在这个函数中做了fork，再调用nativeForkAndSpecialize，也就是说fork被提前了</p>
+<p>这里存在一个问题，nativeForkAndSpecialize本身调用的fork会发生什么呢？看看上面的fork函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="p">(</span><span class="n">g_ctx</span> <span class="o">&amp;&amp;</span> <span class="n">g_ctx</span><span class="o">-&gt;</span><span class="n">pid</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="n">g_ctx</span><span class="o">-&gt;</span><span class="nl">pid</span> <span class="p">:</span> <span class="n">old_fork</span><span class="p">();</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>hook后的fork会先判断g_ctx-&gt;pid的值是否为0，若为0表示它没做过fork，进而调用原本的fork函数，若不为0就直接返回pid，这个是子进程的pid值，说明nativeForkAndSpecialize的第二次fork不会调用真正的fork函数</p>
+<p>提前fork的作用是什么呢？看下nativeForkAndSpecialize_pre</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">nativeSpecializeAppProcess_pre</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_ctx</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">state</span><span class="p">[</span><span class="n">APP_SPECIALIZE</span><span class="p">]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">process</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="n">GetStringUTFChars</span><span class="p">(</span><span class="n">args</span><span class="o">-&gt;</span><span class="n">nice_name</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="n">FORK_AND_SPECIALIZE</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGV</span><span class="p">(</span><span class="s">&#34;pre  forkAndSpecialize [%s]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">process</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGV</span><span class="p">(</span><span class="s">&#34;pre  specialize [%s]</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">process</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">module_fds</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">remote_get_info</span><span class="p">(</span><span class="n">args</span><span class="o">-&gt;</span><span class="n">uid</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">flags</span><span class="p">,</span> <span class="n">module_fds</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">((</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">UNMOUNT_MASK</span><span class="p">)</span> <span class="o">==</span> <span class="n">UNMOUNT_MASK</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZLOGI</span><span class="p">(</span><span class="s">&#34;[%s] is on the denylist</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">process</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">state</span><span class="p">[</span><span class="n">DO_UNMOUNT</span><span class="p">]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 加载模块
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">run_modules_pre</span><span class="p">(</span><span class="n">module_fds</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">close_fds</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">android_logging</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>它调用的nativeSpecializeAppProcess_pre会做zygisk模块的加载，也就是说zygisk为了让fork后的进程加载模块，就得提前fork，这样还在它自己的代码空间，它可以根据denylist决定是否加载模块</p>
+<p>zygisk这种在fork后加载模块的方式使得它可以在不重启的情况下更新lsposed代码</p>
+<p>fork_post没有特殊的处理逻辑，zygisk环境清理</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">fork_post</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigmask</span><span class="p">(</span><span class="n">SIG_UNBLOCK</span><span class="p">,</span> <span class="n">SIGCHLD</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">g_ctx</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unload_zygisk</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">HookContext</span><span class="o">::</span><span class="n">unload_zygisk</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="n">CAN_DLCLOSE</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Do NOT call the destructor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="n">jni_method_map</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Directly unmap the whole memory block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">jni_hook</span><span class="o">::</span><span class="n">memory_block</span><span class="o">::</span><span class="n">release</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// Strip out all API function pointers
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">m</span> <span class="p">:</span> <span class="n">modules</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">.</span><span class="n">api</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">api</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">new_daemon_thread</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">thread_entry</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">dlclose</span><span class="p">),</span> <span class="n">self_handle</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/" title="重读Magisk内部实现细节2">重读Magisk内部实现细节2</a></li><li>
+          <a href="/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82/" title="重读Magisk内部实现细节">重读Magisk内部实现细节</a></li><li>
+          <a href="/posts/%E4%BB%8Efips-197%E4%B8%AD%E7%90%86%E8%A7%A3aes%E7%AE%97%E6%B3%95/" title="从FIPS 197中理解AES算法">从FIPS 197中理解AES算法</a></li><li>
+          <a href="/posts/%E4%BB%8Efips-46-3%E4%B8%AD%E7%90%86%E8%A7%A3des%E7%AE%97%E6%B3%95/" title="从FIPS 46-3中理解DES算法">从FIPS 46-3中理解DES算法</a></li><li>
+          <a href="/posts/%E4%BB%8Erfc1321%E4%B8%AD%E7%90%86%E8%A7%A3md5%E7%AE%97%E6%B3%95/" title="从RFC1321中理解MD5算法">从RFC1321中理解MD5算法</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-06-11 11:36:47">更新于 2023-06-11&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk源码阅读" data-hashtags="源码分析,zygisk"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-hashtag="源码分析"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/zygisk%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" data-title="Zygisk源码阅读"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-tag" title="标签 - 源码分析">源码分析</a><a href="/tags/zygisk/" class="post-tag" title="标签 - Zygisk">Zygisk</a></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/magisk%E6%A3%80%E6%B5%8B%E6%96%B9%E5%BC%8F/" class="post-nav-item" rel="prev" title="Magisk检测方式"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>Magisk检测方式</a><a href="/posts/%E9%87%8D%E8%AF%BBmagisk%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%822/" class="post-nav-item" rel="next" title="重读Magisk内部实现细节2">重读Magisk内部实现细节2<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>

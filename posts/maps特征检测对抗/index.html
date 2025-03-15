@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+    <meta name="robots" content="noodp" />
+    <title>Maps特征检测对抗 - 佛光普照</title><meta name="author" content="tcc0lin">
+<meta name="description" content="一、前言 maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。在之前的特征分析中，发现像dobby hook框架、frida等工具都会造成maps中的数据改变，因此想深入分析下这种特征的形成原因以及可以采用什么方式进行对抗
+">
+  <meta itemprop="name" content="Maps特征检测对抗">
+  <meta itemprop="description" content="一、前言 maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。在之前的特征分析中，发现像dobby hook框架、frida等工具都会造成maps中的数据改变，因此想深入分析下这种特征的形成原因以及可以采用什么方式进行对抗">
+  <meta itemprop="datePublished" content="2023-08-06T14:39:32+08:00">
+  <meta itemprop="dateModified" content="2023-08-06T14:39:32+08:00">
+  <meta itemprop="wordCount" content="3346"><meta property="og:url" content="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/">
+  <meta property="og:site_name" content="佛光普照">
+  <meta property="og:title" content="Maps特征检测对抗">
+  <meta property="og:description" content="一、前言 maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。在之前的特征分析中，发现像dobby hook框架、frida等工具都会造成maps中的数据改变，因此想深入分析下这种特征的形成原因以及可以采用什么方式进行对抗">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-08-06T14:39:32+08:00">
+    <meta property="article:modified_time" content="2023-08-06T14:39:32+08:00">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Maps特征检测对抗">
+  <meta name="twitter:description" content="一、前言 maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。在之前的特征分析中，发现像dobby hook框架、frida等工具都会造成maps中的数据改变，因此想深入分析下这种特征的形成原因以及可以采用什么方式进行对抗">
+<meta name="application-name" content="FixIt">
+<meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" title="Maps特征检测对抗 - 佛光普照" /><link rel="prev" type="text/html" href="http://localhost:1313/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" title="StrongR Frida特征魔改" /><link rel="next" type="text/html" href="http://localhost:1313/posts/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/" title="探讨新的riru加载方式" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/index.md" title="Maps特征检测对抗 - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Maps特征检测对抗",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "http:\/\/localhost:1313\/posts\/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97\/"
+    },"genre": "posts","wordcount":  3346 ,
+    "url": "http:\/\/localhost:1313\/posts\/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97\/","datePublished": "2023-08-06T14:39:32+08:00","dateModified": "2023-08-06T14:39:32+08:00","publisher": {
+      "@type": "Organization",
+      "name": ""},"author": {
+        "@type": "Person",
+        "name": "tcc0lin"
+      },"description": ""
+  }
+  </script><script src="/js/head/color-scheme.min.js"></script></head>
+  <body data-header-desktop="sticky" data-header-mobile="auto"><div class="wrapper" data-page-style="normal"><header class="desktop animate__faster" id="header-desktop">
+  <div class="header-wrapper" data-github-corner="right">
+    <div class="header-title">
+      <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+    <nav>
+      <ul class="menu"><li class="menu-item has-children">
+              <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item">
+              <a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item">
+              <a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id="search-desktop">
+            <input type="text" placeholder="搜索文章标题或内容……" id="search-input-desktop">
+            <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+              <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+            </a>
+            <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+              <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+            </a>
+            <span class="search-button search-loading" id="search-loading-desktop">
+              <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+            </span>
+          </li><li class="menu-item theme-switch" title="切换主题">
+          <i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i>
+        </li></ul>
+    </nav>
+  </div>
+</header><header class="mobile animate__faster" id="header-mobile">
+  <div class="header-container">
+    <div class="header-wrapper">
+      <div class="header-title">
+        <a href="/" title="佛光普照"><span class="header-title-text">tcc0lin&#39;s security blog</span></a><span class="typeit header-subtitle"><template>佛光普照，威胁无处遁形</template></span></div>
+      <div class="menu-toggle" id="menu-toggle-mobile">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <nav>
+      <ul class="menu" id="menu-mobile"><li class="search-wrapper">
+            <div class="search mobile" id="search-mobile">
+              <input type="text" placeholder="搜索文章标题或内容……" id="search-input-mobile">
+              <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                <i class="fa-solid fa-search fa-fw" aria-hidden="true"></i>
+              </a>
+              <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                <i class="fa-solid fa-times-circle fa-fw" aria-hidden="true"></i>
+              </a>
+              <span class="search-button search-loading" id="search-loading-mobile">
+                <i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+              </span>
+            </div>
+            <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+              取消
+            </a>
+          </li><li class="menu-item"><span class="nested-item">
+                  <a class="menu-link" href="/documentation/"><i class="fa-regular fa-newspaper fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 文档</a>
+                  <i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
+                <ul class="sub-menu"><li class="menu-item">
+                        <a class="menu-link" href="/archives/"><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden="true"></i> 归档</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/categories/"><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden="true"></i> 分类</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/collections/"><i class="fa-solid fa-layer-group fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 合集</a>
+                      </li><li class="menu-item">
+                        <a class="menu-link" href="/tags/"><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden="true"></i> 标签</a>
+                      </li></ul></li><li class="menu-item"><a class="menu-link" href="/showcase/"><i class="fa-solid fa-blog fa-fw fa-sm fa-fw fa-sm" aria-hidden="true"></i> 案例展示</a></li><li class="menu-item"><a class="menu-link" href="/thinks/"><i class="fa-solid fa-brain fa-fw fa-sm" aria-hidden="true"></i> 近期思考</a></li><li class="menu-item menu-system">
+          <span class="menu-system-item theme-switch" title="切换主题"><i class="fa-solid fa-adjust fa-fw" aria-hidden="true"></i></span></li>
+      </ul>
+    </nav>
+  </div>
+</header><div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+  </div>
+  <div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+  </div><nav aria-label="breadcrumb" class="breadcrumb-container sticky">
+    <ol class="breadcrumb"><li class="breadcrumb-item" data-separator="/"><a href="/" title="佛光普照">主页</a></li><li class="breadcrumb-item" data-separator="/"><a href="/posts/" title="Posts">文章</a></li><li class="breadcrumb-item active" data-separator="/" aria-current="page">Maps特征检测对抗</li>
+    </ol>
+  </nav><main class="container container-reverse"><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label="合集"></aside>
+
+  <article class="page single">
+    <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span>Maps特征检测对抗</span>
+      </h1></div><div class="post-meta">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span></div><div class="post-meta-line"><span title="发布于 2023-08-06 14:39:32"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2023-08-06">2023-08-06</time></span>&nbsp;<span title="3346 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 3400 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 7 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#一前言">一、前言</a></li>
+        <li><a href="#二maps文件形成">二、maps文件形成</a></li>
+        <li><a href="#三maps特征">三、maps特征</a>
+          <ul>
+            <li><a href="#1-lsposed-maps特征">1 lsposed maps特征</a></li>
+            <li><a href="#2-frida-maps特征">2 frida maps特征</a></li>
+          </ul>
+        </li>
+        <li><a href="#四对抗思路">四、对抗思路</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><h3 id="一前言" class="heading-element"><span>一、前言</span>
+  <a href="#%e4%b8%80%e5%89%8d%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>maps文件在Android中一般指/proc/pid/maps，记录着每个进程的内存映射信息，也就是每个进程都会有一个对应的文件。在之前的特征分析中，发现像dobby hook框架、frida等工具都会造成maps中的数据改变，因此想深入分析下这种特征的形成原因以及可以采用什么方式进行对抗</p>
+<h3 id="二maps文件形成" class="heading-element"><span>二、maps文件形成</span>
+  <a href="#%e4%ba%8cmaps%e6%96%87%e4%bb%b6%e5%bd%a2%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>以微信进程为例，看看它的maps文件</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">selene:/ <span class="c1"># cat /proc/9336/maps|head -n 10</span>
+</span></span><span class="line"><span class="cl">020f4000-020f6000 r--p <span class="m">00000000</span> fd:01 <span class="m">424</span>                                /system/bin/app_process32
+</span></span><span class="line"><span class="cl">020f6000-020fa000 r-xp <span class="m">00001000</span> fd:01 <span class="m">424</span>                                /system/bin/app_process32
+</span></span><span class="line"><span class="cl">020fa000-020fb000 r--p <span class="m">00004000</span> fd:01 <span class="m">424</span>                                /system/bin/app_process32
+</span></span><span class="line"><span class="cl">020fb000-020fc000 rw-p <span class="m">00004000</span> fd:01 <span class="m">424</span>                                /system/bin/app_process32
+</span></span><span class="line"><span class="cl">020fc000-020fd000 rw-p <span class="m">00000000</span> 00:00 <span class="m">0</span>                                  <span class="o">[</span>anon:.bss<span class="o">]</span>
+</span></span><span class="line"><span class="cl">12c00000-4af00000 rw-p <span class="m">00000000</span> 00:00 <span class="m">0</span>                                  <span class="o">[</span>anon:dalvik-main space <span class="o">(</span>region space<span class="o">)]</span>
+</span></span><span class="line"><span class="cl">57400000-57401000 ---p <span class="m">00000000</span> 00:00 <span class="m">0</span>                                  <span class="o">[</span>anon:partition_alloc<span class="o">]</span>
+</span></span><span class="line"><span class="cl">57401000-57402000 rw-p <span class="m">00000000</span> 00:00 <span class="m">0</span>                                  <span class="o">[</span>anon:partition_alloc<span class="o">]</span>
+</span></span><span class="line"><span class="cl">57402000-57404000 ---p <span class="m">00000000</span> 00:00 <span class="m">0</span>                                  <span class="o">[</span>anon:partition_alloc<span class="o">]</span>
+</span></span><span class="line"><span class="cl">57404000-57430000 rw-p <span class="m">00000000</span> 00:00 <span class="m">0</span>                                  <span class="o">[</span>anon:partition_alloc<span class="o">]</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>从文件内容可以看到，每行内容都对应着一个地址段，可以划分为七列，在内核中每行数据使用vm_area_struct结构体，也就是VMA来表示</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// include/linux/mm_types.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * This struct defines a memory VMM memory area. There is one of these
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * per VM-area/task.  A VM area is any part of the process virtual memory
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * space that has a special rule for the page-fault handlers (ie a shared
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * library, the executable area etc).
+</span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">vm_area_struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* The first cache line has the info for VMA tree walking. */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">vm_start</span><span class="p">;</span>		<span class="cm">/* Our start address within vm_mm. */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">vm_end</span><span class="p">;</span>		<span class="cm">/* The first byte after our end address
+</span></span></span><span class="line"><span class="cl"><span class="cm">					   within vm_mm. */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* linked list of VM areas per task, sorted by address */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">vm_area_struct</span> <span class="o">*</span><span class="n">vm_next</span><span class="p">,</span> <span class="o">*</span><span class="n">vm_prev</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">rb_node</span> <span class="n">vm_rb</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * Largest free memory gap in bytes to the left of this VMA.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * Either between this VMA and vma-&gt;vm_prev, or between one of the
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * VMAs below us in the VMA rbtree and its -&gt;vm_prev. This helps
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * get_unmapped_area find a free area of the right size.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">rb_subtree_gap</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Second cache line starts here. */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">mm_struct</span> <span class="o">*</span><span class="n">vm_mm</span><span class="p">;</span>	<span class="cm">/* The address space we belong to. */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">pgprot_t</span> <span class="n">vm_page_prot</span><span class="p">;</span>		<span class="cm">/* Access permissions of this VMA. */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">vm_flags</span><span class="p">;</span>		<span class="cm">/* Flags, see mm.h. */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * For areas with an address space and backing store,
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * linkage into the address_space-&gt;i_mmap interval tree.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 *
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * For private anonymous mappings, a pointer to a null terminated string
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * in the user process containing the name given to the vma, or NULL
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * if unnamed.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">struct</span> <span class="n">rb_node</span> <span class="n">rb</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">rb_subtree_last</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="n">shared</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="n">anon_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * A file&#39;s MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * list, after a COW of one of the file pages.	A MAP_SHARED vma
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * can only be in the i_mmap tree.  An anonymous MAP_PRIVATE, stack
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * or brk vma (with NULL file) can only be in an anon_vma list.
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">list_head</span> <span class="n">anon_vma_chain</span><span class="p">;</span> <span class="cm">/* Serialized by mmap_sem &amp;
+</span></span></span><span class="line"><span class="cl"><span class="cm">					  * page_table_lock */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">anon_vma</span> <span class="o">*</span><span class="n">anon_vma</span><span class="p">;</span>	<span class="cm">/* Serialized by page_table_lock */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Function pointers to deal with this struct. */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="k">struct</span> <span class="n">vm_operations_struct</span> <span class="o">*</span><span class="n">vm_ops</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Information about our backing store: */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">vm_pgoff</span><span class="p">;</span>		<span class="cm">/* Offset (within vm_file) in PAGE_SIZE
+</span></span></span><span class="line"><span class="cl"><span class="cm">					   units */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">file</span> <span class="o">*</span> <span class="n">vm_file</span><span class="p">;</span>		<span class="cm">/* File we map to (can be NULL). */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">void</span> <span class="o">*</span> <span class="n">vm_private_data</span><span class="p">;</span>		<span class="cm">/* was vm_pte (shared mem) */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_long_t</span> <span class="n">swap_readahead_info</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifndef CONFIG_MMU
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">struct</span> <span class="n">vm_region</span> <span class="o">*</span><span class="n">vm_region</span><span class="p">;</span>	<span class="cm">/* NOMMU mapping region */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_NUMA
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">struct</span> <span class="n">mempolicy</span> <span class="o">*</span><span class="n">vm_policy</span><span class="p">;</span>	<span class="cm">/* NUMA policy for the VMA */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">struct</span> <span class="n">vm_userfaultfd_ctx</span> <span class="n">vm_userfaultfd_ctx</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_SPECULATIVE_PAGE_FAULT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">seqcount_t</span> <span class="n">vm_sequence</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_t</span> <span class="n">vm_ref_count</span><span class="p">;</span>		<span class="cm">/* see vma_get(), vma_put() */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="p">}</span> <span class="n">__randomize_layout</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>而最终展示到maps文件中的是以下七列</p>
+<table>
+  <thead>
+      <tr>
+          <th>列数</th>
+          <th>对应的vm_area_struct属性</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>“-”前一列，如00377000</td>
+          <td>vm_start</td>
+          <td>此段虚拟地址空间起始地址</td>
+      </tr>
+      <tr>
+          <td>“-”后一列，如00390000</td>
+          <td>vm_end</td>
+          <td>此段虚拟地址空间结束地址</td>
+      </tr>
+      <tr>
+          <td>第三列，如r-xp</td>
+          <td>vm_flags</td>
+          <td>此段虚拟地址空间的属性。每种属性用一个字段表示，r表示可读，w表示可写，x表示可执行，p和s共用一个字段，互斥关系，p表示私有段，s表示共享段，如果没有相应权限，则用’-’代替</td>
+      </tr>
+      <tr>
+          <td>第四列，如00000000</td>
+          <td>vm_pgoff</td>
+          <td>对有名映射，表示此段虚拟内存起始地址在文件中以页为单位的偏移。对匿名映射，它等于0或者vm_start/PAGE_SIZE</td>
+      </tr>
+      <tr>
+          <td>第五列，如fd:00</td>
+          <td>vm_file-&gt;f_dentry-&gt;d_inode-&gt;i_sb-&gt;s_dev</td>
+          <td>映射文件所属设备号。对匿名映射来说，因为没有文件在磁盘上，所以没有设备号，始终为00:00。对有名映射来说，是映射的文件所在设备的设备号</td>
+      </tr>
+      <tr>
+          <td>第六列，如9176473</td>
+          <td>vm_file-&gt;f_dentry-&gt;d_inode-&gt;i_ino</td>
+          <td>映射文件所属节点号。对匿名映射来说，因为没有文件在磁盘上，所以没有节点号，始终为00:00。对有名映射来说，是映射的文件的节点号</td>
+      </tr>
+      <tr>
+          <td>第七列，如/lib/ld-2.5.so</td>
+          <td></td>
+          <td>对有名来说，是映射的文件名。对匿名映射来说，是此段虚拟内存在进程中的角色。[stack]表示在进程中作为栈使用，[heap]表示堆。其余情况则无显示</td>
+      </tr>
+      <tr>
+          <td>含义中反复提到的两个词就是文件映射与匿名映射，文件是可以通过mmap来映射到一段内存区域上的，通常是给mmap传文件的fd，而最终会保存在vm_area_struct-&gt;vm_file属性中，因此这段内存区域就可以叫做普通文件映射区域，相反，匿名映射可以认为是进程主动申请一个空间使用，而这个空间没有关联任何一个文件</td>
+          <td></td>
+          <td></td>
+      </tr>
+  </tbody>
+</table>
+<p>从maps的文件可以看出，文件映射主要指的是ELF文件，而通常单个ELF文件的对应的数据段都有三个或者四个</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ea1b1000-ea1ca000 r--p <span class="m">00000000</span> 07:38 <span class="m">13</span>                                 /apex/com.android.runtime/bin/linker
+</span></span><span class="line"><span class="cl">ea1ca000-ea251000 r-xp <span class="m">00018000</span> 07:38 <span class="m">13</span>                                 /apex/com.android.runtime/bin/linker
+</span></span><span class="line"><span class="cl">ea251000-ea255000 r--p 0009e000 07:38 <span class="m">13</span>                                 /apex/com.android.runtime/bin/linker
+</span></span><span class="line"><span class="cl">ea255000-ea256000 rw-p 000a1000 07:38 <span class="m">13</span>                                 /apex/com.android.runtime/bin/linker</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以从权限中来区分ELF的不同数据段</p>
+<ul>
+<li>r-xp：代码段（.tetx），代码段对于进程来说只是只读可执行的，编译完成后不可随机修改</li>
+<li>rw-p：数据段（.data/.bss），数据段对于进程来说是可读可写但是只是数据，没有执行的权限</li>
+<li>r&ndash;p：只读数据段（.rodata），通常指一些全局静态常量等等</li>
+</ul>
+<p>解析下vm_mm这个属性，vm_mm是指向跟该VMA相关的mm_struct结构体，而mm_struct结构体是表示整个maps文件的结构体</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">mm_struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">vm_area_struct</span> <span class="o">*</span><span class="n">mmap</span><span class="p">;</span>		<span class="cm">/* list of VMAs */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">rb_root</span> <span class="n">mm_rb</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_SPECULATIVE_PAGE_FAULT
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">rwlock_t</span> <span class="n">mm_rb_lock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">u64</span> <span class="n">vmacache_seqnum</span><span class="p">;</span>                   <span class="cm">/* per-thread vmacache */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_MMU
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">unsigned</span> <span class="nf">long</span> <span class="p">(</span><span class="o">*</span><span class="n">get_unmapped_area</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">filp</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">len</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">pgoff</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="p">......</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="p">}</span> <span class="n">__randomize_layout</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>关键的mmap属性是保存VMA的链表，整体流程大致是这样的
+<img loading="lazy" src="https://github.com/tcc0lin/self_pic/blob/main/map%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg?raw=true" alt="https://github.com/tcc0lin/self_pic/blob/main/map%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg?raw=true" srcset="https://github.com/tcc0lin/self_pic/blob/main/map%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg?raw=true&amp;size=small, https://github.com/tcc0lin/self_pic/blob/main/map%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg?raw=true&amp;size=medium 1.5x, https://github.com/tcc0lin/self_pic/blob/main/map%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg?raw=true&amp;size=large 2x" data-title="https://github.com/tcc0lin/self_pic/blob/main/map%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg?raw=true" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 入参为文件指针以及vma指针
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">show_map_vma</span><span class="p">(</span><span class="k">struct</span> <span class="n">seq_file</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span> <span class="k">struct</span> <span class="n">vm_area_struct</span> <span class="o">*</span><span class="n">vma</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">mm_struct</span> <span class="o">*</span><span class="n">mm</span> <span class="o">=</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_mm</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span> <span class="o">=</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_file</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">vm_flags_t</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">ino</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">pgoff</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">dev_t</span> <span class="n">dev</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 判断是否是普通文件映射，是的话则关联的几个字段都需要赋值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">inode</span> <span class="o">=</span> <span class="nf">file_inode</span><span class="p">(</span><span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_file</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="n">dev</span> <span class="o">=</span> <span class="n">inode</span><span class="o">-&gt;</span><span class="n">i_sb</span><span class="o">-&gt;</span><span class="n">s_dev</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">ino</span> <span class="o">=</span> <span class="n">inode</span><span class="o">-&gt;</span><span class="n">i_ino</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pgoff</span> <span class="o">=</span> <span class="p">((</span><span class="kt">loff_t</span><span class="p">)</span><span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_pgoff</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">PAGE_SHIFT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">start</span> <span class="o">=</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">end</span> <span class="o">=</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_end</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 打印前五列
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">show_vma_header_prefix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">pgoff</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">ino</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * Print the dentry name for named mappings, and a
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 * special [heap] marker for the heap:
+</span></span></span><span class="line"><span class="cl"><span class="cm">	 */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">seq_pad</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="sc">&#39; &#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">seq_file_path</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">done</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_ops</span> <span class="o">&amp;&amp;</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_ops</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">name</span> <span class="o">=</span> <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_ops</span><span class="o">-&gt;</span><span class="nf">name</span><span class="p">(</span><span class="n">vma</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">goto</span> <span class="n">done</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">name</span> <span class="o">=</span> <span class="nf">arch_vma_name</span><span class="p">(</span><span class="n">vma</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 判断具体类型：文件、堆栈还是其他
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">mm</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">name</span> <span class="o">=</span> <span class="s">&#34;[vdso]&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="k">goto</span> <span class="n">done</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_start</span> <span class="o">&lt;=</span> <span class="n">mm</span><span class="o">-&gt;</span><span class="n">brk</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">		    <span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_end</span> <span class="o">&gt;=</span> <span class="n">mm</span><span class="o">-&gt;</span><span class="n">start_brk</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">name</span> <span class="o">=</span> <span class="s">&#34;[heap]&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="k">goto</span> <span class="n">done</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">is_stack</span><span class="p">(</span><span class="n">vma</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">name</span> <span class="o">=</span> <span class="s">&#34;[stack]&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="k">goto</span> <span class="n">done</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">vma_get_anon_name</span><span class="p">(</span><span class="n">vma</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">seq_pad</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="sc">&#39; &#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">seq_print_vma_name</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">vma</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">done</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">seq_pad</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="sc">&#39; &#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">seq_puts</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">seq_putc</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="sc">&#39;\n&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">show_vma_header_prefix</span><span class="p">(</span><span class="k">struct</span> <span class="n">seq_file</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				   <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">start</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">end</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				   <span class="kt">vm_flags_t</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">pgoff</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				   <span class="kt">dev_t</span> <span class="n">dev</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">ino</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">seq_setwidth</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">25</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">seq_printf</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s">&#34;%08lx-%08lx %c%c%c%c %08llx %02x:%02x %lu &#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">start</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">end</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">VM_READ</span> <span class="o">?</span> <span class="sc">&#39;r&#39;</span> <span class="o">:</span> <span class="sc">&#39;-&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">VM_WRITE</span> <span class="o">?</span> <span class="sc">&#39;w&#39;</span> <span class="o">:</span> <span class="sc">&#39;-&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">VM_EXEC</span> <span class="o">?</span> <span class="sc">&#39;x&#39;</span> <span class="o">:</span> <span class="sc">&#39;-&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">VM_MAYSHARE</span> <span class="o">?</span> <span class="sc">&#39;s&#39;</span> <span class="o">:</span> <span class="sc">&#39;p&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="n">pgoff</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		   <span class="nf">MAJOR</span><span class="p">(</span><span class="n">dev</span><span class="p">),</span> <span class="nf">MINOR</span><span class="p">(</span><span class="n">dev</span><span class="p">),</span> <span class="n">ino</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="三maps特征" class="heading-element"><span>三、maps特征</span>
+  <a href="#%e4%b8%89maps%e7%89%b9%e5%be%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>上面大概了解了maps的形成以及展示过程后，结合hook框架中常暴露的特征来说下</p>
+<h4 id="1-lsposed-maps特征" class="heading-element"><span>1 lsposed maps特征</span>
+  <a href="#1-lsposed-maps%e7%89%b9%e5%be%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>目前手头上的项目是基于lsposed 1.6.0魔改的，因此以1.6.0的代码为例</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// core/src/main/cpp/main/src/context.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="n">Context</span><span class="o">::</span><span class="nf">OnNativeForkSystemServerPost</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">,</span> <span class="n">jint</span> <span class="n">res</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">skip_</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LoadDex</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="n">Service</span><span class="o">::</span><span class="nf">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">HookBridge</span><span class="p">(</span><span class="o">*</span><span class="n">this</span><span class="p">,</span> <span class="n">env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">auto</span> <span class="n">binder</span> <span class="o">=</span> <span class="n">Service</span><span class="o">::</span><span class="nf">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">RequestBinderForSystemServer</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">binder</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">InstallInlineHooks</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">Init</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">FindAndCall</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;forkSystemServerPost&#34;</span><span class="p">,</span> <span class="s">&#34;(Landroid/os/IBinder;)V&#34;</span><span class="p">,</span> <span class="n">binder</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="n">skip_</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">setAllowUnload</span><span class="p">(</span><span class="n">skip_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="n">Context</span><span class="o">::</span><span class="nf">OnNativeForkAndSpecializePost</span><span class="p">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="n">JUTFString</span> <span class="nf">process_name</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">nice_name_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">auto</span> <span class="n">binder</span> <span class="o">=</span> <span class="n">skip_</span> <span class="o">?</span> <span class="n">ScopedLocalRef</span><span class="o">&lt;</span><span class="n">jobject</span><span class="o">&gt;</span><span class="p">{</span><span class="n">env</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">						<span class="o">:</span> <span class="n">Service</span><span class="o">::</span><span class="nf">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">RequestBinder</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">nice_name_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">binder</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">InstallInlineHooks</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LoadDex</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">Init</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;Done prepare&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">FindAndCall</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;forkAndSpecializePost&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					<span class="s">&#34;(Ljava/lang/String;Ljava/lang/String;Landroid/os/IBinder;)V&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					<span class="n">app_data_dir_</span><span class="p">,</span> <span class="n">nice_name_</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					<span class="n">binder</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;injected xposed into %s&#34;</span><span class="p">,</span> <span class="n">process_name</span><span class="p">.</span><span class="nf">get</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">setAllowUnload</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">auto</span> <span class="n">context</span> <span class="o">=</span> <span class="n">Context</span><span class="o">::</span><span class="nf">ReleaseInstance</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">		<span class="k">auto</span> <span class="n">service</span> <span class="o">=</span> <span class="n">Service</span><span class="o">::</span><span class="nf">ReleaseInstance</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">		<span class="n">art_img</span><span class="p">.</span><span class="nf">reset</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;skipped %s&#34;</span><span class="p">,</span> <span class="n">process_name</span><span class="p">.</span><span class="nf">get</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">setAllowUnload</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在ForkSystemServerPost和ForkAndSpecializePost函数时会触发inlinehook的操作</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">InstallInlineHooks</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">installed</span><span class="p">.</span><span class="nf">exchange</span><span class="p">(</span><span class="nb">true</span><span class="p">))</span> <span class="p">[[</span><span class="n">unlikely</span><span class="p">]]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;Inline hooks have been installed, skip&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;Start to install inline hooks&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="k">auto</span> <span class="o">&amp;</span><span class="n">handle_libart</span> <span class="o">=</span> <span class="o">*</span><span class="n">art_img</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handle_libart</span><span class="p">.</span><span class="nf">isValid</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">LOGE</span><span class="p">(</span><span class="s">&#34;Failed to fetch libart.so&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">hidden_api</span><span class="o">::</span><span class="nf">DisableHiddenApi</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">art_method</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">Thread</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">ClassLinker</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">mirror</span><span class="o">::</span><span class="n">Class</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">JNIEnvExt</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">instrumentation</span><span class="o">::</span><span class="nf">DisableUpdateHookedMethodsCode</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">thread_list</span><span class="o">::</span><span class="n">ScopedSuspendAll</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">gc</span><span class="o">::</span><span class="n">ScopedGCCriticalSection</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art</span><span class="o">::</span><span class="n">jit</span><span class="o">::</span><span class="n">jit_code_cache</span><span class="o">::</span><span class="nf">Setup</span><span class="p">(</span><span class="n">handle_libart</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">art_img</span><span class="p">.</span><span class="nf">reset</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;Inline hooks installed&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>主要是对libart.so的修改，以art::instrumentation::DisableUpdateHookedMethodsCode(handle_libart);为例</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// core/src/main/cpp/main/include/art/runtime/instrumentation.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">namespace</span> <span class="n">art</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">namespace</span> <span class="n">instrumentation</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nf">CREATE_MEM_HOOK_STUB_ENTRIES</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">				<span class="s">&#34;_ZN3art15instrumentation15Instrumentation21UpdateMethodsCodeImplEPNS_9ArtMethodEPKv&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">void</span><span class="p">,</span> <span class="n">UpdateMethodsCode</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span> <span class="n">thiz</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span> <span class="n">art_method</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">quick_code</span><span class="p">),</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="k">if</span> <span class="p">(</span><span class="n">lspd</span><span class="o">::</span><span class="nf">isHooked</span><span class="p">(</span><span class="n">art_method</span><span class="p">))</span> <span class="p">[[</span><span class="n">unlikely</span><span class="p">]]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;Skip update method code for hooked method %s&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">								<span class="n">art_method</span><span class="o">::</span><span class="nf">PrettyMethod</span><span class="p">(</span><span class="n">art_method</span><span class="p">).</span><span class="nf">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">						<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="nf">backup</span><span class="p">(</span><span class="n">thiz</span><span class="p">,</span> <span class="n">art_method</span><span class="p">,</span> <span class="n">quick_code</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="kr">inline</span> <span class="kt">void</span> <span class="nf">DisableUpdateHookedMethodsCode</span><span class="p">(</span><span class="k">const</span> <span class="n">SandHook</span><span class="o">::</span><span class="n">ElfImg</span> <span class="o">&amp;</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">lspd</span><span class="o">::</span><span class="nf">HookSym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">UpdateMethodsCode</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// core/src/main/cpp/main/include/base/object.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="k">static</span> <span class="kt">bool</span> <span class="nf">HookSym</span><span class="p">(</span><span class="n">H</span> <span class="o">&amp;&amp;</span><span class="n">handle</span><span class="p">,</span> <span class="n">T</span> <span class="o">&amp;</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">auto</span> <span class="n">original</span> <span class="o">=</span> <span class="nf">Dlsym</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span><span class="p">(</span><span class="n">handle</span><span class="p">),</span> <span class="n">arg</span><span class="p">.</span><span class="n">sym</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nf">HookSymNoHandle</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">arg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="k">static</span> <span class="kt">bool</span> <span class="nf">HookSymNoHandle</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">original</span><span class="p">,</span> <span class="n">T</span> <span class="o">&amp;</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">original</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nf">constexpr</span><span class="p">(</span><span class="n">is_instance</span><span class="o">&lt;</span><span class="nf">decltype</span><span class="p">(</span><span class="n">arg</span><span class="p">.</span><span class="n">backup</span><span class="p">),</span> <span class="n">MemberFunction</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="kt">void</span> <span class="o">*</span><span class="n">backup</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">HookFunction</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">arg</span><span class="p">.</span><span class="n">replace</span><span class="p">),</span> <span class="o">&amp;</span><span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="n">arg</span><span class="p">.</span><span class="n">backup</span> <span class="o">=</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="kr">typename</span> <span class="nf">decltype</span><span class="p">(</span><span class="n">arg</span><span class="p">.</span><span class="n">backup</span><span class="p">)</span><span class="o">::</span><span class="n">FunType</span><span class="o">&gt;</span><span class="p">(</span><span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">HookFunction</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">arg</span><span class="p">.</span><span class="n">replace</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">							<span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span> <span class="o">**&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">arg</span><span class="p">.</span><span class="n">backup</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="kt">int</span> <span class="nf">HookFunction</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">original</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">replace</span><span class="p">,</span> <span class="kt">void</span> <span class="o">**</span><span class="n">backup</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">_make_rwx</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">_page_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nf">constexpr</span> <span class="p">(</span><span class="n">isDebug</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">Dl_info</span> <span class="n">info</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">dladdr</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">info</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">LOGD</span><span class="p">(</span><span class="s">&#34;Hooking %s (%p) from %s (%p)&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					<span class="n">info</span><span class="p">.</span><span class="n">dli_sname</span> <span class="o">?</span> <span class="n">info</span><span class="p">.</span><span class="nl">dli_sname</span> <span class="p">:</span> <span class="s">&#34;(unknown symbol)&#34;</span><span class="p">,</span> <span class="n">info</span><span class="p">.</span><span class="n">dli_saddr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					<span class="n">info</span><span class="p">.</span><span class="n">dli_fname</span> <span class="o">?</span> <span class="n">info</span><span class="p">.</span><span class="nl">dli_fname</span> <span class="p">:</span> <span class="s">&#34;(unknown file)&#34;</span><span class="p">,</span> <span class="n">info</span><span class="p">.</span><span class="n">dli_fbase</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nf">DobbyHook</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">replace</span><span class="p">,</span> <span class="n">backup</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个版本的lsposed所使用到的inlinehook还是基于dobby hook来做的，而dobby hook是很典型的inline hook套路，基于指令的跳转，因此对于libart.so会增加额外的代码段与数据段</p>
+<h4 id="2-frida-maps特征" class="heading-element"><span>2 frida maps特征</span>
+  <a href="#2-frida-maps%e7%89%b9%e5%be%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>来源于<a href="https://bbs.kanxue.com/thread-268586-1.htm"target="_blank" rel="external nofollow noopener noreferrer">[原创]关于frida检测的一个新思路
+</a></p>
+<h3 id="四对抗思路" class="heading-element"><span>四、对抗思路</span>
+  <a href="#%e5%9b%9b%e5%af%b9%e6%8a%97%e6%80%9d%e8%b7%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>复用riru_hide
+具体流程可参考之前的文章-<a href="https://tcc0lin.github.io/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/#21-hidepreparemapshidelibrary"target="_blank" rel="external nofollow noopener noreferrer">Riru原理理解</a>，原理是将对应每个segment对应内存的数据替换，并去除文件关联</li>
+<li>open重定向
+例如内核层修改函数do_sys_open，返回指定伪装文件的fd来做展示，需要注意的是maps内容是随时变动的，那么伪装文件的生成也需要每次动态生成</li>
+<li>内核层修改展示函数show_map_vma
+代码可参考<a href="https://github.com/tcc0lin/KernelModification/blob/main/task_mmu.c"target="_blank" rel="external nofollow noopener noreferrer">task_mmu.c</a>，修改展示内容</li>
+</ul>
+</div><hr class="awesome-hr" />
+    <h2 id="see-also">相关内容</h2>
+    <ul><li>
+          <a href="/posts/riru%E5%8E%9F%E7%90%86%E7%90%86%E8%A7%A3/" title="Riru原理理解">Riru原理理解</a></li><li>
+          <a href="/posts/riru-momohider%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" title="Riru MomoHider源码分析">Riru MomoHider源码分析</a></li><li>
+          <a href="/posts/riru-unshare%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" title="Riru Unshare源码分析">Riru Unshare源码分析</a></li></ul><div class="post-footer" id="post-footer">
+  <div class="post-info">
+    <div class="post-info-line">
+      <div class="post-info-mod">
+        <span title="更新于 2023-08-06 14:39:32">更新于 2023-08-06&nbsp;</span>
+      </div><div class="post-info-license">
+            <span><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a></span>
+          </div></div><div class="post-info-line">
+        <div class="post-info-md"><span><a href="/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/index.md" title="阅读原始文档" class="link-to-markdown">阅读原始文档</a></span></div>
+        <div class="post-info-share">
+          <span><a href="javascript:void(0);" title="分享到 X" data-sharer="twitter" data-url="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" data-title="Maps特征检测对抗"><i class="fa-brands fa-x-twitter fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/"><i class="fa-brands fa-facebook-square fa-fw" aria-hidden="true"></i></a>
+  <a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="http://localhost:1313/posts/maps%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/" data-title="Maps特征检测对抗"><i class="fa-brands fa-weibo fa-fw" aria-hidden="true"></i></a>
+  </span>
+        </div>
+      </div></div>
+
+  <div class="post-info-more">
+    <section class="post-tags"></section>
+    <section>
+      <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+    </section>
+  </div><div class="post-nav"><a href="/posts/%E6%8E%A2%E8%AE%A8%E6%96%B0%E7%9A%84riru%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F/" class="post-nav-item" rel="prev" title="探讨新的riru加载方式"><i class="fa-solid fa-angle-left fa-fw" aria-hidden="true"></i>探讨新的riru加载方式</a><a href="/posts/strongr-frida%E7%89%B9%E5%BE%81%E9%AD%94%E6%94%B9/" class="post-nav-item" rel="next" title="StrongR Frida特征魔改">StrongR Frida特征魔改<i class="fa-solid fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article>
+
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
+    <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
+        </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
+            <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
+              <a href="/">tcc0lin</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div><div class="footer-line statistics"><span class="site-time" title='网站运行中……'><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden="true"></i><span class="run-times ms-1">网站运行中……</span></span></div></div>
+  </footer></div><div class="widgets"><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role="button" aria-label="回到顶部"><i class="fa-solid fa-arrow-up fa-fw" aria-hidden="true"></i><span class="variant-numeric">0%</span>
+        </div></div><a href="https://github.com/tcc0lin" title="View source on GitHub"target="_blank" rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><div id="mask"></div><div class="reading-progress-bar" style="left: 0;top: 0;width: calc(100% - var(--progress));"></div><noscript>
+    <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
+  </noscript>
+</div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};</script><script src="/js/theme.min.js" defer></script></body>
+</html>
