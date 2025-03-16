@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>TLS协议 - 标签 - 佛光普照</title>
+    <link>http://localhost:1313/tags/tls%E5%8D%8F%E8%AE%AE/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sun, 16 Mar 2025 12:02:26 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/tls%E5%8D%8F%E8%AE%AE/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>TLS协议握手与协议组合的深度解构：从TLS 1.2到TLS 1.3的移动安全视角</title>
+      <link>http://localhost:1313/posts/e319adc/</link>
+      <pubDate>Sun, 16 Mar 2025 12:02:26 +0800</pubDate>
+      <guid>http://localhost:1313/posts/e319adc/</guid>
+      <category domain="http://localhost:1313/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/">网络协议</category>
+      <description>本文将以TLS 1.2与TLS 1.3的握手流程为核心，解析其协议组合的底层逻辑，并提炼出一套逆向分析自定义协议的方法论</description>
+    </item>
+  </channel>
+</rss>

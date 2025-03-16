@@ -154,7 +154,14 @@
     </li>
   </ul>
 </nav></div>
-      </div><div class="content" id="content"><p>Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了解，但是还是没有从源码上入手分析，这次想完整的梳理下Dobby的实现流程，也就有了这次的文章。</p>
+      </div><div class="content" id="content"><div class="details admonition warning open">
+      <div class="details-summary admonition-title">
+        <i class="icon fa-solid fa-exclamation-triangle fa-fw" aria-hidden="true"></i>警告<i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden="true"></i>
+      </div>
+      <div class="details-content">
+        <div class="admonition-content">本文最后更新于 2024-02-21，文中内容可能已过时。</div>
+      </div>
+    </div><p>Dobby框架推出的时间也不短了，从Github提交记录上看最早在17年就有提交了。这期间陆陆续续在使用Dobby框架，虽然对原理有大概的了解，但是还是没有从源码上入手分析，这次想完整的梳理下Dobby的实现流程，也就有了这次的文章。</p>
 <p>对于Dobby这类inline hook框架的认识，大多数人都知道它的实现是在hook函数时，修改了函数对应汇编代码的前几行指令实现跳转到自定义函数上的，那么就沿着这个角度先从汇编调试上看看Dobby从我们原始程序的修改</p>
 <h3 id="一从调试角度看dobby的原理" class="heading-element"><span>一、从调试角度看Dobby的原理</span>
   <a href="#%e4%b8%80%e4%bb%8e%e8%b0%83%e8%af%95%e8%a7%92%e5%ba%a6%e7%9c%8bdobby%e7%9a%84%e5%8e%9f%e7%90%86" class="heading-mark">
