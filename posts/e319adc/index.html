@@ -11,7 +11,7 @@
   <meta itemprop="description" content="本文将以TLS 1.2与TLS 1.3的握手流程为核心，解析其协议组合的底层逻辑，并提炼出一套逆向分析自定义协议的方法论">
   <meta itemprop="datePublished" content="2025-03-16T12:02:26+08:00">
   <meta itemprop="dateModified" content="2025-03-16T12:02:26+08:00">
-  <meta itemprop="wordCount" content="12276">
+  <meta itemprop="wordCount" content="13853">
   <meta itemprop="keywords" content="tls1.2,tls1.3"><meta property="og:url" content="http://localhost:1313/posts/e319adc/">
   <meta property="og:site_name" content="佛光普照">
   <meta property="og:title" content="TLS协议握手与协议组合的深度解构：从TLS 1.2到TLS 1.3的移动安全视角">
@@ -38,7 +38,7 @@
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "http:\/\/localhost:1313\/posts\/e319adc\/"
-    },"genre": "posts","keywords": "TLS协议","wordcount":  12276 ,
+    },"genre": "posts","keywords": "TLS协议","wordcount":  13853 ,
     "url": "http:\/\/localhost:1313\/posts\/e319adc\/","datePublished": "2025-03-16T12:02:26+08:00","dateModified": "2025-03-16T12:02:26+08:00","publisher": {
       "@type": "Organization",
       "name": ""},"author": {
@@ -136,7 +136,7 @@
   <article class="page single">
     <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span title="转载" class="icon-repost"><i class="fa-solid fa-share fa-fw" aria-hidden="true"></i></span><span>TLS协议握手与协议组合的深度解构：从TLS 1.2到TLS 1.3的移动安全视角</span>
       </h1></div><div class="post-meta">
-      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" class="post-category" title="分类 - 网络协议"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 网络协议</a></span></div><div class="post-meta-line"><span title="发布于 2025-03-16 12:02:26"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-16">2025-03-16</time></span>&nbsp;<span title="12276 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 12300 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 25 分钟</span>&nbsp;</div>
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" class="post-category" title="分类 - 网络协议"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 网络协议</a></span></div><div class="post-meta-line"><span title="发布于 2025-03-16 12:02:26"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-16">2025-03-16</time></span>&nbsp;<span title="13853 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 13900 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 28 分钟</span>&nbsp;</div>
     </div><div class="details toc" id="toc-static" data-kept="false">
         <div class="details-summary toc-title">
           <span>目录</span>
@@ -214,7 +214,8 @@
                 <li><a href="#3131-client-handshake-finished">3.1.3.1 <strong>Client Handshake Finished</strong></a></li>
               </ul>
             </li>
-            <li><a href="#314-application-data">3.1.4 <strong>Application Data</strong></a></li>
+            <li><a href="#314-server-session-ticket">3.1.4 <strong>Server Session Ticket</strong></a></li>
+            <li><a href="#315-application-data">3.1.5 <strong>Application Data</strong></a></li>
           </ul>
         </li>
         <li><a href="#32-1-rtt与0-rtt握手流程">3.2 <strong>1-RTT与0-RTT握手流程</strong></a></li>
@@ -725,7 +726,7 @@
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-coffee" data-lang="coffee"><span class="line"><span class="cl"><span class="nx">struct</span> <span class="p">{</span> <span class="p">}</span> <span class="nx">ServerHelloDone</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="p">{</span> <span class="p">}</span> <span class="n">ServerHelloDone</span><span class="p">;</span></span></span></code></pre></td></tr></table>
 </div>
 </div><h4 id="213-step-3" class="heading-element"><span>2.1.3 <strong>STEP 3</strong></span>
   <a href="#213-step-3" class="heading-mark">
@@ -752,18 +753,18 @@
 </span><span class="lnt">12
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-coffee" data-lang="coffee"><span class="line"><span class="cl"><span class="nx">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">select</span> <span class="p">(</span><span class="nx">KeyExchangeAlgorithm</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">              <span class="nx">case</span> <span class="nv">rsa:
-</span></span></span><span class="line"><span class="cl"><span class="nv"></span>                  <span class="nx">EncryptedPreMasterSecret</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">              <span class="nx">case</span> <span class="nv">dhe_dss:
-</span></span></span><span class="line"><span class="cl"><span class="nv"></span>              <span class="nx">case</span> <span class="nv">dhe_rsa:
-</span></span></span><span class="line"><span class="cl"><span class="nv"></span>              <span class="nx">case</span> <span class="nv">dh_dss:
-</span></span></span><span class="line"><span class="cl"><span class="nv"></span>              <span class="nx">case</span> <span class="nv">dh_rsa:
-</span></span></span><span class="line"><span class="cl"><span class="nv"></span>              <span class="nx">case</span> <span class="nv">dh_anon:
-</span></span></span><span class="line"><span class="cl"><span class="nv"></span>                  <span class="nx">ClientDiffieHellmanPublic</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">          <span class="p">}</span> <span class="nx">exchange_keys</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">      <span class="p">}</span> <span class="nx">ClientKeyExchange</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">select</span> <span class="p">(</span><span class="n">KeyExchangeAlgorithm</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="k">case</span> <span class="nl">rsa</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                  <span class="n">EncryptedPreMasterSecret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">              <span class="k">case</span> <span class="nl">dhe_dss</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">              <span class="k">case</span> <span class="nl">dhe_rsa</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">              <span class="k">case</span> <span class="nl">dh_dss</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">              <span class="k">case</span> <span class="nl">dh_rsa</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">              <span class="k">case</span> <span class="nl">dh_anon</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                  <span class="n">ClientDiffieHellmanPublic</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span> <span class="n">exchange_keys</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span> <span class="n">ClientKeyExchange</span><span class="p">;</span></span></span></code></pre></td></tr></table>
 </div>
 </div><p>其格式相对简单，对于我们选择的加密套件而言只需要包含临时生成的ECDH公钥。注意此处与Server Key Exchange不同，并没有对客户端的公钥进行签名，也就是说可以被中间人进行替换。不过协议设计的时候已经考虑到了这一点，因为此时双方已经有足够的信息去协商秘钥并且进行验证了，通过后文的计算过程也可以确认这一点。</p>
 <p><img loading="lazy" src="/posts/tls/ClientKeyExchange.png" alt="/posts/tls/ClientKeyExchange.png" srcset="/posts/tls/ClientKeyExchange.png?size=small, /posts/tls/ClientKeyExchange.png?size=medium 1.5x, /posts/tls/ClientKeyExchange.png?size=large 2x" data-title="/posts/tls/ClientKeyExchange.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
@@ -1030,19 +1031,19 @@
 </span><span class="lnt">8
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-coffee" data-lang="coffee"><span class="line"><span class="cl"><span class="nx">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">ProtocolVersion</span> <span class="nv">legacy_version = </span><span class="mh">0x0303</span><span class="p">;</span>    <span class="sr">/* TLS v1.2 */</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">Random</span> <span class="nx">random</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">opaque</span> <span class="nx">legacy_session_id</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">..</span><span class="mi">32</span><span class="o">&gt;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">CipherSuite</span> <span class="nx">cipher_suites</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">..</span><span class="mi">2</span><span class="o">^</span><span class="mi">16</span><span class="o">-</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">opaque</span> <span class="nx">legacy_compression_methods</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">..</span><span class="mi">2</span><span class="o">^</span><span class="mi">8</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">          <span class="nx">Extension</span> <span class="nx">extensions</span><span class="o">&lt;</span><span class="mi">8</span><span class="p">..</span><span class="mi">2</span><span class="o">^</span><span class="mi">16</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">      <span class="p">}</span> <span class="nx">ClientHello</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">ProtocolVersion</span> <span class="n">legacy_version</span> <span class="o">=</span> <span class="mh">0x0303</span><span class="p">;</span>    <span class="cm">/* TLS v1.2 */</span>
+</span></span><span class="line"><span class="cl">          <span class="n">Random</span> <span class="n">random</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">opaque</span> <span class="n">legacy_session_id</span><span class="o">&lt;</span><span class="mf">0..32</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">CipherSuite</span> <span class="n">cipher_suites</span><span class="o">&lt;</span><span class="mf">2..2</span><span class="o">^</span><span class="mi">16</span><span class="o">-</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">opaque</span> <span class="n">legacy_compression_methods</span><span class="o">&lt;</span><span class="mf">1..2</span><span class="o">^</span><span class="mi">8</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">Extension</span> <span class="n">extensions</span><span class="o">&lt;</span><span class="mf">8..2</span><span class="o">^</span><span class="mi">16</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span> <span class="n">ClientHello</span><span class="p">;</span></span></span></code></pre></td></tr></table>
 </div>
-</div><p><code>session_id</code>字段在此前的版本中该字段被用于恢复TLS会话，不过在TLS1.3中会话恢复使用了一种更为灵活的PSK秘钥交换方式，因此这个字段在TLS1.3中是没有实际作用的</p>
-<p>在ClientHello消息中，有一个重要的拓展，即<code>KeyShare</code>，用于与服务器交换秘钥。前文说到在TLS1.3中，ServerHello之后的所有消息都是加密的，为了双方能够正确加解密数据，因此在ClientHello中通过该拓展告诉服务端自己的公钥以及秘钥交换算法</p>
+</div><p><code>session_id</code>字段在此前的版本中该字段被用于恢复TLS会话，不过在TLS1.3中会话恢复使用了一种更为灵活的PSK秘钥交换方式，因此这个字段在TLS1.3中是没有实际作用的。</p>
+<p>在ClientHello消息中，有一个重要的拓展，即<code>KeyShare</code>，用于与服务器交换秘钥。前文说到在TLS1.3中，ServerHello之后的所有消息都是加密的，那么为了双方能够正确加解密数据，因此在ClientHello中，客户端就已经通过该拓展告诉服务端自己的公钥以及秘钥交换算法，如图所示</p>
 <p><img loading="lazy" src="/posts/tls/ClientHello_tls1.3.png" alt="/posts/tls/ClientHello_tls1.3.png" srcset="/posts/tls/ClientHello_tls1.3.png?size=small, /posts/tls/ClientHello_tls1.3.png?size=medium 1.5x, /posts/tls/ClientHello_tls1.3.png?size=large 2x" data-title="/posts/tls/ClientHello_tls1.3.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
-<p>随后，该公钥就随着Client Hello发送给了服务端。</p>
+<p>客户端指定了x25519椭圆曲线加密，生成一对公私钥，该公钥就随着Client Hello发送给了服务端。</p>
 <h4 id="312-step-2" class="heading-element"><span>3.1.2 <strong>STEP 2</strong></span>
   <a href="#312-step-2" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -1053,7 +1054,7 @@
   </a>
 </h5><p>服务端根据客户端提供的选项，选择一个好自己支持的TLS版本以及加密套件，这里选的是<code>TLS_AES_256_GCM_SHA384</code></p>
 <p>由于涉及到了秘钥交换，服务端在收到请求后也需要先生成一对临时公私钥，<code>Key Share</code> Extension 中返回的即为上述公钥。</p>
-<p>如果还记得上文的 ECDH 秘钥交换方法，这里就可以很容易计算出两端的共享秘钥。该秘钥用于生成后续握手包所需的秘钥，使用 HKDF 函数进行生成，如下所示</p>
+<p>如果还记得上文的ECDH秘钥交换方法，就明白到这里服务端就可以很容易计算出两端的共享秘钥。该秘钥用于生成后续握手包所需的秘钥，使用HKDF函数进行生成，如下所示</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -1068,35 +1069,84 @@
 </span><span class="lnt">10
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-coffee" data-lang="coffee"><span class="line"><span class="cl"><span class="nv">early_secret = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Extract</span><span class="p">(</span><span class="nv">salt: </span><span class="mi">00</span><span class="p">,</span> <span class="nv">key: </span><span class="mi">00</span><span class="p">...)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">empty_hash = </span><span class="nx">SHA384</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">derived_secret = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">early_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;derived&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="nx">empty_hash</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">48</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">handshake_secret = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Extract</span><span class="p">(</span><span class="nv">salt: </span><span class="nx">derived_secret</span><span class="p">,</span> <span class="nv">key: </span><span class="nx">shared_secret</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">client_secret = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">handshake_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;c hs traffic&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="nx">hello_hash</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">48</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">server_secret = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">handshake_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;s hs traffic&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="nx">hello_hash</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">48</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">client_handshake_key = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">client_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;key&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">32</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">server_handshake_key = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">server_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;key&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">32</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">client_handshake_iv = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">client_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;iv&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">12</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">server_handshake_iv = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">server_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;iv&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">12</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">early_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="nf">Extract</span><span class="p">(</span><span class="nl">salt</span><span class="p">:</span> <span class="mo">00</span><span class="p">,</span> <span class="nl">key</span><span class="p">:</span> <span class="mf">00.</span><span class="p">..)</span>
+</span></span><span class="line"><span class="cl"><span class="n">empty_hash</span> <span class="o">=</span> <span class="nf">SHA384</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">derived_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">early_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;derived&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="n">empty_hash</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">48</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">handshake_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="nf">Extract</span><span class="p">(</span><span class="nl">salt</span><span class="p">:</span> <span class="n">derived_secret</span><span class="p">,</span> <span class="nl">key</span><span class="p">:</span> <span class="n">shared_secret</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">client_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">handshake_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;c hs traffic&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="n">hello_hash</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">48</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">server_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">handshake_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;s hs traffic&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="n">hello_hash</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">48</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">client_handshake_key</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;key&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">server_handshake_key</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">server_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;key&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">client_handshake_iv</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;iv&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">12</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">server_handshake_iv</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">server_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;iv&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">12</span><span class="p">)</span></span></span></code></pre></td></tr></table>
 </div>
 </div><p><img loading="lazy" src="/posts/tls/ServerHello_tls1.3.png" alt="/posts/tls/ServerHello_tls1.3.png" srcset="/posts/tls/ServerHello_tls1.3.png?size=small, /posts/tls/ServerHello_tls1.3.png?size=medium 1.5x, /posts/tls/ServerHello_tls1.3.png?size=large 2x" data-title="/posts/tls/ServerHello_tls1.3.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
 <h5 id="3122-server-encrypted-extensions" class="heading-element"><span>3.1.2.2 <strong>Server Encrypted Extensions</strong></span>
   <a href="#3122-server-encrypted-extensions" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h5><h5 id="3123-server-certificate" class="heading-element"><span>3.1.2.3 <strong>Server Certificate</strong></span>
+</h5><p>在计算完共享秘钥后，后续的流量将使用上述秘钥进行加密，因此对于TLS 1.2的情况服务端会先返回一个 ChangeCipherSpec，在TLS 1.3中可不必多此一举，不过在兼容模式下为了防止某些中间件抽风还是会多这么一步。</p>
+<p>我们这里直接看加密的数据，服务端一般会先返回一个Encrypted Extensions类型的Record消息，该消息加密后存放在Record(type=0x17)，即Application Data的Body部分，同时(加密后数据的)末尾还添加了16字节的 <strong>Auth Tag</strong>，这是AEAD算法用来校验加密消息完整性的数据。</p>
+<p>根据之前服务端所选择的套件，这里数据使用 <code>AES-256-GCM</code> 进行加密和校验，这里解密后的拓展长度为空。一般与握手无关的额外拓展都会放在这里返回，这是为了能够尽可能地减少握手阶段的明文传输。</p>
+<p><img loading="lazy" src="/posts/tls/ServerEncryptedExt.png" alt="/posts/tls/ServerEncryptedExt.png" srcset="/posts/tls/ServerEncryptedExt.png?size=small, /posts/tls/ServerEncryptedExt.png?size=medium 1.5x, /posts/tls/ServerEncryptedExt.png?size=large 2x" data-title="/posts/tls/ServerEncryptedExt.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h5 id="3123-server-certificate" class="heading-element"><span>3.1.2.3 <strong>Server Certificate</strong></span>
   <a href="#3123-server-certificate" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h5><h5 id="3124-server-certificate-verify" class="heading-element"><span>3.1.2.4 <strong>Server Certificate Verify</strong></span>
+</h5><p>使用server handshake key/iv进行加密。解密后的数据与TLS 1.2的证书响应相同。</p>
+<p><img loading="lazy" src="/posts/tls/ServerCertificate_tls1.3.png" alt="/posts/tls/ServerCertificate_tls1.3.png" srcset="/posts/tls/ServerCertificate_tls1.3.png?size=small, /posts/tls/ServerCertificate_tls1.3.png?size=medium 1.5x, /posts/tls/ServerCertificate_tls1.3.png?size=large 2x" data-title="/posts/tls/ServerCertificate_tls1.3.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h5 id="3124-server-certificate-verify" class="heading-element"><span>3.1.2.4 <strong>Server Certificate Verify</strong></span>
   <a href="#3124-server-certificate-verify" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h5><h5 id="3125-server-handshake-finished" class="heading-element"><span>3.1.2.5 <strong>Server Handshake Finished</strong></span>
+</h5><p>前文Hello阶段进行ECDHE秘钥交换的时候其实有个问题，即双方只交换了公钥，却没有认证这个秘钥，因此如果存在网络劫持，就可能被中间人进行攻击，那加密似乎也只是加了个寂寞。</p>
+<p>但无需担心，这点早已在计划之中。虽然之前没有进行认证，但可以后面补上。Server Certificate Verify就是这个作用。该消息将服务端证书的私钥与之前生成的临时公钥进行绑定，准确来说是使用证书的私钥对其进行签名，并将签名算法与结果返回给客户端。由于客户端可以认证证书的有消息，就间接地证实了之前所交换的秘钥的真实性。</p>
+<p><img loading="lazy" src="/posts/tls/ServerCertificateVerify_tls1.3.png" alt="/posts/tls/ServerCertificateVerify_tls1.3.png" srcset="/posts/tls/ServerCertificateVerify_tls1.3.png?size=small, /posts/tls/ServerCertificateVerify_tls1.3.png?size=medium 1.5x, /posts/tls/ServerCertificateVerify_tls1.3.png?size=large 2x" data-title="/posts/tls/ServerCertificateVerify_tls1.3.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h5 id="3125-server-handshake-finished" class="heading-element"><span>3.1.2.5 <strong>Server Handshake Finished</strong></span>
   <a href="#3125-server-handshake-finished" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h5><h4 id="313-step-3" class="heading-element"><span>3.1.3 <strong>STEP 3</strong></span>
+</h5><p>至此服务端所需要发送的握手包已经发送完毕了，因此最后发送一个Finished数据给客户端并等待对方的握手完成。在Finished数据中，消息体的内容和TLS1.2类似，是通过此前所有的握手数据计算得到的verify_data，并使用HMAC进行认证，进一步确保此前的消息没有经过中间人修改。</p>
+<p>计算方法如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">finished_key</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">server_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;finished&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">finished_hash</span> <span class="o">=</span> <span class="nf">SHA384</span><span class="p">(</span><span class="n">Client</span> <span class="n">Hello</span> <span class="p">...</span> <span class="n">Server</span> <span class="n">Cert</span> <span class="n">Verify</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">verify_data</span> <span class="o">=</span> <span class="n">HMAC</span><span class="o">-</span><span class="nf">SHA384</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">finished_key</span><span class="p">,</span> <span class="nl">msg</span><span class="p">:</span> <span class="n">finished_hash</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>server_secret是指前文中协商得到的server handshake traffic secret。</p>
+<p>同时，服务端使用前面协商得到的handshake secret加上前面所有握手包的哈希重新计算出一个应用秘钥，用于加密实际的应用数据。计算方法如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">empty_hash</span> <span class="o">=</span> <span class="nf">SHA384</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">derived_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">handshake_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;derived&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="n">empty_hash</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">48</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">master_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="nf">Extract</span><span class="p">(</span><span class="nl">salt</span><span class="p">:</span> <span class="n">derived_secret</span><span class="p">,</span> <span class="nl">key</span><span class="p">:</span> <span class="mf">00.</span><span class="p">..)</span>
+</span></span><span class="line"><span class="cl"><span class="n">client_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">master_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;c ap traffic&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="n">handshake_hash</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">48</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">server_secret</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">master_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;s ap traffic&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="n">handshake_hash</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">48</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">client_application_key</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;key&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">server_application_key</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">server_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;key&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">client_application_iv</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;iv&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">12</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">server_application_iv</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">server_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;iv&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">12</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>之所以重新计算而不是使用handshake key是为了防止针对某些加密套件可能存在的选择密文攻击，最终得到了相当于TLS 1.2中的 client/server write key/IV。</p>
+<p><img loading="lazy" src="/posts/tls/ServerFinish.png" alt="/posts/tls/ServerFinish.png" srcset="/posts/tls/ServerFinish.png?size=small, /posts/tls/ServerFinish.png?size=medium 1.5x, /posts/tls/ServerFinish.png?size=large 2x" data-title="/posts/tls/ServerFinish.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h4 id="313-step-3" class="heading-element"><span>3.1.3 <strong>STEP 3</strong></span>
   <a href="#313-step-3" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -1114,17 +1164,46 @@
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-coffee" data-lang="coffee"><span class="line"><span class="cl"><span class="c1"># client handshake traffic secret
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nv">finished_key = </span><span class="nx">HKDF</span><span class="o">-</span><span class="nx">Expand</span><span class="o">-</span><span class="nx">Label</span><span class="p">(</span><span class="nv">key: </span><span class="nx">client_secret</span><span class="p">,</span> <span class="nv">label: </span><span class="s">&#34;finished&#34;</span><span class="p">,</span> <span class="nv">ctx: </span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nv">len: </span><span class="mi">32</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">finished_hash = </span><span class="nx">SHA384</span><span class="p">(</span><span class="nx">Client</span> <span class="nx">Hello</span> <span class="p">...</span> <span class="nx">Server</span> <span class="nx">Finished</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nv">verify_data = </span><span class="nx">HMAC</span><span class="o">-</span><span class="nx">SHA384</span><span class="p">(</span><span class="nv">key: </span><span class="nx">finished_key</span><span class="p">,</span> <span class="nv">msg: </span><span class="nx">finished_hash</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp"># client handshake traffic secret
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="n">finished_key</span> <span class="o">=</span> <span class="n">HKDF</span><span class="o">-</span><span class="n">Expand</span><span class="o">-</span><span class="nf">Label</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span> <span class="nl">label</span><span class="p">:</span> <span class="s">&#34;finished&#34;</span><span class="p">,</span> <span class="nl">ctx</span><span class="p">:</span> <span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nl">len</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">finished_hash</span> <span class="o">=</span> <span class="nf">SHA384</span><span class="p">(</span><span class="n">Client</span> <span class="n">Hello</span> <span class="p">...</span> <span class="n">Server</span> <span class="n">Finished</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">verify_data</span> <span class="o">=</span> <span class="n">HMAC</span><span class="o">-</span><span class="nf">SHA384</span><span class="p">(</span><span class="nl">key</span><span class="p">:</span> <span class="n">finished_key</span><span class="p">,</span> <span class="nl">msg</span><span class="p">:</span> <span class="n">finished_hash</span><span class="p">)</span></span></span></code></pre></td></tr></table>
 </div>
 </div><p>可以这么理解，Server Finished用来让客户端确认服务端没有被中间人攻击，而Client Finished则用来让服务端确认客户端没有被中间人攻击。双向认证之后则可以保证TLS握手的真实性和完整性，成功建立加密信道。</p>
-<h4 id="314-application-data" class="heading-element"><span>3.1.4 <strong>Application Data</strong></span>
-  <a href="#314-application-data" class="heading-mark">
+<h4 id="314-server-session-ticket" class="heading-element"><span>3.1.4 <strong>Server Session Ticket</strong></span>
+  <a href="#314-server-session-ticket" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h4><p>回顾之前的所有流程，再对比下图来巩固下</p>
+</h4><p>这一步通常是可选的。服务端在握手完成后会发送若干个ticket给客户端，可以理解为web中的cookie。客户端在后续如果需要重新发起握手，可以带上这个ticket，用于恢复当前的TLS会话。从上面的握手流程可见TLS握手需要涉及许多计算和网络请求，如果能够恢复会话，将极大地降低云服务器资源和网络延时。</p>
+<p>ticket消息的格式如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-coffee" data-lang="coffee"><span class="line"><span class="cl"><span class="nx">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nx">uint32</span> <span class="nx">ticket_lifetime</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="nx">uint32</span> <span class="nx">ticket_age_add</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="nx">opaque</span> <span class="nx">ticket_nonce</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">..</span><span class="mi">255</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="nx">opaque</span> <span class="nx">ticket</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">..</span><span class="mi">2</span><span class="o">^</span><span class="mi">16</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="nx">Extension</span> <span class="nx">extensions</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">..</span><span class="mi">2</span><span class="o">^</span><span class="mi">16</span><span class="o">-</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span> <span class="nx">NewSessionTicket</span><span class="p">;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>包含有效期、随机数等信息。其中ticket字段对于客户端是透明的，但对于服务端而言需要是有效的会话凭据，可通过该数据恢复之前的TLS会话。</p>
+<p>由于ticket是一次性的，综合考虑时间和空间成本，一般服务端都会返回两个ticket给客户端。由于是服务端返回的数据，因此使用server application key/iv进行加密。</p>
+<p><img loading="lazy" src="/posts/tls/newTicket.png" alt="/posts/tls/newTicket.png" srcset="/posts/tls/newTicket.png?size=small, /posts/tls/newTicket.png?size=medium 1.5x, /posts/tls/newTicket.png?size=large 2x" data-title="/posts/tls/newTicket.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h4 id="315-application-data" class="heading-element"><span>3.1.5 <strong>Application Data</strong></span>
+  <a href="#315-application-data" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>随后客户端发送的数据加密方式与handshake过程的加密类似，区别仅在于应用数据的加密使用的是client application key/iv，服务端发送给客户端的数据使用server application key/iv。</p>
+<p>回顾之前的所有流程，再对比下图来巩固下</p>
 <p><img loading="lazy" src="/posts/tls/TLSv1.3-handshake-1591540910347.png" alt="/posts/tls/TLSv1.3-handshake-1591540910347.png" srcset="/posts/tls/TLSv1.3-handshake-1591540910347.png?size=small, /posts/tls/TLSv1.3-handshake-1591540910347.png?size=medium 1.5x, /posts/tls/TLSv1.3-handshake-1591540910347.png?size=large 2x" data-title="/posts/tls/TLSv1.3-handshake-1591540910347.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
 <h3 id="32-1-rtt与0-rtt握手流程" class="heading-element"><span>3.2 <strong>1-RTT与0-RTT握手流程</strong></span>
   <a href="#32-1-rtt%e4%b8%8e0-rtt%e6%8f%a1%e6%89%8b%e6%b5%81%e7%a8%8b" class="heading-mark">
@@ -1160,8 +1239,8 @@
 </h2><ul>
 <li><strong>从TLS设计中学习的通用模式</strong>：
 <ul>
-<li>​<strong>握手阶段的标志性消息</strong>​（如随机数交换、密钥参数传递）。</li>
-<li>​<strong>密钥计算的时序依赖</strong>​（何时生成加密密钥、如何验证完整性）。</li>
+<li>​握手阶段的标志性消息​（如随机数交换、密钥参数传递）。</li>
+<li>​密钥计算的时序依赖（何时生成加密密钥、如何验证完整性）。</li>
 </ul>
 </li>
 <li>​<strong>自定义协议的常见漏洞点</strong>：
@@ -1190,7 +1269,7 @@
 </h3><ul>
 <li>
 <p><strong>逆向范式的标准化</strong></p>
-<p>TLS的分层设计（握手协议与记录协议解耦）和密钥派生流程（从随机数到会话密钥的确定性推导）为私有协议提供了。工程师可通过对比TLS的标准流程，快速定位私有协议中的“非常规”操作，例如：</p>
+<p>TLS的分层设计（握手协议与记录协议解耦）和密钥派生流程（从随机数到会话密钥的确定性推导）为私有协议提供了标准范本。逆向分析人员可通过对比TLS的标准流程，快速定位私有协议中的“非常规”操作，例如：</p>
 <ul>
 <li>握手阶段未交换随机数（易遭受重放攻击）；</li>
 <li>密钥派生依赖静态参数（缺乏前向保密）；</li>
