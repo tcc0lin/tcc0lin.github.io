@@ -1,4 +1,4 @@
-# TLS协议握手与协议组合的深度解构：从TLS 1.2到TLS 1.3的移动安全视角
+# TLS协议握手与协议组合的深度解构：从TLS协议到定制化加密协议的移动安全视角
 
 
 &lt;!--more--&gt;
@@ -948,16 +948,179 @@ struct {
 
 ### 4.2 **握手消息的加密范围**
 
-* TLS 1.2的明文部分（Server Certificate） vs TLS 1.3的加密扩展（Encrypted Extensions）。
+从TLS 1.2到TLS 1.3，握手消息的加密范围发生了显著变化，这一改进在安全性和隐私保护方面具有里程碑意义。
+
+根据上文对两套协议的分析也可以看出加密范围的改变：
+
+- **TLS1.2协议加密范围**
+
+  Client端和Server端是在`ChangeCipherSpec`时开始计算`PMS`继而生成后续密钥，在`Finished`之后才开始确保双方都验证成功，开始使用加密信道进行通信。这也就意味着只有双方完完整整的完成整个加密过程之后才会对后续的`Application`数据进行加密，而之前的所有握手数据几乎都是明文数据。
+
+- **TLS1.3协议加密范围**
+
+  由于Client端在`Client Hello`阶段就已经将自身的公钥通过扩展`KeyShare`发送给服务端，那么服务端在`Server Hello`之后就可以完成密钥的计算，因此后续的握手数据都可以通过该密钥进行加密。
+
+之所以这样做也是因为可以**最大限度的减少明文的暴露**
+
+- **​TLS 1.2 的明文暴露风险**
+
+  - 攻击者可通过嗅探`ClientHello`和`ServerHello`获取支持的协议版本、密码套件、服务器证书等信息，甚至利用这些信息发起降级攻击（如强制协商弱密码套件）。
+  - `TLS 1.2`的`ServerKeyExchange`中的`DH参数`以明文传输，可能被用于计算预主密钥。
+
+- **TLS 1.3的改进**
+
+  - **增强安全性**
+    - TLS 1.3通过加密服务器证书和密钥交换参数，避免了证书劫持和私钥泄露风险。例如TLS 1.2中明文传输的证书可能被用于伪造中间人攻击，而TLS 1.3中证书通过加密的 `Application Data`传输。
+  - **抵御降级攻击**
+    TLS 1.3通过强制加密握手消息，移除了对不安全密码套件（如 RSA、SHA-1）的支持，避免了攻击者诱导客户端降级到弱协议版本。
+  - **提升隐私保护**
+    TLS 1.3加密了客户端支持的密码套件列表和扩展（如 SNI 扩展），防止网络监听者通过分析握手消息推断用户行为。例如，TLS 1.2中明文SNI可能暴露访问的域名，而TLS 1.3 通过加密扩展保护了这一信息。
+
 
 ## 五、**逆向分析自定义协议的方法论提炼**
 
-* **从TLS设计中学习的通用模式**：
-  * ​握手阶段的标志性消息​（如随机数交换、密钥参数传递）。
-  * ​密钥计算的时序依赖（何时生成加密密钥、如何验证完整性）。
-* ​**自定义协议的常见漏洞点**：
-  * 未加密的元数据暴露（如协议版本、支持的算法）。
-  * 弱密钥交换逻辑（静态密钥复用、缺乏前向保密）。
+在实际逆向分析App网络协议的工作当中，或多或少都会碰到使用自研网络协议的App，那么在完整的了解了`TLS`协议之后（`TLS`协议是业内最标准的安全加密层协议），是否可以通过其流程来总结一套方法论呢？
+
+### 5.1 **自定义协议的实现方式分类**
+
+#### 5.1.1 **基于TLS/SSL协议的魔改方案**
+
+基于TLS/SSL的魔改本质上还是在TLS现有的框架内做的改动，本质上不影响TLS的某些特征
+
+**典型场景**：TLS/SSL协议扩展、HTTP协议私有化封装
+**技术特征**：
+
+* ​**加密算法替换**：保留协议框架但替换核心组件，例如采用国密SM2/SM4算法替代RSA/AES，或修改HKDF密钥派生参数。
+
+  - **国密TLS案例**
+    目前市面上看到的是长安链主导研发的[国密TLS](https://docs.chainmaker.org.cn/tech/%E5%9B%BD%E5%AF%86TLS%E8%AE%BE%E8%AE%A1%E5%92%8C%E5%AE%9E%E7%8E%B0.html)和北京大学基于国密算法自主开发的[GmSSL](https://github.com/guanzhi/GmSSL)项目
+  - **HKDF参数替换**
+    HKDF对应的函数有`Extract`和`Expand`，对应的函数实现如下
+    ```c
+    int hkdfExtract(SHAversion whichSha,
+    const unsigned char *salt, int salt_len,
+    const unsigned char *ikm, int ikm_len,
+    uint8_t prk[USHAMaxHashSize])
+
+    int hkdfExpand(SHAversion whichSha, const uint8_t prk[ ], int prk_len,
+    const unsigned char *info, int info_len,
+    uint8_t okm[ ], int okm_len)
+    ```
+    从入参中可以找到很多可魔改的点，比如在TLS1.3的RFC中及上文分析中都可以找到在HKDF扩展时所利用到的info，如下
+    ```
+              0
+              |
+              v
+    PSK -&gt;  HKDF-Extract = Early Secret
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;ext binder&#34; | &#34;res binder&#34;, &#34;&#34;)
+              |                     = binder_key
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;c e traffic&#34;, ClientHello)
+              |                     = client_early_traffic_secret
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;e exp master&#34;, ClientHello)
+              |                     = early_exporter_master_secret
+              v
+        Derive-Secret(., &#34;derived&#34;, &#34;&#34;)
+              |
+              v
+    (EC)DHE -&gt; HKDF-Extract = Handshake Secret
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;c hs traffic&#34;,
+              |                     ClientHello...ServerHello)
+              |                     = client_handshake_traffic_secret
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;s hs traffic&#34;,
+              |                     ClientHello...ServerHello)
+              |                     = server_handshake_traffic_secret
+              v
+        Derive-Secret(., &#34;derived&#34;, &#34;&#34;)
+              |
+              v
+    0 -&gt; HKDF-Extract = Master Secret
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;c ap traffic&#34;,
+              |                     ClientHello...server Finished)
+              |                     = client_application_traffic_secret_0
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;s ap traffic&#34;,
+              |                     ClientHello...server Finished)
+              |                     = server_application_traffic_secret_0
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;exp master&#34;,
+              |                     ClientHello...server Finished)
+              |                     = exporter_master_secret
+              |
+              &#43;-----&gt; Derive-Secret(., &#34;res master&#34;,
+                                    ClientHello...client Finished)
+                                    = resumption_master_secret
+    ```
+    这里可以在info中加入上下文、时间戳等等，其他的包括salt的生成方式、生成密钥的长度等都可以进一步魔改。
+* ​**证书体系私有化**：绕过CA认证链，通过硬编码证书指纹（如Android应用内嵌自签名证书）或私有根证书库实现双向认证。
+  通过改造或替换标准TLS的证书信任链机制，构建一套完全由开发者或企业控制的证书颁发、验证和信任体系。这种私有化改造的核心目标是摆脱对公共证书颁发机构（Public CA）的依赖，实现通信双方身份认证的自主可控。
+  相比于标准TLS证书体系，私有化证书体系可以构建私有CA，并在证书中添加专有字段（如设备ID、业务角色），实现更细粒度的身份验证。
+* ​**协议字段扩展**：在标准协议头中注入私有标识，例如ClientHello扩展字段携带设备ID、会话令牌，用于混淆流量特征。
+
+#### 5.1.2 **完全自研协议的设计特征**
+
+TODO
+
+### 5.2 **自定义协议逆向分析提效方法论**
+
+针对自定义协议的逆向分析，传统单一方法往往效率低下或难以覆盖复杂场景。一套有效的分析方法可以最大程度的提升分析效率，因此结合笔者过去的分析经验，总结一种**三阶融合方法论**，结合黑盒流量分析、白盒动态调试与静态二进制分析，通过多维度协同破解协议结构。
+
+#### 5.2.1 网络流量分析：黑盒视角的协议解构**​**
+
+* **协议特征提取**：
+  * 使用Wireshark筛选固定端口/IP流量，统计报文长度分布（如24字节高频出现可能为心跳包）。更常用的方式可以是设置对单个App的tcpdump抓包，为了减少其他App网络请求的干扰，参考如下：
+    ```shell
+    $ iptables -A OUTPUT -m owner --uid-owner 1000 -j CONNMARK --set-mark 1
+    $ iptables -A INPUT -m connmark --mark 1 -j NFLOG --nflog-group 30 
+    $ iptables -A OUTPUT -m connmark --mark 1 -j NFLOG --nflog-group 30 
+    $ tcpdump -i nflog:30 -w uid-1000.pcap
+    ```
+  * 通过字节频率分析识别分隔符（如0x00）、文本字段（ASCII可打印字符连续出现）。
+* ​**交互式差分测试**：
+  * 触发不同操作（登录/数据请求）捕获差异报文，对比字段变化（如第6字节0x01→0x00表示指令类型）。
+  * 构造畸形数据包测试校验算法（CRC16/CRC32常见），验证长度字段与载荷的关联性。
+
+#### 5.2.2 动态调试与代码追踪：白盒视角的协议还原
+
+* **关键函数Hook**：
+  * 数据报文传输角度：以OpenSSL为例，底层通过bio_wrie完成数据与socket的交互，而bio_write针对不同实现有对应的与socket文件的交互方式，可以将拦截点设置成
+    - socket类型：libc sendto/recvfrom
+    - file类型：libc write/read
+    - mem类型：memcpy
+
+    另外需要注意到一点的是，App可能会绕过libc使用内联syscall来调用系统函数，因此更推荐直接hook内核函数。
+  * 定位加密函数入口（如OpenSSL的`EVP_EncryptUpdate`），Dump内存中的密钥与IV参数，可以整理开源框架例如OpenSSL的加密函数，尝试下是否App引用了这些框架，但是其中难点在于App抹掉符号与日志，无法定位相关加密函数。
+* ​**协议状态机还原**：
+  * 通过调试器（GDB/IDA）追踪会话ID生成逻辑，绘制请求-响应状态转移图。
+  * 分析线程调度机制（如心跳包独立线程），识别超时重传策略。
+
+* **数据流变动追踪**：
+  - 合理使用memcpy等内存操作函数，通过堆栈跟踪上下文
+
+#### 5.2.3 静态代码逆向：协议实现的深度解析
+
+* **协议解析代码定位**：
+  * 在反编译代码中搜索特征字符串（如&#34;encrypt\_key&#34;）、固定常量（如魔数0xDEADBEEF）。
+  * 逆向JNI层`native`方法（Android）或Objective-C消息分发（iOS），追踪协议编解码流程。
+* ​**加密算法识别**：
+  * 识别S盒置换（AES特征）、模幂运算（RSA标志）等密码学原语。
+  * 通过交叉引用分析密钥存储位置（SharedPreferences/Keychain）。
+
+
+### 5.3 **分析效能提升的关键策略**
+
+#### 5.3.1 多维度数据交叉验证
+
+**流量-代码-内存联动：**&amp;#x5C06;网络流量、反编译代码、运行时内存Dump交叉验证，减少单一数据源误差
+
+#### 5.3.2 **协议语法语义分离**
+
+**先结构后语义**：先通过流量分析提取格式（语法），再结合代码逆向推断字段含义（语义）
 
 ## 六、**移动端TLS协议分析的实践挑战**
 
@@ -1004,6 +1167,7 @@ struct {
 ### **参考** 
 1. [Swoole 源码分析——Server模块之OpenSSL(上)](https://github.com/LeoYang90/swoole-source-analysis/blob/master/Swoole%20%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E2%80%94%E2%80%94Server%E6%A8%A1%E5%9D%97%E4%B9%8BOpenSSL(%E4%B8%8A).md)
 2. [深入浅出 SSL/TLS 协议](https://evilpan.com/2022/05/15/tls-basics/#application-data)
+3. [基于 TLS 1.3的微信安全通信协议 mmtls 介绍](https://cloud.tencent.com/developer/article/1005518)
 
 TLS协议是一面“镜子”，既映照出工业级协议应有的严谨性，也暴露出自定义协议在安全性上的妥协。作为移动安全工程师，我们应深入理解TLS的设计哲学，将其转化为逆向工程的“探针”——从随机数的生成到加密层的切换，每一步都可能成为击穿私有协议的突破口。唯有将协议逆向与安全设计原则深度融合，才能在隐私与安全的博弈中找到无往不胜的突破口。
 
