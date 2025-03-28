@@ -6,21 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
     <meta name="robots" content="noodp" />
     <title> - 佛光普照</title><meta name="author" content="tcc0lin">
-<meta name="description" content="再使用PKCS#5填充至32字节即为末尾添加的数据。服务端通过将客户端发送的verify_data与自身计算的值进行比对，可确保整个握手流程的完整性；使用HMAC校验当前数据可以保证消息没有被中间人篡改。
+<meta name="description" content="上节中介绍了流量抓取的一些方案，对于常规 HTTP 流量而言没有太大争议，但是对于当今日趋普遍的 HTTPS 却有一些悬而未决的问题。如果我们抓到的所有 HTTPS 流量都是通过 TLS 进行加密的，那对于分析而言就几乎毫无价值了。
 ">
   <meta itemprop="name" content="佛光普照">
-  <meta itemprop="description" content="再使用PKCS#5填充至32字节即为末尾添加的数据。服务端通过将客户端发送的verify_data与自身计算的值进行比对，可确保整个握手流程的完整性；使用HMAC校验当前数据可以保证消息没有被中间人篡改。">
-  <meta itemprop="wordCount" content="166"><meta property="og:url" content="http://localhost:1313/posts/untitled/">
+  <meta itemprop="description" content="上节中介绍了流量抓取的一些方案，对于常规 HTTP 流量而言没有太大争议，但是对于当今日趋普遍的 HTTPS 却有一些悬而未决的问题。如果我们抓到的所有 HTTPS 流量都是通过 TLS 进行加密的，那对于分析而言就几乎毫无价值了。">
+  <meta itemprop="wordCount" content="2798"><meta property="og:url" content="http://localhost:1313/posts/untitled/">
   <meta property="og:site_name" content="佛光普照">
   <meta property="og:title" content="佛光普照">
-  <meta property="og:description" content="再使用PKCS#5填充至32字节即为末尾添加的数据。服务端通过将客户端发送的verify_data与自身计算的值进行比对，可确保整个握手流程的完整性；使用HMAC校验当前数据可以保证消息没有被中间人篡改。">
+  <meta property="og:description" content="上节中介绍了流量抓取的一些方案，对于常规 HTTP 流量而言没有太大争议，但是对于当今日趋普遍的 HTTPS 却有一些悬而未决的问题。如果我们抓到的所有 HTTPS 流量都是通过 TLS 进行加密的，那对于分析而言就几乎毫无价值了。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="佛光普照">
-  <meta name="twitter:description" content="再使用PKCS#5填充至32字节即为末尾添加的数据。服务端通过将客户端发送的verify_data与自身计算的值进行比对，可确保整个握手流程的完整性；使用HMAC校验当前数据可以保证消息没有被中间人篡改。">
+  <meta name="twitter:description" content="上节中介绍了流量抓取的一些方案，对于常规 HTTP 流量而言没有太大争议，但是对于当今日趋普遍的 HTTPS 却有一些悬而未决的问题。如果我们抓到的所有 HTTPS 流量都是通过 TLS 进行加密的，那对于分析而言就几乎毫无价值了。">
 <meta name="application-name" content="FixIt">
 <meta name="apple-mobile-web-app-title" content="FixIt"><meta name="theme-color" data-light="#f8f8f8" data-dark="#252627" content="#f8f8f8"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="/tcc0lin_fav.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="canonical" type="text/html" href="http://localhost:1313/posts/untitled/" title=" - 佛光普照" /><link rel="next" type="text/html" href="http://localhost:1313/posts/frida%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" title="Frida调试环境搭建" /><link rel="alternate" type="text/markdown" href="http://localhost:1313/posts/untitled/index.md" title=" - 佛光普照"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
@@ -33,7 +33,7 @@
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "http:\/\/localhost:1313\/posts\/untitled\/"
-    },"genre": "posts","wordcount":  166 ,
+    },"genre": "posts","wordcount":  2798 ,
     "url": "http:\/\/localhost:1313\/posts\/untitled\/","publisher": {
       "@type": "Organization",
       "name": ""},"author": {
@@ -131,16 +131,110 @@
   <article class="page single">
     <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span></span>
       </h1></div><div class="post-meta">
-      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span></div><div class="post-meta-line"><span title="发布于 0001-01-01 00:00:00"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="0001-01-01">0001-01-01</time></span>&nbsp;<span title="166 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 200 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 1 分钟</span>&nbsp;</div>
-    </div><div class="content" id="content"><div class="details admonition warning open">
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span></div><div class="post-meta-line"><span title="发布于 0001-01-01 00:00:00"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="0001-01-01">0001-01-01</time></span>&nbsp;<span title="2798 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 2800 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 6 分钟</span>&nbsp;</div>
+    </div><div class="details toc" id="toc-static" data-kept="false">
+        <div class="details-summary toc-title">
+          <span>目录</span>
+          <span><i class="details-icon fa-solid fa-angle-right" aria-hidden="true"></i></span>
+        </div>
+        <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#根证书">根证书</a></li>
+    <li><a href="#ssl-keylog">SSL keylog</a></li>
+    <li><a href="#ssl-readwrite">SSL read/write</a></li>
+  </ul>
+</nav></div>
+      </div><div class="content" id="content"><div class="details admonition warning open">
       <div class="details-summary admonition-title">
         <i class="icon fa-solid fa-exclamation-triangle fa-fw" aria-hidden="true"></i>警告<i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden="true"></i>
       </div>
       <div class="details-content">
         <div class="admonition-content">本文最后更新于 0001-01-01，文中内容可能已过时。</div>
       </div>
-    </div><p>再使用PKCS#5填充至32字节即为末尾添加的数据。服务端通过将客户端发送的verify_data与自身计算的值进行比对，可确保整个握手流程的完整性；使用HMAC校验当前数据可以保证消息没有被中间人篡改。</p>
-<p>在这些校验都完成后，服务端给客户端返回ChangeCipherSpec消息，告知客户端接下来发送的数据都将经过协商秘钥进行加密。</p>
+    </div><p>上节中介绍了流量抓取的一些方案，对于常规 HTTP 流量而言没有太大争议，但是对于当今日趋普遍的 HTTPS 却有一些悬而未决的问题。如果我们抓到的所有 HTTPS 流量都是通过 TLS 进行加密的，那对于分析而言就几乎毫无价值了。</p>
+<p>因此，为了能够对目标应用进行网络分析，应用层的私有加密姑且不论，至少要解决标准的 TLS 的解密问题。解密是为了中间人攻击，获取明文流量，那么就需要知道 TLS 中常规的中间人防御方案，一般来说，有下面几种:</p>
+<ol>
+<li>客户端验证服务端的证书链可信，基本操作；</li>
+<li>服务端验证客户端的证书可信(Certificate Request)，又称为双向证书绑定；</li>
+<li>客户端验证服务端的证书 HASH 是否在白名单中，即 SSL Pinning；</li>
+<li>……</li>
+</ol>
+<p>在介绍后文的具体解密方案中也会围绕这几点去进行分析。</p>
+<h2 id="根证书" class="heading-element"><span>根证书</span>
+  <a href="#%e6%a0%b9%e8%af%81%e4%b9%a6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>添加自定义的根证书应该是 HTTPS 流量分析的标准答案了。前文中提到的 Burpsuite、mitmproxy 等工具的文档中肯定都有介绍如何添加自定义根证书，根证书的存放对于不同的操作系统甚至不同的应用都有不同路径。比如在 Android 中，根证书存放在 <code>/system/etc/security/cacerts</code> 目录之下；在 iOS/macOS 中，根证书存放在 <code>Keychain</code> 中；对于 <code>Firefox</code> 浏览器，其应用中打包了证书链，不使用系统的证书。……</p>
+<p>至于如何添加根证书，上过学的话应该都能在搜索引擎中找到方法，这里就不再啰嗦了。虽然添加自定义根证书可以让我们很方便地使用代理工具进行 HTTPS 流量分析，但其实际上只解决了第一个问题，因此对于某些做了额外校验的应用而言 TLS 握手还是无法成功的。</p>
+<p>如果目标应用服务器在 TLS 握手中校验了客户端证书，那么我们还需要在代理工具中添加对应私钥才能顺利完成握手。该证书一般以 <code>p12</code> 格式存放，包含了客户端的证书及其私钥，通常还有一个额外的密码。通过逆向分析目标应用的的加载代码往往不难发现客户端证书的踪迹，甚至有时可以直接在资源文件中找到。</p>
+<p>如果目标应用使用了 SSL Pinning 加固，那么通常是将服务器的证书 HASH 保存在代码中，并在握手<strong>之后</strong>进行额外校验。由于相关数据(证书HASH)和逻辑都在代码中，因此这种情况下往往只能通过侵入式的方式去绕过 Pinning 校验，比如 Patch 代码或者使用 hook 等方法实现。由于这是一个较为常见的功能，因此网上有很多相关脚本可以实现常规的 SSL Pinning bypass，但需要注意的是这并不意味着可以 100% 绕过，对于一些特殊实现仍然需要进行特殊分析。</p>
+<h2 id="ssl-keylog" class="heading-element"><span>SSL keylog</span>
+  <a href="#ssl-keylog" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>除了在端侧添加自定义根证书，还有一种方式可以解密 SSL/TLS 的流量，即在握手过程中想办法获取到 TLS 会话的 <code>Master Key</code>，根据协商的加密套件，就可以对整个 TLS stream 进行解密。关于 TLS 握手的原理介绍，可以参考笔者上一篇文章 —— <a href="https://evilpan.com/2022/05/15/tls-basics/"target="_blank" rel="external nofollow noopener noreferrer">深入浅出 SSL/TLS 协议</a>。</p>
+<p>知名的抓包和网络协议分析工具 <code>Wireshark</code> 就支持通过添加 <code>keylog</code> 文件去辅助 TLS 流量的解密。这里的 keylog 就是 <a href="https://wiki.wireshark.org/TLS"target="_blank" rel="external nofollow noopener noreferrer">TLS 会话秘钥</a>，文件格式为 <a href="https://firefox-source-docs.mozilla.org/security/nss/legacy/key_log_format/index.html"target="_blank" rel="external nofollow noopener noreferrer">NSS Key Log Format</a>。对于不同版本的 TLS 内容略有不同，在 TLS 1.2 中只需要一个会话的 MasterKey，使用 <code>CLIENT_RANDOM</code> 去区分不同会话；而在 TLS 1.3 中每个会话包含 5 个秘钥，分别用于解密握手、数据阶段的不同数据。</p>
+<p>那么，这个 keylog 文件我们应该如何获取呢？对于大部分 SSL 库而言，比如 OpenSSL、BoringSSL、libreSSL 等，都可以通过 <a href="https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_keylog_callback.html"target="_blank" rel="external nofollow noopener noreferrer">SSL_CTX_set_keylog_callback</a> 这个 API 去设置获取的回调，令 SSL 库在握手成功后调用对应的回调函数从而获取 keylog。因此我们就需要通过静态 patch 或者动态 hook 的方式去为 TLS 添加该回调。</p>
+<p>这看似很简单，但实际操作起来会遇到一些问题。比如，很多大型商业应用都封装了自己的 SSL 库，甚至同一个应用中不同组件中又间接包含了有多个 SSL 库，为了每一个 TLS 会话都能成功解密，需要确保每个 SSL 库都要被正确 patch 或者 hook；</p>
+<p>其次，对于某些组件而言，实际是通过静态编译的方式引入 SSL 库，比如 <code>webview</code>、<code>libflutter</code>、<code>libffmpeg</code> 等。在去除掉符号后，我们可能需要通过一些方法去搜索定位所需的符号地址。这个任务的难度可大可小，简单的可以通过 yara、Bindiff 去进行定位，复杂的话也可以通过一些深度学习算法去进行相似度分析，比如科恩的 <code>BinaryAI</code> 或者阿里云的 <code>Finger</code> 等。感兴趣的也可以去进一步阅读相关的综述文章:</p>
+<blockquote>
+<p><a href="https://www.eurecom.fr/publication/6847/download/sec-publi-6847.pdf"target="_blank" rel="external nofollow noopener noreferrer">USENIX Security 2022 - How Machine Learning Is Solving the Binary Function Similarity Problem</a></p></blockquote>
+<p>另外还有一个问题，<code>SSL_CTX_set_keylog_callback</code> 这个 API 并不是最初就存在于 SSL 库中的。以 openssl 为例，keylog 文件的支持实际上是在 commit <a href="https://github.com/openssl/openssl/commit/4bf73e9f86804cfe98b03accfc2dd7cb98e018d6"target="_blank" rel="external nofollow noopener noreferrer">4bf73e</a> 中才被引入。因此，如果遇到了某些应用中依赖于旧版本的 SSL 库，那么可能就不支持 keylog。我们要想强行支持就要进行二进制级别的 cherry-pick，这个工作量还是挺大的。</p>
+<p>虽然有这些那些难点，但这种解密方法的一大优点是可以一次性解决本节开头所提及的三个问题，即服务端证书校验、客户端证书校验和 SSL Pinning。因为该方法并没有对流量进行网络层面的中间人，而是在应用的运行过程中泄露会话秘钥，因此不会影响上层的证书校验。</p>
+<h2 id="ssl-readwrite" class="heading-element"><span>SSL read/write</span>
+  <a href="#ssl-readwrite" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>既然设置 keylog 如此麻烦，为什么不找一些相对简单且通用的 API 去进行解密呢？一个直接的思路就是通过挂钩 <a href="https://www.openssl.org/docs/man1.1.1/man3/SSL_read.html"target="_blank" rel="external nofollow noopener noreferrer">SSL_read</a>、SSL_write 来获取 SSL 读写的明文数据。基于这个思路目前网上有许多工程化的实现，比如 <a href="https://github.com/ehids/ecapture"target="_blank" rel="external nofollow noopener noreferrer">eCapture</a> 是基于 <code>eBPF/uprobes</code> 的 TLS 抓包方案；<a href="https://github.com/r0ysue/r0capture"target="_blank" rel="external nofollow noopener noreferrer">r0capture</a> 则是基于 <code>frida</code> 注入的 TLS 抓包方案。</p>
+<p>使用该方法进行解密的一大优点，或者说特点，是这种方式可以在解密的同时直接输出明文信息，因此可以完全略过<strong>流量抓取</strong>这一步。虽然许多开源工具是将结果保存为 pcap 文件进行进一步分析的，但实际上也可以直接在标准输出或者日志文件中打印出来进行分析。</p>
+<p>由于这些抓包工具本质上都是在获取 SSL read/write 明文的基础上再以 pcap 格式进行转储，因此同样会面临 keylog 方案所面临的问题，即依赖 SSL 库的符号。但不同的是其所依赖的是较为通用的符号，因此不太会受到 SSL 库版本的限制。唯一需要考虑的难题是如何解析无符号的 SSL 库中相关函数的偏移地址，这在上节中有些简单介绍，展开的话又是另一篇论文了。</p>
+<p>上述介绍的每一种流量抓取方法都可以和任意一种流量解密方法相结合，组成一种网络流量分析方案。实践上使用较多的是下面几种组合:</p>
+<ul>
+<li>系统 HTTP 代理 + 根证书</li>
+<li>路由抓包/透明代理 + 根证书</li>
+<li>tcpdump + keylog</li>
+<li>SSL_read/SSL_write hook</li>
+</ul>
+<p>每种方案都有其优点和缺点:</p>
+<table>
+  <thead>
+      <tr>
+          <th>抓包方案</th>
+          <th>优点</th>
+          <th>缺点</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>系统代理</td>
+          <td>配置简单，工具成熟</td>
+          <td>可被忽略，流量不全，证书问题</td>
+      </tr>
+      <tr>
+          <td>路由抓包</td>
+          <td>流量完整，应用透明</td>
+          <td>配置复杂，协议受限，证书问题</td>
+      </tr>
+      <tr>
+          <td>tcpdump + keylog</td>
+          <td>流量完整，无需证书协议丰富，应用过滤</td>
+          <td>TLS 解密需要 hook 应用且依赖于 SSL 库的版本和符号</td>
+      </tr>
+      <tr>
+          <td>SSL read/write</td>
+          <td>劫持简单，无需证书</td>
+          <td>需要(某些)符号，依赖 hook，流量不全</td>
+      </tr>
+  </tbody>
+</table>
+<p>那么实际安全分析中要如何选择呢？正如那句老话所说: <strong>网络安全没有银弹</strong>，实际情况也无法一概而论，通常是根据具体的目标去进行分析。</p>
+<p>例如，对于操作系统比较封闭的 IoT 设备，通过路由抓包是唯一选择；对于移动应用或者桌面应用而言，可以先尝试传统的系统代理方式，添加对应根证书，如果不能抓到包，可以通过流量分析可能的问题:</p>
+<ul>
+<li>流量日志中服务端有 Certificate Request 则表示进行了客户端证书校验；</li>
+<li>流量日志中握手成功但很快断开，则客户端中可能使用了 SSL Pinning 加固；</li>
+<li>流量日志中客户端握手失败，Alert 提示证书不可信，则说明客户端使用了自定义的 keystore 而不是系统的根证书；</li>
+<li>……</li>
+</ul>
 </div><div class="post-footer" id="post-footer">
   <div class="post-info">
     <div class="post-info-line">
@@ -167,7 +261,8 @@
 </div>
 </article>
 
-  <aside class="toc" id="toc-auto" aria-label="目录"></aside></main><footer class="footer">
+  <aside class="toc" id="toc-auto" aria-label="目录"><h2 class="toc-title">目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden="true"></i></h2>
+      <div class="toc-content" id="toc-content-auto"></div></aside></main><footer class="footer">
     <div class="footer-container"><div class="footer-line powered">由 <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreferrer" title="Hugo 0.144.2"><img class="hugo-icon" src="/images/hugo.min.svg" alt="Hugo logo" /> Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/hugo-fixit/FixIt" target="_blank" rel="external" title="FixIt v0.3.16"><img class="fixit-icon" src="/images/fixit.min.svg" alt="FixIt logo" /> FixIt</a>
         </div><div class="footer-line copyright" itemscope itemtype="http://schema.org/CreativeWork"><i class="fa-regular fa-copyright fa-fw" aria-hidden="true"></i>
             <span itemprop="copyrightYear">2021 - 2025</span><span class="author" itemprop="copyrightHolder">
@@ -177,5 +272,5 @@
     <div class="noscript-warning">该网站在启用 JavaScript 的情况下效果最佳。</div>
   </noscript>
 </div><link rel="preload" href="/lib/katex/katex.min.css" as="style" onload="this.removeAttribute('onload');this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":10},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};console.log('Page config:', window.config);</script><script src="/js/theme.min.js" defer></script></body>
+    <noscript><link rel="stylesheet" href="/lib/katex/katex.min.css"></noscript><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><link rel="stylesheet" href="/lib/pace/themes/blue/pace-theme-minimal.css"><script src="/lib/autocomplete/autocomplete.min.js" defer></script><script src="/lib/fuse/fuse.min.js" defer></script><script src="/lib/instant-page/instantpage.min.js" async defer type="module"></script><script src="/lib/sharer/sharer.min.js" async defer></script><script src="/lib/typeit/index.umd.js" defer></script><script src="/lib/katex/katex.min.js" defer></script><script src="/lib/katex/auto-render.min.js" defer></script><script src="/lib/katex/copy-tex.min.js" defer></script><script src="/lib/katex/mhchem.min.js" defer></script><script src="/lib/cookieconsent/cookieconsent.min.js" defer></script><script src="/lib/pace/pace.min.js" async defer></script><script>window.config={"code":{"copyTitle":"复制到剪贴板","editLockTitle":"锁定可编辑代码块","editUnLockTitle":"解锁可编辑代码块","editable":true,"maxShownLines":50},"comment":{"enable":false},"cookieconsent":{"content":{"dismiss":"同意","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验。"},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"distance":100,"findAllMatches":false,"fuseIndexURL":"/search.json","highlightTag":"em","ignoreFieldNorm":false,"ignoreLocation":false,"isCaseSensitive":false,"location":0,"maxResultLength":10,"minMatchCharLength":2,"noResultsFound":"没有找到结果","snippetLength":30,"threshold":0.3,"type":"fuse","useExtendedSearch":false},"siteTime":"2021-12-18T16:15:22+08:00","typeit":{"cursorChar":"|","cursorSpeed":1000,"duration":-1,"loop":false,"speed":100},"version":"v0.3.16"};console.log('Page config:', window.config);</script><script src="/js/theme.min.js" defer></script></body>
 </html>

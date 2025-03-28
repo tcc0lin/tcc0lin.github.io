@@ -11,7 +11,7 @@
   <meta itemprop="description" content="本文聚焦终端流量的攻防对抗技术，分析系统代理、VPN隧道、网关抓包及libpcap抓包等流量控制手段的原理与限制，并探讨SSL/TLS中间人攻击、协议逆向、密钥提取等流量解密方法。通过技术对比与实例，揭示攻防双方在流量隐蔽、检测与反制中的动态博弈，为安全研究人员提供实践参考">
   <meta itemprop="datePublished" content="2025-03-26T20:57:27+08:00">
   <meta itemprop="dateModified" content="2025-03-26T20:57:27+08:00">
-  <meta itemprop="wordCount" content="7866">
+  <meta itemprop="wordCount" content="10753">
   <meta itemprop="keywords" content="流量对抗"><meta property="og:url" content="http://localhost:1313/posts/19081ef/">
   <meta property="og:site_name" content="佛光普照">
   <meta property="og:title" content="终端流量对抗的经验总结">
@@ -38,7 +38,7 @@
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "http:\/\/localhost:1313\/posts\/19081ef\/"
-    },"genre": "posts","keywords": "流量对抗","wordcount":  7866 ,
+    },"genre": "posts","keywords": "流量对抗","wordcount":  10753 ,
     "url": "http:\/\/localhost:1313\/posts\/19081ef\/","datePublished": "2025-03-26T20:57:27+08:00","dateModified": "2025-03-26T20:57:27+08:00","publisher": {
       "@type": "Organization",
       "name": ""},"author": {
@@ -136,7 +136,7 @@
   <article class="page single">
     <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span title="转载" class="icon-repost"><i class="fa-solid fa-share fa-fw" aria-hidden="true"></i></span><span>终端流量对抗的经验总结</span>
       </h1></div><div class="post-meta">
-      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" class="post-category" title="分类 - 网络协议"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 网络协议</a></span></div><div class="post-meta-line"><span title="发布于 2025-03-26 20:57:27"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-26">2025-03-26</time></span>&nbsp;<span title="7866 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 7900 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 16 分钟</span>&nbsp;</div>
+      <div class="post-meta-line"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" class="post-category" title="分类 - 网络协议"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 网络协议</a></span></div><div class="post-meta-line"><span title="发布于 2025-03-26 20:57:27"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2025-03-26">2025-03-26</time></span>&nbsp;<span title="10753 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>约 10800 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>预计阅读 22 分钟</span>&nbsp;</div>
     </div><div class="details toc" id="toc-static" data-kept="false">
         <div class="details-summary toc-title">
           <span>目录</span>
@@ -177,7 +177,13 @@
         </li>
       </ul>
     </li>
-    <li><a href="#三协议解析">三、协议解析</a></li>
+    <li><a href="#三协议解析">三、协议解析</a>
+      <ul>
+        <li><a href="#31-根证书">3.1 根证书</a></li>
+        <li><a href="#32-ssl-keylog">3.2 SSL keylog</a></li>
+        <li><a href="#33-ssl-readwrite">3.3 SSL read/write</a></li>
+      </ul>
+    </li>
     <li><a href="#总结">总结</a></li>
     <li><a href="#参考">参考</a></li>
   </ul>
@@ -1060,11 +1066,126 @@
   <a href="#%e4%b8%89%e5%8d%8f%e8%ae%ae%e8%a7%a3%e6%9e%90" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h2 id="总结" class="heading-element"><span>总结</span>
+</h2><p>上节中介绍了流量抓取的一些方案，现在目光转向协议解析上，排除某类App使用到的定制加密协议外（例如微信的mmtls等），标准的<code>TLS</code>协议解密同样是一个在终端流量对抗中很严峻的课题，一般来说，目前存在以下几种防御方式：</p>
+<ol>
+<li>
+<p>客户端验证服务端的证书链可信，这是在TLS握手阶段的必要操作；</p>
+<ul>
+<li>证书链扩展：可以选择系统证书链验证或者自建证书链验证；</li>
+</ul>
+</li>
+<li>
+<p>服务端验证客户端的证书可信(Certificate Request)，又称为双向证书绑定；</p>
+</li>
+<li>
+<p>客户端验证服务端的证书<code>HASH</code>是否在白名单中，即<code>SSL Pinning</code>；</p>
+</li>
+<li>
+<p>……</p>
+</li>
+</ol>
+<p>在介绍后文的具体解密方案中也会围绕这几点去进行分析。</p>
+<h3 id="31-根证书" class="heading-element"><span>3.1 根证书</span>
+  <a href="#31-%e6%a0%b9%e8%af%81%e4%b9%a6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>添加自定义的根证书应该是<code>HTTPS</code>流量分析的标准答案了。前文中提到的<code>Burpsuite</code>等工具的文档中肯定都有介绍如何添加自定义根证书，根证书的存放对于不同的操作系统甚至不同的应用都有不同路径。比如</p>
+<ul>
+<li>在<code>Android</code>中，根证书存放在<code>/system/etc/security/cacerts</code>目录之下；</li>
+<li>在<code>ios/MacOS</code>中，根证书存放在<code>Keychain</code>中；</li>
+<li>对于<code>Chrome</code>浏览器，其应用中打包了证书链，不使用系统的证书；</li>
+<li>……</li>
+</ul>
+<p>至于如何添加根证书，可以自行搜索，这里就不再啰嗦了。虽然添加自定义根证书可以让我们很方便地使用代理工具进行<code>HTTPS</code>流量分析，但其实际上只解决了第一个问题，因此对于某些做了额外校验的应用而言<code>TLS</code>握手还是无法成功的。</p>
+<p>如果目标应用服务器在<code>TLS</code>握手中校验了客户端证书，那么我们还需要在代理工具中添加对应私钥才能顺利完成握手。该证书一般以<code>p12</code>格式存放，包含了客户端的证书及其私钥，通常还有一个额外的密码。通过逆向分析目标应用的的加载代码往往不难发现客户端证书的踪迹，甚至有时可以直接在资源文件中找到。</p>
+<p>如果目标应用使用了<code>SSL Pinning</code>加固，那么通常是将服务器的证书<code>HASH</code>保存在代码中，并在握手之后进行额外校验。</p>
+<p>由于相关数据<code>证书HASH</code>和逻辑都在代码中，因此这种情况下往往只能通过侵入式的方式去绕过<code>Pinning</code>校验，比如<code>Patch</code>代码或者使用<code>hook</code>等方法实现。</p>
+<p>由于这是一个较为常见的功能，因此网上有很多相关脚本可以实现常规的<code>SSL Pinning bypass</code>，例如<code>JustTrustMe系列</code>以及<code>Objection</code>工具提供的<code>android sslpinning disable</code>功能等等，但需要注意的是这并不意味着可以100%绕过，对于一些特殊实现仍然需要进行特殊分析。</p>
+<h3 id="32-ssl-keylog" class="heading-element"><span>3.2 SSL keylog</span>
+  <a href="#32-ssl-keylog" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>除了在端侧添加自定义根证书完成<code>MITM攻击</code>以外，还有一种方式可以解密<code>SSL/TLS</code>的流量，即在握手过程中想办法获取到<code>TLS</code>会话的 <code>Master Key</code>，根据协商的加密套件，就可以对整个<code>TLS stream</code>进行解密。关于<code>TLS</code>握手的原理介绍，可以参考笔者上一篇文章 —— <a href="https://tcc0lin.github.io/posts/e319adc/"target="_blank" rel="external nofollow noopener noreferrer">TLS协议握手与协议组合的深度解构：从TLS协议到定制化加密协议的移动安全视角</a>。</p>
+<p>知名的抓包和网络协议分析工具 <code>Wireshark</code> 就支持通过添加 <code>keylog</code> 文件去辅助 TLS 流量的解密。这里的<code>keylog</code>就是 <a href="https://wiki.wireshark.org/TLS"target="_blank" rel="external nofollow noopener noreferrer">TLS 会话秘钥</a>，文件格式为 <a href="https://firefox-source-docs.mozilla.org/security/nss/legacy/key_log_format/index.html"target="_blank" rel="external nofollow noopener noreferrer">NSS Key Log Format</a>。对于不同版本的<code>TLS</code>内容略有不同</p>
+<ul>
+<li>在<code>TLS 1.2</code>中只需要一个会话的<code>MasterKey</code>，使用<code>CLIENT_RANDOM</code>去区分不同会话；</li>
+<li>在<code>TLS 1.3</code>中每个会话包含5个秘钥，分别用于解密握手、数据阶段的不同数据。</li>
+</ul>
+<p>那么，这个<code>keylog</code>文件我们应该如何获取呢？对于大部分<code>keylog</code>库而言，比如<code>OpenSSL``、BoringSSL</code>、<code>libreSSL</code>等，都可以通过 <a href="https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_keylog_callback.html"target="_blank" rel="external nofollow noopener noreferrer">SSL_CTX_set_keylog_callback</a> 这个<code>API</code>去设置获取的回调，令<code>SSL</code>库在握手成功后调用对应的回调函数从而获取<code>keylog</code>。因此我们就需要通过静态<code>patch</code>或者动态<code>hook</code>的方式去为<code>TLS</code>添加该回调。</p>
+<p>这看似很简单，但实际操作起来会遇到一些问题。比如，很多大型商业应用都封装了自己的<code>SSL</code>库，甚至同一个应用中不同组件中又间接包含了有多个<code>SSL</code>库，为了每一个<code>TLS</code>会话都能成功解密，需要确保每个<code>SSL</code>库都要被正确<code>patch</code>或者<code>hook</code>；</p>
+<p>其次，对于某些App而言，它们会将系统网络库实现全都下沉到Native中，也就相应的通过静态编译的方式引入<code>SSL</code>库，同时针对网络库进行代码保护。那么我们可能需要通过一些方法去搜索定位所需的符号地址。这个任务的难度可大可小，简单的可以通过<code>yara</code>、<code>Bindiff</code>去进行定位，复杂的话也可以通过一些深度学习算法去进行相似度分析，比如科恩的<code>BinaryAI</code>或者阿里云的<code>Finger</code>等。感兴趣的也可以去进一步阅读相关的综述文章:</p>
+<blockquote>
+<p><a href="https://www.eurecom.fr/publication/6847/download/sec-publi-6847.pdf"target="_blank" rel="external nofollow noopener noreferrer">USENIX Security 2022 - How Machine Learning Is Solving the Binary Function Similarity Problem</a></p></blockquote>
+<p>虽然有这些那些难点，但这种解密方法的一大优点是可以一次性解决本节开头所提及的三个问题，即<strong>服务端证书校验</strong>、<strong>客户端证书校验</strong>和<strong>SSL Pinning</strong>。因为该方法并非是<code>MITM攻击</code>，而是在应用的运行过程中主动泄露会话秘钥，因此不会影响上层的证书校验。</p>
+<h3 id="33-ssl-readwrite" class="heading-element"><span>3.3 SSL read/write</span>
+  <a href="#33-ssl-readwrite" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>既然设置<code>keylog</code>如此麻烦，为什么不找一些相对简单且通用的<code>API</code>去进行解密呢？一个直接的思路就是通过挂钩 <a href="https://www.openssl.org/docs/man1.1.1/man3/SSL_read.html"target="_blank" rel="external nofollow noopener noreferrer">SSL_read</a>、<a href="https://docs.openssl.org/1.1.1/man3/SSL_write/"target="_blank" rel="external nofollow noopener noreferrer">SSL_write</a>来获取<code>SSL</code>读写的明文数据。基于这个思路目前网上有许多工程化的实现，比如</p>
+<ul>
+<li>
+<p><a href="https://github.com/ehids/ecapture"target="_blank" rel="external nofollow noopener noreferrer">eCapture</a> 是基于<code>eBPF/uprobes</code>的<code>TLS</code>抓包方案；</p>
+</li>
+<li>
+<p><a href="https://github.com/r0ysue/r0capture"target="_blank" rel="external nofollow noopener noreferrer">r0capture</a> 则是基于<code>frida</code>注入的<code>TLS</code>抓包方案。</p>
+</li>
+</ul>
+<p>使用该方法进行解密的一大优点，或者说特点，是这种方式可以在解密的同时直接输出明文信息，因此可以完全略过<strong>流量抓取</strong>这一步。虽然许多开源工具是将结果保存为<code>pcap</code>文件进行进一步分析的，但实际上也可以直接在标准输出或者日志文件中打印出来进行分析。</p>
+<p>由于这些抓包工具本质上都是在获取<code>SSL read/write</code>明文的基础上再以<code>pcap</code>格式进行转储，因此同样会面临<code>keylog</code>方案所面临的问题，即依赖<code>SSL</code>库的符号。但不同的是其所依赖的是较为通用的符号，因此不太会受到<code>SSL</code>库版本的限制。唯一需要考虑的难题是如何解析无符号的<code>SSL</code>库中相关函数的偏移地址，这个后续会再开个文章细说。</p>
+<h2 id="总结" class="heading-element"><span>总结</span>
   <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h2 id="参考" class="heading-element"><span>参考</span>
+</h2><p>上述介绍的每一种流量抓取方法都可以和任意一种流量解密方法相结合，组成一种网络流量分析方案。实践上使用较多的是下面几种组合:</p>
+<ul>
+<li>系统HTTP代理 + 根证书</li>
+<li>路由抓包/透明代理 + 根证书</li>
+<li>tcpdump + keylog</li>
+<li>SSL_read/SSL_write hook</li>
+</ul>
+<p>每种方案都有其优点和缺点:</p>
+<table>
+  <thead>
+      <tr>
+          <th>抓包方案</th>
+          <th>优点</th>
+          <th>缺点</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>系统代理</td>
+          <td>配置简单，工具成熟</td>
+          <td>可被忽略，流量不全，证书问题</td>
+      </tr>
+      <tr>
+          <td>路由抓包</td>
+          <td>流量完整，应用透明</td>
+          <td>配置复杂，协议受限，证书问题</td>
+      </tr>
+      <tr>
+          <td>tcpdump + keylog</td>
+          <td>流量完整，无需证书协议丰富，应用过滤</td>
+          <td>TLS 解密需要hook应用且依赖于 SSL 库的版本和符号</td>
+      </tr>
+      <tr>
+          <td>SSL read/write</td>
+          <td>劫持简单，无需证书</td>
+          <td>需要(某些)符号，依赖hook，流量不全</td>
+      </tr>
+  </tbody>
+</table>
+<p>那么实际安全分析中要如何选择呢？正如那句老话所说: <strong>网络安全没有银弹</strong>，实际情况也无法一概而论，通常是根据具体的目标去进行分析。</p>
+<p>总而言之，根据现有的梳理</p>
+<ul>
+<li>
+<p>流量抓取可以100%的放心，因为已有足够稳定的方案可以确保网络流量的完备性，即App所产生的所有网络交互都能够确保被抓到</p>
+</li>
+<li>
+<p>协议解析在App使用常规的<code>HTTP</code>类协议的前提下也能够保证稳定的解析，但是不能排除App使用存在多种协议混用的情况，因此需要在不同的场景中灵活处理。</p>
+</li>
+</ul>
+<h2 id="参考" class="heading-element"><span>参考</span>
   <a href="#%e5%8f%82%e8%80%83" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -1074,6 +1195,7 @@
 <li><a href="https://jgsun.github.io/2019/01/21/linux-tcpdump/"target="_blank" rel="external nofollow noopener noreferrer">图解linux tcpdump</a></li>
 <li><a href="https://blog.csdn.net/sdgdsczs/article/details/129365078"target="_blank" rel="external nofollow noopener noreferrer">网卡多队列绑定中断的方式优化网络吞吐
 </a></li>
+<li><a href="https://tcc0lin.github.io/posts/e319adc/"target="_blank" rel="external nofollow noopener noreferrer">TLS协议握手与协议组合的深度解构：从TLS协议到定制化加密协议的移动安全视角</a></li>
 </ol></div><hr class="awesome-hr" />
     <h2 id="see-also">相关内容</h2>
     <ul><li>
