@@ -67,6 +67,24 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>http://localhost:1313/tags/frida/</loc>
+    <lastmod>2025-02-09T18:59:03+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>http://localhost:1313/posts/4f4516a/</loc>
+    <lastmod>2025-02-09T18:59:03+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>http://localhost:1313/categories/%E7%8E%AF%E5%A2%83%E6%A3%80%E6%B5%8B/</loc>
+    <lastmod>2025-02-09T18:59:03+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>http://localhost:1313/tags/keyattestation/</loc>
     <lastmod>2024-08-31T23:14:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -399,12 +417,6 @@
   <url>
     <loc>http://localhost:1313/posts/unidbg%E7%89%B9%E5%BE%81%E6%A3%80%E6%B5%8B%E6%B1%87%E6%80%BB/</loc>
     <lastmod>2023-08-31T18:29:34+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>http://localhost:1313/tags/frida/</loc>
-    <lastmod>2023-08-21T19:29:35+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

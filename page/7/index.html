@@ -118,7 +118,27 @@
     </a><a href="mailto:linhanqiu1123@gmail.com" title="Email"target="_blank" rel="external nofollow noopener noreferrer me"><i class="fa-regular fa-envelope fa-fw" aria-hidden="true"></i>
     </a><a href="/index.xml" title="RSS"target="_blank" rel="external nofollow noopener noreferrer me"><i class="fa-solid fa-rss fa-fw" aria-hidden="true"></i>
     </a></div><img loading="lazy" src="/profile.jpg" alt="/profile.jpg" data-title="profile" width="1000" height="300" class="profile-ghchart" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></div>
-<article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">探讨关于MD5算法的魔改方式</a>
+<article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">探讨关于CRC32算法的魔改方式</a>
+  </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span>&nbsp;<span class="post-publish" title='2023-05-09 22:36:47'>发布于 <time datetime="2023-05-09">2023-05-09</time></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/" class="post-category" title="分类 - 算法研究"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 算法研究</a></span></div><div class="content"><ul>
+<li>写法
+<ul>
+<li>函数名</li>
+</ul>
+</li>
+<li>算法常量
+<ul>
+<li>CRC码表</li>
+<li>多项式的二进制</li>
+</ul>
+</li>
+<li>算法流程
+<ul>
+<li>CRC码表生成方式</li>
+</ul>
+</li>
+</ul></div><div class="post-footer">
+    <a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Ecrc32%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">阅读全文</a><div class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href='/tags/%E6%91%98%E8%A6%81%E7%AE%97%E6%B3%95/' class="post-tag">摘要算法</a><a href='/tags/%E9%AD%94%E6%94%B9%E6%80%9D%E8%B7%AF/' class="post-tag">魔改思路</a></div></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/%E6%8E%A2%E8%AE%A8%E5%85%B3%E4%BA%8Emd5%E7%AE%97%E6%B3%95%E7%9A%84%E9%AD%94%E6%94%B9%E6%96%B9%E5%BC%8F/">探讨关于MD5算法的魔改方式</a>
   </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span>&nbsp;<span class="post-publish" title='2023-05-09 22:36:47'>发布于 <time datetime="2023-05-09">2023-05-09</time></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/" class="post-category" title="分类 - 算法研究"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> 算法研究</a></span></div><div class="content"><ul>
 <li>写法
 <ul>
@@ -541,17 +561,6 @@
 </div>
 </div><p>根据clang的flag来判断是否开启某类混淆，以间接跳转为例</p></div><div class="post-footer">
     <a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E6%A1%86%E6%9E%B6%E9%97%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">阅读全文</a><div class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href='/tags/goron%E6%A1%86%E6%9E%B6/' class="post-tag">Goron框架</a></div></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h2 class="single-title" itemprop="name headline"><a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/">Ollvm混淆与反混淆: Goron编译使用</a>
-  </h2><div class="post-meta"><span class="post-author"><span class="author"><img loading="lazy" src="/tcc0lin.png" alt="tcc0lin" data-title="tcc0lin" width="20" height="20" class="avatar" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>&nbsp;tcc0lin</span></span>&nbsp;<span class="post-publish" title='2023-03-29 23:21:45'>发布于 <time datetime="2023-03-29">2023-03-29</time></span><span class="post-included-in">&nbsp;收录于 <a href="/categories/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/" class="post-category" title="分类 - Ollvm混淆与反混淆"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Ollvm混淆与反混淆</a></span></div><div class="content"><p>很多App实现的定制ollvm框架中都有goron框架的影子，或多或少的借鉴了它的功能，包括</p>
-<ul>
-<li>间接跳转,并加密跳转目标(-mllvm -irobf-indbr)</li>
-<li>间接函数调用,并加密目标函数地址(-mllvm -irobf-icall)</li>
-<li>间接全局变量引用,并加密变量地址(-mllvm -irobf-indgv)</li>
-<li>字符串(c string)加密功能(-mllvm -irobf-cse)</li>
-<li>过程相关控制流平坦混淆(-mllvm -irobf-cff)</li>
-</ul>
-<p>想要了解怎么针对这些混淆功能完成去混淆，势必要先对其混淆过程有所了解，那么第一步就是对goron框架的编译使用</p></div><div class="post-footer">
-    <a href="/posts/ollvm%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86-goron%E7%BC%96%E8%AF%91%E4%BD%BF%E7%94%A8/">阅读全文</a><div class="post-tags"><i class="fa-solid fa-tags fa-fw me-1" aria-hidden="true"></i><a href='/tags/goron%E6%A1%86%E6%9E%B6/' class="post-tag">Goron框架</a></div></div>
 </article><ul class="pagination"><li class="page-item">
           <span class="page-link">
             <a href="/">1</a>

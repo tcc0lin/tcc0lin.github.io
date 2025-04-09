@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>环境检测 - 分类 - 佛光普照</title>
+    <link>http://localhost:1313/categories/%E7%8E%AF%E5%A2%83%E6%A3%80%E6%B5%8B/</link>
+    <description>佛光普照</description>
+    <generator>Hugo 0.145.0 &amp; FixIt v0.3.16</generator>
+    <language>zh-CN</language>
+    <lastBuildDate></lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/%E7%8E%AF%E5%A2%83%E6%A3%80%E6%B5%8B/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
